@@ -1,0 +1,164 @@
+const User = require('../models/User');
+
+// Get all users
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.json({
+      success: true,
+      count: users.length,
+      data: users
+    });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching users',
+      error: error.message 
+    });
+  }
+};
+
+// Get single user by ID
+exports.getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+    
+    // Remove password from response
+    const { password, ...userWithoutPassword } = user;
+    
+    res.json({
+      success: true,
+      data: userWithoutPassword
+    });
+  } catch (error) {
+    console.error('Get user by ID error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching user',
+      error: error.message 
+    });
+  }
+};
+
+// Create new user (not for signup, just admin user creation)
+exports.createUser = async (req, res) => {
+  try {
+    const { full_name, email, password, provider, provider_id, profile_picture } = req.body;
+    
+    // Validation
+    if (!full_name || !email) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Full name and email are required' 
+      });
+    }
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'User with this email already exists' 
+      });
+    }
+    
+    const user = await User.create({
+      full_name,
+      email,
+      password,
+      provider,
+      provider_id,
+      profile_picture
+    });
+    
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      data: user
+    });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error creating user',
+      error: error.message 
+    });
+  }
+};
+
+// Update user
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { full_name, email, profile_picture } = req.body;
+    
+    // Check if user exists
+    const existingUser = await User.findById(id);
+    if (!existingUser) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+    
+    // Update user
+    const updatedUser = await User.update(id, {
+      full_name,
+      email,
+      profile_picture
+    });
+    
+    res.json({
+      success: true,
+      message: 'User updated successfully',
+      data: updatedUser
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error updating user',
+      error: error.message 
+    });
+  }
+};
+
+// Delete user
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if user exists
+    const existingUser = await User.findById(id);
+    if (!existingUser) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+    
+    // Delete user
+    await User.delete(id);
+    
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error deleting user',
+      error: error.message 
+    });
+  }
+};

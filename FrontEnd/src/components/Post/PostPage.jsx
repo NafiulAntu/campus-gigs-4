@@ -1,0 +1,800 @@
+import React, { useEffect, useState } from "react";
+import Sidebar from "./Sidebar";
+import PostComposer from "./PostComposer";
+import Profile from "./side bar/profile";
+import Messages from "./side bar/messages";
+import Notifications from "./side bar/notifications";
+import Communities from "./side bar/communities";
+import Premium from "./side bar/premium";
+import Payments from "./side bar/payments";
+
+const Switcher8 = ({ isChecked, onChange }) => {
+  return (
+    <label className='flex cursor-pointer select-none items-center'>
+      <div className='relative'>
+        <input
+          type='checkbox'
+          checked={isChecked}
+          onChange={onChange}
+          className='sr-only'
+        />
+        <div
+          className={`box h-6 w-14 rounded-full shadow-inner transition-all duration-300 ${
+            isChecked ? 'bg-blue-500' : 'bg-gray-300'
+          }`}
+        ></div>
+        <div 
+          className={`dot shadow-lg absolute top-0.5 flex h-5 w-5 items-center justify-center rounded-full transition-all duration-300 ${
+            isChecked ? 'left-[34px] bg-white' : 'left-1 bg-white'
+          }`}
+        >
+          <span
+            className={`active h-3 w-3 rounded-full transition-all duration-300 ${
+              isChecked ? 'bg-blue-600' : 'bg-gray-400'
+            }`}
+          ></span>
+        </div>
+      </div>
+    </label>
+  );
+};
+
+const initialPosts = [
+  {
+    id: 1,
+    text: "We completed the initial prototype. Files uploaded in attachments.",
+    files: [],
+    author: { name: "Project Bot", avatar: null, verified: true },
+    replies: 3,
+    reposts: 1,
+    likes: 9,
+    views: 980,
+    liked: false,
+    reposted: false,
+    accepted: false,
+    rejected: false,
+    reacted: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+  },
+  {
+    id: 2,
+    text: "Uploaded dataset for analysis. Check the team folder.",
+    files: [],
+    author: { name: "Researcher", avatar: null, verified: false },
+    replies: 12,
+    reposts: 7,
+    likes: 54,
+    views: 2100,
+    liked: false,
+    reposted: false,
+    accepted: false,
+    rejected: false,
+    reacted: false,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+  },
+];
+
+export default function PostPage({ onNavigate = () => {} }) {
+  const [posts, setPosts] = useState(initialPosts);
+  const [isSearching, setIsSearching] = useState(false);
+  const [query, setQuery] = useState("");
+  const [peopleTab, setPeopleTab] = useState("active");
+  const [brightOn, setBrightOn] = useState(false);
+  const [isWideScreen, setIsWideScreen] = useState(window.innerWidth >= 1536);
+  const [editingPost, setEditingPost] = useState(null);
+  const [currentView, setCurrentView] = useState("home");
+
+  // Initialize CSS vars on mount (light teal accent, default text colors) and set dim mode
+  useEffect(() => {
+    document.documentElement.style.setProperty("--accent-main", "#70B2B2");
+    document.documentElement.style.setProperty("--text-base-color", "#ffffff");
+    document.documentElement.style.setProperty("--text-muted-color", "#94a3b8");
+    
+    // Set initial dim mode
+    document.documentElement.style.setProperty("--ui-brightness", "0.85");
+    document.documentElement.classList.remove("theme-light");
+    document.documentElement.classList.add("force-black");
+
+    // Handle window resize for sidebar width
+    const handleResize = () => {
+      setIsWideScreen(window.innerWidth >= 1536);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  const followingPeople = [
+    { name: "Ayesha", handle: "@ayesha" },
+    { name: "Imran", handle: "@imran" },
+    { name: "Neha", handle: "@neha" },
+  ];
+  const followerPeople = [
+    { name: "Rahul", handle: "@rahul" },
+    { name: "Saba", handle: "@saba" },
+    { name: "Tanvir", handle: "@tanvir" },
+  ];
+
+  // No external navbar toggle; search can still be opened via Explore or local top button
+
+  function handleNewPost(post) {
+    const p = {
+      id: post.id || Date.now(),
+      text: post.text || "",
+      files: post.files || [],
+      author: post.author || { name: "You", avatar: null, verified: false },
+      replies: 0,
+      reposts: 0,
+      likes: 0,
+      views: 0,
+      liked: false,
+      reposted: false,
+      accepted: false,
+      rejected: false,
+      createdAt: post.createdAt || new Date().toISOString(),
+    };
+    setPosts((prev) => [p, ...prev]);
+  }
+
+  function handleEditPost(updatedPost) {
+    if (updatedPost) {
+      setPosts((prev) =>
+        prev.map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p))
+      );
+    }
+    setEditingPost(null);
+  }
+
+  // Explore-like search behavior
+  const normalizedQuery = (typeof query === "string" ? query : "")
+    .trim()
+    .toLowerCase();
+  const showResults = isSearching && normalizedQuery.length > 0;
+  const filteredPosts = showResults
+    ? posts.filter((p) => {
+        const txt = (p.text || "").toLowerCase();
+        const author = (p.author?.name || "").toLowerCase();
+        const q = normalizedQuery.startsWith("#")
+          ? normalizedQuery.slice(1)
+          : normalizedQuery;
+        return (
+          txt.includes(normalizedQuery) ||
+          txt.includes(`#${q}`) ||
+          author.includes(normalizedQuery)
+        );
+      })
+    : posts;
+
+  // Relative time like X.com (e.g., 5s, 2m, 1h, 3d)
+  function formatRelativeTime(iso) {
+    const now = Date.now();
+    const t = new Date(iso).getTime();
+    const diff = Math.max(0, now - t);
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h`;
+    const d = Math.floor(h / 24);
+    return `${d}d`;
+  }
+
+  function formatCount(n = 0) {
+    if (n < 1000) return `${n}`;
+    if (n < 1_000_000) return `${(n / 1000).toFixed(n % 1000 >= 100 ? 1 : 0)}k`;
+    return `${(n / 1_000_000).toFixed(n % 1_000_000 >= 100_000 ? 1 : 0)}M`;
+  }
+
+  function toggleLike(id) {
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const nextLiked = !p.liked;
+        return {
+          ...p,
+          liked: nextLiked,
+          likes: Math.max(0, (p.likes || 0) + (nextLiked ? 1 : -1)),
+        };
+      })
+    );
+  }
+
+  function toggleRepost(id) {
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const nextReposted = !p.reposted;
+        return {
+          ...p,
+          reposted: nextReposted,
+          reposts: Math.max(0, (p.reposts || 0) + (nextReposted ? 1 : -1)),
+        };
+      })
+    );
+  }
+
+  function toggleAccept(id) {
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const nextAccepted = !p.accepted;
+        return {
+          ...p,
+          accepted: nextAccepted,
+          rejected: nextAccepted ? false : p.rejected,
+        };
+      })
+    );
+  }
+
+  function toggleReject(id) {
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const nextRejected = !p.rejected;
+        return {
+          ...p,
+          rejected: nextRejected,
+          accepted: nextRejected ? false : p.accepted,
+        };
+      })
+    );
+  }
+
+  function toggleReactPost(id) {
+    setPosts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, reacted: !p.reacted } : p))
+    );
+  }
+
+  function handleNav(key) {
+    if (key === "jobs") {
+      setIsSearching(true);
+      setCurrentView("home");
+      return;
+    }
+    // Update current view based on sidebar navigation
+    setCurrentView(key);
+  }
+
+  return (
+    <div className="w-full min-h-screen">
+      <div className="max-w-[1400px] mx-auto flex relative">
+        {/* Fixed Left Sidebar - hidden on mobile, compact on xl-2xl, full on 2xl+ */}
+        <aside className="hidden xl:block xl:w-[88px] 2xl:w-[275px] fixed left-[max(0px,calc((100vw-1400px)/2))] top-0 h-screen z-30 transition-all duration-300 xl:ml-[-10px] 2xl:ml-[-17px]">
+          <div className="h-full flex justify-end xl:pr-2 2xl:pr-3">
+            <div className="w-full xl:max-w-[70px] 2xl:max-w-[255px]">
+              <Sidebar
+                onNavigate={(k) => {
+                  handleNav(k);
+                  onNavigate(k);
+                }}
+              />
+            </div>
+          </div>
+        </aside>
+
+        {/* Main content area - Full width when not on home, normal width on home */}
+        <div className={`w-full mx-auto px-0 min-h-screen transition-all duration-300 ${
+          brightOn ? 'bg-[#0F172A]' : 'bg-black'
+        } ${
+          currentView === "home" 
+            ? "xl:w-[750px] xl:ml-[108px] 2xl:ml-[295px]" 
+            : "xl:w-[calc(100%-88px)] xl:ml-[88px] 2xl:w-[calc(100%-275px)] 2xl:ml-[275px]"
+        }`}>
+        
+        {/* Conditional rendering based on currentView */}
+        {currentView === "profile" && (
+          <Profile onBack={() => setCurrentView("home")} />
+        )}
+        
+        {currentView === "messages" && (
+          <Messages onBack={() => setCurrentView("home")} />
+        )}
+        
+        {currentView === "notifications" && (
+          <Notifications onBack={() => setCurrentView("home")} />
+        )}
+        
+        {currentView === "communities" && (
+          <Communities onBack={() => setCurrentView("home")} />
+        )}
+        
+        {currentView === "premium" && (
+          <Premium onBack={() => setCurrentView("home")} />
+        )}
+        
+        {currentView === "payments" && (
+          <Payments onBack={() => setCurrentView("home")} />
+        )}
+        
+        {/* Home view - Default post feed */}
+        {currentView === "home" && (
+          <>
+  <div className="border-b border-white/10"></div>
+
+        <section className="pt-0">
+          {/* Sticky search bar with transparent background - Properly aligned */}
+          <div className={`sticky top-0 z-20 backdrop-blur-sm transition-all duration-300 ${
+            isSearching ? (brightOn ? 'bg-[#033E3E]/95' : 'bg-[#040720]/95') : 'bg-transparent'
+          }`}>
+            <div 
+              className={`flex items-center gap-3 px-3 py-3.5 transition-all duration-300 border-b ${
+                brightOn ? 'border-white bg-[#0F172A]' : 'border-[#045F5F] bg-black'
+              }`}
+            >
+              <i className={`fi fi-br-search text-xl transition-colors duration-300 ${
+                brightOn ? 'text-[#008B8B]' : 'text-blue-400'
+              }`}></i>
+              <input
+                value={query}
+                onFocus={() => setIsSearching(true)}
+                onChange={(e) => setQuery(e.target.value)}
+                className={`search-input flex-1 bg-transparent outline-none text-lg font-semibold transition-colors duration-300 ${
+                  brightOn ? 'text-black placeholder:text-[#008B8B]/60' : 'text-blue-300 placeholder:text-blue-400/60'
+                }`}
+                placeholder="Search #Jobs, Communities, People..."
+                style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+              />
+              {isSearching && (
+                <button
+                  className="px-4 py-1.5 rounded-full bg-primary-teal hover:bg-primary-blue text-white text-sm font-semibold transition-colors"
+                  onClick={() => { setIsSearching(false); setQuery(""); }}
+                  style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                  onFocus={(e) => e.currentTarget.style.outline = 'none'}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Status composer is hidden while searching */}
+          {!isSearching && <PostComposer onPost={handleNewPost} onEdit={handleEditPost} editingPost={editingPost} brightOn={brightOn} />}
+
+          {/* Divider after composer or under sticky search */}
+          <div className={`transition-colors duration-300 ${
+            brightOn ? 'border-b-2 border-gray-200' : 'border-b border-white/10'
+          }`}></div>
+
+          {/* Explore mode: show recommendations when searching */}
+          {isSearching && !showResults && (
+            <div className="mt-0">
+              <div className="pl-6 pr-4 py-4">
+                <h3 className={`text-lg font-bold mb-3 transition-colors duration-300 ${
+                  brightOn ? 'text-white' : 'text-white'
+                }`}>
+                  Recommended Communities
+                </h3>
+                <div className="rounded-2xl overflow-hidden">
+                  {[
+                    { area: "Campus", title: "#Jobs", posts: "12.4k" },
+                    { area: "Campus", title: "#Internships", posts: "8,103" },
+                    { area: "Technology", title: "#React", posts: "28.1k" },
+                    { area: "Remote", title: "#Freelance", posts: "6,980" },
+                    { area: "Learning", title: "#OpenSource", posts: "14.7k" },
+                  ].map((t, i, arr) => (
+                    <button
+                      key={t.title}
+                      onClick={() => { setQuery(t.title); }}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
+                        brightOn ? 'hover:bg-gray-700 active:bg-gray-600' : 'hover:bg-white/5 active:bg-white/10'
+                      }`}
+                    >
+                      <div className={`text-xs font-medium transition-colors duration-300 ${
+                        brightOn ? 'text-white/70' : 'text-text-muted'
+                      }`}>
+                        Trending in {t.area}
+                      </div>
+                      <div className={`font-bold text-base transition-colors duration-300 mt-0.5 ${
+                        brightOn ? 'text-white' : 'text-white'
+                      }`}>{t.title}</div>
+                      <div className={`text-xs font-medium transition-colors duration-300 mt-0.5 ${
+                        brightOn ? 'text-white/70' : 'text-text-muted'
+                      }`}>
+                        {t.posts} posts
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Results list when a query is present */}
+          <div className="mt-0">
+            {showResults && filteredPosts.length === 0 && (
+              <div className="p-10 text-center">
+                <div className={`inline-flex h-12 w-12 items-center justify-center rounded-full border-2 border-dashed mb-3 transition-colors duration-300 ${
+                  brightOn ? 'border-gray-300' : 'border-text-muted'
+                }`}>
+                  <i className="fa-regular fa-face-frown" />
+                </div>
+                <div className={`font-semibold transition-colors duration-300 ${
+                  brightOn ? 'text-white' : 'text-white'
+                }`}>No results</div>
+                <div className={`text-sm transition-colors duration-300 ${
+                  brightOn ? 'text-gray-400' : 'text-text-muted'
+                }`}>
+                  Try a different keyword or hashtag.
+                </div>
+              </div>
+            )}
+            {filteredPosts.map((p, index) => {
+              const avatarLetter =
+                (p.author && p.author.name && p.author.name[0]) || "P";
+              return (
+                <div
+                  key={p.id}
+                  className={`mb-2 transition-colors duration-300 border overflow-hidden ${
+                    brightOn ? 'border-white' : 'border-[#045F5F]'
+                  }`}
+                >
+                  <article className={`px-6 sm:px-8 py-5 sm:py-6 transition-colors duration-150 ${
+                    brightOn ? 'bg-[#0F172A] hover:bg-[#1E293B]' : 'bg-gray-900/30 hover:bg-gray-900/40'
+                  }`}>
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      {p.author?.avatar ? (
+                        <img
+                          src={p.author.avatar}
+                          alt={p.author.name}
+                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover shadow-md ring-2 ring-primary-teal/20"
+                        />
+                      ) : (
+                        <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary-teal/30 to-primary-teal/10 flex items-center justify-center font-bold text-white text-sm sm:text-base shadow-md ring-2 ring-primary-teal/20">
+                          {avatarLetter}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 sm:gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1 sm:gap-2 leading-tight flex-wrap">
+                              <span className={`font-bold text-[15px] sm:text-[17px] transition-colors duration-300 ${
+                                brightOn ? 'text-white' : 'text-blue-400'
+                              }`}>
+                                {p.author?.name || "Unknown"}
+                              </span>
+                              {p.author?.verified && (
+                                <i
+                                  className="fa-solid fa-circle-check text-sky-400 text-xs sm:text-sm"
+                                  aria-label="Verified"
+                                />
+                              )}
+                              <span className={`text-xs sm:text-sm truncate transition-colors duration-300 ${
+                                brightOn ? 'text-[#008B8B]' : 'text-text-muted'
+                              }`}>
+                                @
+                                {(p.author?.name || "unknown")
+                                  .toLowerCase()
+                                  .replace(/\s+/g, "")}
+                              </span>
+                              <span className={`hidden sm:inline transition-colors duration-300 ${
+                                brightOn ? 'text-[#008B8B]' : 'text-text-muted'
+                              }`}>•</span>
+                              <a
+                                href="#"
+                                className={`text-xs sm:text-sm hover:underline hidden sm:inline transition-colors duration-300 ${
+                                  brightOn ? 'text-[#008B8B] hover:text-[#00CED1]' : 'text-text-muted hover:text-white'
+                                }`}
+                              >
+                                {formatRelativeTime(p.createdAt)}
+                              </a>
+                            </div>
+                          </div>
+                          <button
+                            className={`shrink-0 rounded p-1 transition-colors duration-300 ${
+                              brightOn ? 'text-[#008B8B] hover:text-[#00CED1] hover:bg-[#1E293B]' : 'text-text-muted hover:text-white hover:bg-white/5'
+                            }`}
+                            aria-label="More options"
+                          >
+                            <i className="fa-solid fa-ellipsis" />
+                          </button>
+                        </div>
+
+                        <div className={`mt-2 leading-[1.6] whitespace-pre-wrap font-medium text-[15px] sm:text-[17px] break-words transition-colors duration-300 ${
+                          brightOn ? 'text-white' : 'text-white'
+                        }`}>
+                          {p.text}
+                        </div>
+
+                        {p.files && p.files.length > 0 && (
+                          <div
+                            className={`mt-2 grid ${
+                              p.files.length === 1
+                                ? "grid-cols-1"
+                                : p.files.length === 2
+                                ? "grid-cols-2"
+                                : "grid-cols-2"
+                            } gap-0.5 sm:gap-1`}
+                          >
+                            {p.files.map((f, i) => {
+                              const count = p.files.length;
+                              const isFirstLarge = count === 3 && i === 0;
+                              const itemClass = isFirstLarge
+                                ? "col-span-2"
+                                : "";
+                              const imgHeight =
+                                count === 1
+                                  ? "h-64"
+                                  : count === 2
+                                  ? "h-40"
+                                  : isFirstLarge
+                                  ? "h-56"
+                                  : "h-20";
+                              return (
+                                <div
+                                  key={i}
+                                  className={`rounded-2xl overflow-hidden bg-input border border-white/10 ${itemClass}`}
+                                >
+                                  {f.preview ? (
+                                    f.type?.startsWith("image/") ? (
+                                      <img
+                                        src={f.preview}
+                                        alt={f.name}
+                                        className={`object-cover w-full ${imgHeight}`}
+                                      />
+                                    ) : f.type?.startsWith("video/") ? (
+                                      <video
+                                        src={f.preview}
+                                        className={`object-cover w-full ${imgHeight}`}
+                                        controls
+                                        muted
+                                      />
+                                    ) : (
+                                      <div className="p-3 flex items-center gap-2">
+                                        <div className="h-8 w-8 bg-primary/10 rounded flex items-center justify-center">
+                                          📄
+                                        </div>
+                                        <div className="text-sm truncate">
+                                          {f.name}
+                                        </div>
+                                      </div>
+                                    )
+                                  ) : (
+                                    <div className="p-3 flex items-center gap-2">
+                                      <div className="h-8 w-8 bg-primary/10 rounded flex items-center justify-center">
+                                        📄
+                                      </div>
+                                      <div className="text-sm truncate">
+                                        {f.name}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {/* Action buttons row with full-width divider */}
+                        <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
+                          <div className="flex items-center gap-2">
+                            {/* Sup button (hang loose hand) */}
+                            <button
+                              onClick={() => toggleLike(p.id)}
+                              className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all ${
+                                p.liked
+                                  ? "text-[#89CFF0] bg-[#89CFF0]/10"
+                                  : `transition-colors duration-300 ${
+                                      brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
+                                    } hover:bg-[#89CFF0]/10`
+                              }`}
+                              title="Sup"
+                            >
+                              <span className="text-[18px]" style={{ filter: p.liked ? 'sepia(1) saturate(5) hue-rotate(160deg) brightness(1.1)' : 'grayscale(1)' }}>🤙</span>
+                              <span className="text-sm font-semibold">{p.likes}</span>
+                            </button>
+
+                            {/* Repost button */}
+                            <button
+                              onClick={() => toggleRepost(p.id)}
+                              className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all ${
+                                p.reposted
+                                  ? "text-[#89CFF0] bg-[#89CFF0]/10"
+                                  : `transition-colors duration-300 ${
+                                      brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
+                                    } hover:bg-[#89CFF0]/10`
+                              }`}
+                              title="Repost"
+                            >
+                              <i className="fi fi-br-refresh text-[18px]" />
+                              <span className="text-sm font-semibold">{p.reposts}</span>
+                            </button>
+
+                            {/* Send button */}
+                            <button
+                              className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all transition-colors duration-300 ${
+                                brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
+                              } hover:bg-[#89CFF0]/10`}
+                              title="Send"
+                            >
+                              <i className="fi fi-br-paper-plane text-[18px]" />
+                              <span className="text-sm font-semibold">Send</span>
+                            </button>
+
+                            {/* Edit button - only for user's own posts */}
+                            {p.author?.name === "You" && (
+                              <button
+                                onClick={() => setEditingPost(p)}
+                                className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all transition-colors duration-300 ${
+                                  brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
+                                } hover:bg-[#89CFF0]/10`}
+                                title="Edit"
+                              >
+                                <i className="fa-solid fa-edit text-[18px]" />
+                                <span className="text-sm font-semibold">Edit</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Accept/Reject buttons on the right */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => toggleAccept(p.id)}
+                              className={`flex items-center gap-1.5 px-2 py-1 transition-all font-semibold text-sm transition-colors duration-300 ${
+                                p.accepted
+                                  ? "text-green-400"
+                                  : `${
+                                      brightOn ? 'text-gray-400 hover:text-green-400' : 'text-text-muted hover:text-green-400'
+                                    }`
+                              }`}
+                              title="Accept"
+                            >
+                              <i className="fa-solid fa-check text-[14px]" />
+                              <span>Accept</span>
+                            </button>
+                            <button
+                              onClick={() => toggleReject(p.id)}
+                              className={`flex items-center gap-1.5 px-2 py-1 transition-all font-semibold text-sm transition-colors duration-300 ${
+                                p.rejected
+                                  ? "text-rose-400"
+                                  : `${
+                                      brightOn ? 'text-gray-400 hover:text-rose-400' : 'text-text-muted hover:text-rose-400'
+                                    }`
+                              }`}
+                              title="Reject"
+                            >
+                              <i className="fa-solid fa-xmark text-[14px]" />
+                              <span>Reject</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+        </>
+        )}
+      </div>
+      {/* Right-side rail (xl+): Active Users - Properly aligned with post section */}
+      {currentView === "home" && (
+      <aside 
+        className="hidden xl:block w-[375px] fixed top-0 h-screen z-30 brightness-root transition-all duration-300" 
+        style={{ 
+          left: isWideScreen 
+            ? 'calc(max(0px, (100vw - 1400px) / 2) + 287.8px + 750px)' 
+            : 'calc(max(0px, (100vw - 1400px) / 2) + 100px + 750px)' 
+        }}
+      >
+        <div className="relative h-full pl-12 pr-4">
+          <div className="sticky top-0 pt-4 space-y-4 max-w-[320px]">
+            {/* Theme Toggle: Bright / Dim controls */}
+            <div className="bg-transparent p-3 rounded-2xl">
+              <div className="flex items-center justify-center">
+                <div className={`flex items-center gap-4 backdrop-blur-sm rounded-full px-4 py-2.5 border-2 border-white transition-all duration-500 cursor-pointer group ${
+                  !brightOn 
+                    ? 'bg-black/60 hover:shadow-[0_0_30px_rgba(112,178,178,0.3)] hover:scale-105' 
+                    : 'bg-[#0f172a]/80 hover:shadow-[0_0_30px_rgba(15,23,42,0.6)] hover:scale-105'
+                }`}>
+                  <i className={`fa-regular fa-moon text-2xl transition-all duration-300 ${!brightOn ? 'text-primary-teal scale-125 drop-shadow-[0_0_8px_rgba(112,178,178,0.8)]' : 'text-gray-500 scale-100 group-hover:text-gray-400'}`} />
+                  <Switcher8
+                    isChecked={brightOn}
+                    onChange={() => {
+                      const newValue = !brightOn;
+                      setBrightOn(newValue);
+                      if (newValue) {
+                        document.documentElement.style.setProperty(
+                          "--ui-brightness",
+                          "1"
+                        );
+                        document.documentElement.classList.add("theme-light");
+                        document.documentElement.classList.remove("force-black");
+                      } else {
+                        document.documentElement.style.setProperty(
+                          "--ui-brightness",
+                          "0.85"
+                        );
+                        document.documentElement.classList.remove("theme-light");
+                        document.documentElement.classList.add("force-black");
+                      }
+                    }}
+                  />
+                  <i className={`fa-regular fa-sun text-2xl transition-all duration-300 ${brightOn ? 'text-white scale-125 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'text-gray-500 scale-100 group-hover:text-gray-400'}`} />
+                </div>
+              </div>
+            </div>
+            {/* People: Active / Following / Followers */}
+            <div className={`p-3 people-tabs transition-colors duration-300 ${
+              brightOn ? 'bg-[#0f172a]/50' : 'bg-white/[0.04]'
+            }`}>
+              <div className="flex items-center mb-2">
+                <h3 className="text-lg font-extrabold flex items-center gap-2 text-white">
+                  <i className="fa-solid fa-users" />
+                </h3>
+              </div>
+              <div className="grid grid-cols-3 gap-1 rounded-full bg-white/5 p-0.5 mb-2 w-full">
+                {[
+                  { key: "active", label: "Active" },
+                  { key: "following", label: "Following" },
+                  { key: "followers", label: "Followers" },
+                ].map((t) => (
+                  <button
+                    key={t.key}
+                    onClick={() => setPeopleTab(t.key)}
+                    className={`text-xs px-2.5 rounded-full transition-colors w-full text-center h-8 font-bold transition-colors duration-300 ${
+                      peopleTab === t.key
+                        ? "chip-active"
+                        : `${
+                            brightOn ? 'text-gray-400 hover:text-white' : 'text-text-muted hover:text-white'
+                          } hover:bg-white/10`
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <div className="space-y-1.5">
+                {(peopleTab === "active"
+                  ? [...followingPeople, ...followerPeople]
+                  : peopleTab === "following"
+                  ? followingPeople
+                  : followerPeople
+                ).map((p) => (
+                  <div
+                    key={p.handle}
+                    className={`flex items-center gap-2 px-2 py-1 transition-colors ${
+                      brightOn ? 'hover:bg-[#94a3b8]/20' : 'hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="relative h-8 w-8 rounded-full bg-primary/20 text-white flex items-center justify-center text-xs font-semibold">
+                      {p.name[0]}
+                      {peopleTab === "active" && <span className="pulse-dot" />}
+                    </div>
+                    <div className="flex-1 leading-tight">
+                      <div className="text-sm text-white flex items-center gap-2 font-bold">
+                        {p.name}
+                        {peopleTab === "active" && (
+                          <span className="text-[10px] text-emerald-400 font-semibold">
+                            • Active
+                          </span>
+                        )}
+                      </div>
+                      <div className={`text-xs font-medium transition-colors duration-300 ${
+                        brightOn ? 'text-gray-400' : 'text-text-muted'
+                      }`}>{p.handle}</div>
+                    </div>
+                    {peopleTab === "followers" ? (
+                      <button className="text-xs rounded-full px-2 py-1 btn-accent">
+                        Follow
+                      </button>
+                    ) : (
+                      <button className="text-xs rounded-full px-2 py-1 bg-white/10 hover:bg-white/20 text-white">
+                        View
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Sponsor section removed per request */}
+          </div>
+        </div>
+      </aside>
+      )}
+      </div>
+    </div>
+  );
+}
