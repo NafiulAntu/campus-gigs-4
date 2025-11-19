@@ -2,15 +2,15 @@ require('dotenv').config();
 const pool = require('./config/db');
 
 async function setupDatabase() {
+  console.log('🔧 Setting up database...\n');
+
   try {
-    console.log('🔧 Setting up database...');
-    
     // Drop existing table
     await pool.query('DROP TABLE IF EXISTS users CASCADE');
     console.log('✓ Dropped existing users table (if any)');
-    
+
     // Create users table with OAuth support
-    const createTableQuery = `
+    await pool.query(`
       CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         full_name VARCHAR(255) NOT NULL,
@@ -23,68 +23,65 @@ async function setupDatabase() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `;
-    await pool.query(createTableQuery);
+    `);
     console.log('✓ Created users table with OAuth support');
-    
-    // Add unique constraint for OAuth
-    await pool.query('ALTER TABLE users ADD CONSTRAINT unique_provider_id UNIQUE (provider, provider_id)');
+
+    // Add unique constraint for OAuth providers
+    await pool.query(`
+      ALTER TABLE users 
+      ADD CONSTRAINT unique_provider_id 
+      UNIQUE (provider, provider_id)
+    `);
     console.log('✓ Added unique provider constraint');
-    
-    // Create indexes
+
+    // Create indexes for better performance
     await pool.query('CREATE INDEX idx_users_email ON users(email)');
     console.log('✓ Created email index');
-    
-    await pool.query('CREATE INDEX idx_users_provider ON users(provider)');
+
+    await pool.query('CREATE INDEX idx_users_provider ON users(provider, provider_id)');
     console.log('✓ Created provider index');
-    
-    // Create update trigger function
-    const createFunctionQuery = `
+
+    // Create function to update updated_at timestamp
+    await pool.query(`
       CREATE OR REPLACE FUNCTION update_updated_at_column()
       RETURNS TRIGGER AS $$
       BEGIN
         NEW.updated_at = CURRENT_TIMESTAMP;
         RETURN NEW;
       END;
-      $$ LANGUAGE plpgsql
-    `;
-    await pool.query(createFunctionQuery);
+      $$ language 'plpgsql'
+    `);
     console.log('✓ Created update function');
-    
-    // Create trigger
-    const createTriggerQuery = `
+
+    // Create trigger to auto-update updated_at
+    await pool.query(`
       CREATE TRIGGER update_users_updated_at
       BEFORE UPDATE ON users
       FOR EACH ROW
       EXECUTE FUNCTION update_updated_at_column()
-    `;
-    await pool.query(createTriggerQuery);
+    `);
     console.log('✓ Created update trigger');
-    
-    // Verify table structure
-    const result = await pool.query(`
+
+    // Show table structure
+    const tableInfo = await pool.query(`
       SELECT column_name, data_type, is_nullable
       FROM information_schema.columns
       WHERE table_name = 'users'
       ORDER BY ordinal_position
     `);
-    
-    console.log('\n📊 Users table structure:');
-    result.rows.forEach(col => {
+
+    console.log('\n📋 Users table structure:');
+    tableInfo.rows.forEach(col => {
       console.log(`  - ${col.column_name}: ${col.data_type} ${col.is_nullable === 'NO' ? '(required)' : ''}`);
     });
-    
+
     console.log('\n✅ Database setup complete!');
-    console.log('🎉 Ready to accept signup/signin requests');
-    
+    console.log('🚀 Ready to accept signup/signin requests');
     process.exit(0);
+
   } catch (error) {
     console.error('❌ Database setup failed:', error.message);
-    console.error('\n💡 Troubleshooting:');
-    console.error('   1. Check PostgreSQL is running');
-    console.error('   2. Verify database "PG Antu" exists');
-    console.error('   3. Check password in .env file');
-    console.error('   4. Try: ALTER USER postgres PASSWORD \'antu@1972\';');
+    console.error('Full error:', error);
     process.exit(1);
   }
 }

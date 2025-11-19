@@ -1,23 +1,39 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const pool = require('./config/db');
-require('dotenv').config();
 
 const app = express();
 
-// Test database connection
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
+// Enhanced database connection check
+async function checkDatabaseConnection() {
+  try {
+    const result = await pool.query('SELECT NOW(), current_database() as db');
+    console.log('✅ Database connected:', result.rows[0].db);
+    console.log('✅ Server time:', result.rows[0].now);
+    
+    // Check if users table exists
+    const tableCheck = await pool.query(
+      "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')"
+    );
+    
+    if (tableCheck.rows[0].exists) {
+      const count = await pool.query('SELECT COUNT(*) FROM users');
+      console.log(`✅ Users table ready (${count.rows[0].count} users)`);
+    } else {
+      console.log('⚠️  Users table not found. Run: node setup-database.js');
+    }
+  } catch (err) {
     console.error('❌ Database connection error:', err.message);
-    console.log('⚠️  Please check your .env file and PostgreSQL password');
-  } else {
-    console.log('✅ Database connected at:', res.rows[0].now);
+    console.log('⚠️  Please check your .env file and PostgreSQL configuration');
   }
-});
+}
+
+checkDatabaseConnection();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3007', 'http://localhost:3006', 'http://localhost:3005', 'http://localhost:3004', 'http://localhost:5173'],
+  origin: ['http://localhost:3000'],
   credentials: true
 }));
 app.use(express.json());
