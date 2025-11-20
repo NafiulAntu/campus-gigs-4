@@ -27,12 +27,12 @@ export default function Notifications({ onBack }) {
   }, [openMenuId, showSettingsMenu]);
 
   const handleMenuAction = (action, notifId) => {
-    console.log(`${action} notification ${notifId}`);
+    // Handle notification actions (delete, mute, etc.)
     setOpenMenuId(null);
   };
 
   const handleSettingsAction = (setting) => {
-    console.log(`Toggle ${setting}`);
+    // Handle notification settings toggle
     setShowSettingsMenu(false);
   };
 

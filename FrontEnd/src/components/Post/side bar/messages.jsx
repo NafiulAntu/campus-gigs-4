@@ -24,7 +24,6 @@ export default function Messages({ onBack }) {
   }, [showChatMenu]);
 
   const handleMenuAction = (action) => {
-    console.log(`${action} action`);
     if (action === "details") {
       setShowDetails(!showDetails);
     }

@@ -131,7 +131,6 @@ export default function Sidebar({ onNavigate = () => {} }) {
               onClick={() => {
                 setShowAccountMenu(false);
                 // Add logout logic here
-                console.log('Logout clicked');
               }}
               className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3"
             >
@@ -142,7 +141,6 @@ export default function Sidebar({ onNavigate = () => {} }) {
               onClick={() => {
                 setShowAccountMenu(false);
                 // Add another account logic here
-                console.log('Add account clicked');
               }}
               className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 border-t border-white/10"
             >

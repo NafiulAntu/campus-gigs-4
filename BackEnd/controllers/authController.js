@@ -7,44 +7,35 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 // Signup Controller
 exports.signup = async (req, res) => {
   try {
-    console.log('📝 Signup request received:', req.body);
     const { full_name, email, password, confirm_password, terms_agreed } = req.body;
 
     // Validation
     if (!full_name || !email || !password || !confirm_password) {
-      console.log('❌ Validation failed: Missing fields');
       return res.status(400).json({ message: 'All fields are required' });
     }
 
     if (password !== confirm_password) {
-      console.log('❌ Validation failed: Passwords do not match');
       return res.status(400).json({ message: 'Passwords do not match' });
     }
 
     if (password.length < 6) {
-      console.log('❌ Validation failed: Password too short');
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
     if (!terms_agreed) {
-      console.log('❌ Validation failed: Terms not agreed');
       return res.status(400).json({ message: 'You must agree to terms' });
     }
 
     // Check if user exists
-    console.log('🔍 Checking if user exists...');
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      console.log('❌ User already exists:', email);
       return res.status(400).json({ message: 'Email already registered' });
     }
 
     // Hash password
-    console.log('🔒 Hashing password...');
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user with terms_agreed
-    console.log('📥 Creating user in database...');
     const user = await User.create({
       full_name,
       email,
@@ -52,7 +43,6 @@ exports.signup = async (req, res) => {
       terms_agreed: true,
       provider: 'local'
     });
-    console.log('✅ User created successfully:', user.id);
 
     // Generate token
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
@@ -144,8 +134,6 @@ exports.forgotPassword = async (req, res) => {
     // In production, send email with reset link
     // For now, return the token (you'll integrate email service later)
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-
-    console.log('🔑 Password reset link:', resetLink);
 
     res.json({
       message: 'If email exists, reset link will be sent',

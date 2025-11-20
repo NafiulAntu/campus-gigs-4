@@ -22,7 +22,7 @@ async function checkDatabaseConnection() {
       const count = await pool.query('SELECT COUNT(*) FROM users');
       console.log(`✅ Users table ready (${count.rows[0].count} users)`);
     } else {
-      console.log('⚠️  Users table not found. Run: node setup-database.js');
+      console.log('⚠️  Users table not found.');
     }
   } catch (err) {
     console.error('❌ Database connection error:', err.message);
@@ -43,11 +43,13 @@ app.use(express.urlencoded({ extended: true }));
 // Initialize Passport
 app.use(passport.initialize());
 
-// Request logging
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`, req.body);
-  next();
-});
+// Request logging (disable in production)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+  });
+}
 
 // Routes
 const authRoutes = require('./routes/authRoutes');
