@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const { protect } = require('../middleware/authMiddleware');
 
-// User endpoints
+// Public routes
 router.get('/users', userController.getAllUsers);           // GET /api/users
-router.get('/users/:id', userController.getUserById);       // GET /api/users/:id
-router.post('/users', userController.createUser);           // POST /api/users
-router.put('/users/:id', userController.updateUser);        // PUT /api/users/:id
-router.delete('/users/:id', userController.deleteUser);     // DELETE /api/users/:id
+
+// Protected routes (require JWT token)
+router.get('/users/:id', protect, userController.getUserById);       // GET /api/users/:id
+router.post('/users', protect, userController.createUser);           // POST /api/users
+router.put('/users/:id', protect, userController.updateUser);        // PUT /api/users/:id
+router.delete('/users/:id', protect, userController.deleteUser);     // DELETE /api/users/:id
 
 module.exports = router;
