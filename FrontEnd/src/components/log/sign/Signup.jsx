@@ -204,8 +204,8 @@ export default function Signup() {
               />
               <span>
                 I agree to the{" "}
-                <a href="#" className="terms-link">Terms</a> and{" "}
-                <a href="#" className="terms-link">Privacy Policy</a>
+                <Link to="/terms" className="terms-link" target="_blank">Terms</Link> and{" "}
+                <Link to="/privacy" className="terms-link" target="_blank">Privacy Policy</Link>
               </span>
             </label>
 
