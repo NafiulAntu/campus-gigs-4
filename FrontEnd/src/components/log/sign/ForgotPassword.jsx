@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { forgotPassword } from '../services/api';
+import { forgotPassword } from '../../../services/api';
 import { FaEnvelope, FaArrowLeft } from 'react-icons/fa';
 import { Canvas } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";

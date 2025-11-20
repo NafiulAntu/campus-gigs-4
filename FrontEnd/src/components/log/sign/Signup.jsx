@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { signup, oauthGoogle, oauthGithub, oauthLinkedIn } from '../services/api';
+import { signup, oauthGoogle, oauthGithub, oauthLinkedIn } from '../../../services/api';
 import { FaEnvelope, FaLock, FaUser, FaEye, FaEyeSlash, FaCheckCircle } from "react-icons/fa";
-import GmailIcon from "../assets/icons/GmailIcon";
-import GitHubIcon from "../assets/icons/GitHubIcon";
-import LinkedInIcon from "../assets/icons/LinkedInIcon";
+import GmailIcon from "../../../assets/icons/GmailIcon";
+import GitHubIcon from "../../../assets/icons/GitHubIcon";
+import LinkedInIcon from "../../../assets/icons/LinkedInIcon";
 import { Canvas } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 import { motion, useMotionValue, useMotionTemplate, animate } from "framer-motion";

@@ -3,17 +3,17 @@ import { Routes, Route, useLocation, Navigate, useSearchParams } from "react-rou
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { Box, CircularProgress } from "@mui/material";
-import { handleAuthCallback } from '../services/api';
+import { handleAuthCallback } from '../services/api.js';
 
 // Lazy load components for better performance
-const Hero = lazy(() => import("./Hero.jsx"));
-const Login = lazy(() => import("./Signin.jsx"));
-const Signup = lazy(() => import("./Signup.jsx"));
-const Footer = lazy(() => import("./Footer.jsx"));
+const Hero = lazy(() => import("./Interface/Hero.jsx"));
+const Login = lazy(() => import("./log/sign/Signin.jsx"));
+const Signup = lazy(() => import("./log/sign/Signup.jsx"));
+const Footer = lazy(() => import("./Interface/Footer.jsx"));
 const PostPage = lazy(() => import("./Post/PostPage.jsx"));
-const ForgotPassword = lazy(() => import("./ForgotPassword.jsx"));
-const ResetPassword = lazy(() => import("./ResetPassword.jsx"));
-const AuthLayout = lazy(() => import("./AuthLayout.jsx"));
+const ForgotPassword = lazy(() => import("./log/sign/ForgotPassword.jsx"));
+const ResetPassword = lazy(() => import("./log/sign/ResetPassword.jsx"));
+const AuthLayout = lazy(() => import("./Interface/AuthLayout.jsx"));
 
 // Loading fallback component
 const LoadingFallback = () => (

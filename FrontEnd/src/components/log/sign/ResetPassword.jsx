@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { resetPassword } from '../services/api';
+import { resetPassword } from '../../../services/api';
 import { FaLock, FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa';
 import { Canvas } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
