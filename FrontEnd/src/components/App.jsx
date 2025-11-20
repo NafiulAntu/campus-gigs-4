@@ -11,6 +11,9 @@ const Login = lazy(() => import("./Signin.jsx"));
 const Signup = lazy(() => import("./Signup.jsx"));
 const Footer = lazy(() => import("./Footer.jsx"));
 const PostPage = lazy(() => import("./Post/PostPage.jsx"));
+const ForgotPassword = lazy(() => import("./ForgotPassword.jsx"));
+const ResetPassword = lazy(() => import("./ResetPassword.jsx"));
+const AuthLayout = lazy(() => import("./AuthLayout.jsx"));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -71,7 +74,7 @@ function CallbackHandler() {
 
 export default function App() {
   const location = useLocation();
-  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback"];
+  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/reset-password"];
   const shouldHideFooter = hideFooterOn.includes(
     location.pathname.toLowerCase()
   );
@@ -86,6 +89,8 @@ export default function App() {
               <Route path="/" element={<Hero />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
+              <Route path="/reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
               <Route path="/post" element={<PostPage />} />
               <Route path="/auth/callback" element={<CallbackHandler />} />
               <Route path="*" element={<Navigate to="/" replace />} />
