@@ -20,14 +20,14 @@ export default function ForgotPassword() {
   React.useEffect(() => {
     const controls = animate(color, COLORS, {
       ease: 'easeInOut',
-      duration: 10,
+      duration: 0,
       repeat: Infinity,
       repeatType: 'mirror',
     });
     return () => controls.stop();
   }, [color]);
 
-  const backgroundImage = useMotionTemplate`radial-gradient(125% 125% at 50% 0%, #020617 50%, ${color})`;
+  const backgroundImage = useMotionTemplate`radial-gradient(150% 150% at 100% 0%, #020617 50%, ${color})`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,7 +65,7 @@ export default function ForgotPassword() {
       />
       <div className="fixed inset-0 z-0">
         <Canvas camera={{ position: [0, 0, 1] }}>
-          <Stars radius={50} depth={50} count={7000} factor={4} />
+          <Stars radius={200} depth={50} count={6000} factor={4} />
         </Canvas>
       </div>
 

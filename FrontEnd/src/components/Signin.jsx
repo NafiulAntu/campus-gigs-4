@@ -33,7 +33,7 @@ export default function Signin() {
     return () => controls.stop();
   }, [color]);
 
-  const backgroundImage = useMotionTemplate`radial-gradient(125% 125% at 50% 0%, #020617 50%, ${color})`;
+  const backgroundImage = useMotionTemplate`radial-gradient(180% 160% at 100% 0%, #020617 50%, ${color})`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

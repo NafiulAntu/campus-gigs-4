@@ -24,7 +24,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const COLORS = ["#ef4444", "#0ea5e9", "#14b8a6", "#3b82f6"];
+  const COLORS = ["#ef4444 ", "#0ea5e9", "#14b8a6", "#3b82f6"];
   const color = useMotionValue(COLORS[0]);
 
   React.useEffect(() => {
@@ -37,7 +37,7 @@ export default function Signup() {
     return () => controls.stop();
   }, [color]);
 
-  const backgroundImage = useMotionTemplate`radial-gradient(125% 125% at 50% 0%, #020617 50%, ${color})`;
+  const backgroundImage = useMotionTemplate`radial-gradient(200% 140% at 50% 0%, #020617 50%, ${color})`;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
