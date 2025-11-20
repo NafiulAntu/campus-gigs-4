@@ -11,6 +11,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
 
   // Aurora animation colors
   const COLORS = [];
@@ -26,6 +27,13 @@ export default function ForgotPassword() {
     return () => controls.stop();
   }, [color]);
 
+  React.useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
+
   const backgroundImage = useMotionTemplate`radial-gradient(0% 0% at 0% 0%, #020617 100%, ${color})`;
 
   const handleSubmit = async (e) => {
@@ -37,9 +45,27 @@ export default function ForgotPassword() {
     try {
       await forgotPassword({ email });
       setSuccess('Password reset link sent to your email!');
-      setEmail('');
+      setResendTimer(60); // 60 seconds cooldown
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to send reset link. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (resendTimer > 0 || !email) return;
+    
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      await forgotPassword({ email });
+      setSuccess('Password reset link resent to your email!');
+      setResendTimer(60);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend reset link. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -95,7 +121,8 @@ export default function ForgotPassword() {
             fontSize: '15px',
             lineHeight: '1.6'
           }}>
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and
+            we'll send you a link to reset your password.
           </p>
 
           <form onSubmit={handleSubmit} className="signin-form">
@@ -137,35 +164,52 @@ export default function ForgotPassword() {
             )}
             
             {success && (
-              <p style={{ 
-                color: '#10b981', 
-                marginTop: '16px', 
-                fontSize: '14px', 
-                textAlign: 'center',
-                padding: '12px',
-                background: 'rgba(16, 185, 129, 0.1)',
-                borderRadius: '8px',
-                border: '1px solid rgba(16, 185, 129, 0.3)'
-              }}>
-                ✓ {success}
-              </p>
+              <div style={{ marginTop: '16px' }}>
+                <p style={{ 
+                  color: '#10b981', 
+                  fontSize: '14px', 
+                  textAlign: 'center',
+                  padding: '12px',
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  marginBottom: '12px'
+                }}>
+                  ✓ {success}
+                </p>
+                <div style={{ textAlign: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resendTimer > 0 || loading}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: resendTimer > 0 ? 'rgba(255, 255, 255, 0.4)' : '#3b82f6',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: resendTimer > 0 ? 'not-allowed' : 'pointer',
+                      textDecoration: resendTimer > 0 ? 'none' : 'underline',
+                      padding: '4px 8px',
+                      transition: 'color 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (resendTimer === 0 && !loading) {
+                        e.target.style.color = '#10b981';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (resendTimer === 0 && !loading) {
+                        e.target.style.color = '#3b82f6';
+                      }
+                    }}
+                  >
+                    {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend Link'}
+                  </button>
+                </div>
+              </div>
             )}
           </form>
-
-          <div style={{ 
-            textAlign: 'center', 
-            marginTop: '28px', 
-            fontSize: '15px', 
-            color: 'rgba(255, 255, 255, 0.7)' 
-          }}>
-            Remember your password?{' '}
-            <Link 
-              to="/login" 
-              className="signup-link"
-            >
-              Sign In
-            </Link>
-          </div>
         </div>
       </div>
     </div>
