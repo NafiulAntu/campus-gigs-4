@@ -19,7 +19,11 @@ export const signin = (data) => API.post('/auth/signin', data);
 export const forgotPassword = (data) => API.post('/auth/forgot-password', data);
 export const resetPassword = (data) => API.post('/auth/reset-password', data);
 
-// OAuth Redirects
+// Protected Endpoints (require JWT token)
+export const getProfile = () => API.get('/auth/profile');
+export const updateProfile = (data) => API.put('/auth/profile', data);
+
+// OAuth Redirects - These will redirect to backend OAuth routes
 export const oauthGoogle = () => (window.location.href = '/api/auth/google');
 export const oauthGithub = () => (window.location.href = '/api/auth/github');
 export const oauthLinkedIn = () => (window.location.href = '/api/auth/linkedin');

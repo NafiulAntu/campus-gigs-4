@@ -42,7 +42,7 @@ export default function Signin() {
     setLoading(true);
     
     try {
-      const res = await signin({ email, password });
+      const res = await signin({ email, password, rememberMe });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       setSuccess('Login successful! Redirecting...');

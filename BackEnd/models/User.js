@@ -75,6 +75,13 @@ class User {
     const result = await pool.query(query, [id]);
     return result.rows[0];
   }
+
+  // Update password
+  static async updatePassword(id, hashedPassword) {
+    const query = 'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id';
+    const result = await pool.query(query, [hashedPassword, id]);
+    return result.rows[0];
+  }
 }
 
 module.exports = User;
