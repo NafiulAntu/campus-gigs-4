@@ -61,10 +61,12 @@ if (process.env.NODE_ENV !== 'production') {
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
+const studentRoutes = require('./routes/studentRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api/teachers', teacherRoutes);
+app.use('/api/students', studentRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 
