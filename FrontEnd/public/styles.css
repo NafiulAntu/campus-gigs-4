@@ -1523,8 +1523,8 @@ input[type="range"]::-webkit-slider-thumb:active {
   border-radius: 10px;
   font-size: 1rem;
   font-weight: 600;
-  color: #e8edf2;
-  background: rgba(255, 255, 255, 0.05);
+  color: #3b82f6;
+  background: #000000;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
 }
@@ -1540,7 +1540,7 @@ input.signin-input:focus-visible {
   outline: none !important;
   border: 1px solid #4a90e2 !important;
   border-color: #4a90e2 !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: #000000 !important;
   box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15) !important;
 }
 
@@ -1876,15 +1876,15 @@ input.signin-input:focus-visible {
   border-radius: 10px;
   font-size: 1rem;
   font-weight: 600;
-  color: #e8edf2;
-  background: rgba(255, 255, 255, 0.05);
+  color: #3b82f6;
+  background: #000000;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
 }
 
 .signup-input:hover {
   border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.08);
+  background: #000000;
 }
 
 .signup-form .input-wrapper input.signup-input:focus,
@@ -1897,7 +1897,7 @@ input[type="password"].signup-input:focus {
   outline: none !important;
   border: 1px solid #4a90e2 !important;
   border-color: #4a90e2 !important;
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: #000000 !important;
   box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.15) !important;
 }
 
@@ -1942,7 +1942,7 @@ input[type="password"].signup-input:focus {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
+  color: rgb(8, 8, 8);
   font-size: 11px;
   font-weight: bold;
 }
