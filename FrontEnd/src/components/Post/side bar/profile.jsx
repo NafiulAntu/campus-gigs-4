@@ -482,24 +482,18 @@ export default function Profile({ onBack }) {
           <div className="space-y-6">
             {/* Saved Profile Banner */}
             {viewMode === 'saved' && (
-              <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/40 rounded-xl p-6 shadow-lg">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                      <i className="fi fi-br-check text-white text-2xl"></i>
-                    </div>
-                    <div>
-                      <h3 className="text-white font-bold text-lg mb-1">✨ Profile Saved Successfully!</h3>
-                      <p className="text-text-muted text-sm">Your profile is now up to date. Click edit to make changes anytime.</p>
-                    </div>
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <i className="fi fi-br-check-circle text-green-400 text-xl"></i>
+                    <span className="text-white font-semibold">Profile saved successfully</span>
                   </div>
                   <button
                     onClick={handleEnableEdit}
                     type="button"
-                    className="px-8 py-3 bg-gradient-to-r from-primary-teal to-blue-500 text-white rounded-lg hover:opacity-90 transition-all font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                    className="px-4 py-2 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/90 transition-colors font-semibold text-sm"
                   >
-                    <i className="fi fi-br-pencil"></i>
-                    Edit Profile
+                    Edit
                   </button>
                 </div>
               </div>
