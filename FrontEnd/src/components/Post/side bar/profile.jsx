@@ -10,7 +10,7 @@ import {
 
 const Switcher8 = ({ isChecked, onChange }) => {
   return (
-    <label className='flex cursor-pointer select-none items-center'>
+    <label className='flex cursor-pointer select-none items-center group'>
       <div className='relative'>
         <input
           type='checkbox'
@@ -19,17 +19,17 @@ const Switcher8 = ({ isChecked, onChange }) => {
           className='sr-only'
         />
         <div
-          className={`box h-5 w-14 rounded-full shadow-inner transition ${
-            isChecked ? 'bg-[#EAEEFB]' : 'bg-dark'
+          className={`h-6 w-11 rounded-full transition-all duration-300 ease-in-out ${
+            isChecked 
+              ? 'bg-gradient-to-r from-primary-teal to-blue-500 shadow-lg shadow-primary-teal/30' 
+              : 'bg-white/10 border border-white/20'
           }`}
         ></div>
-        <div className='dot shadow-switch-1 absolute left-0 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-white transition'>
-          <span
-            className={`active h-4 w-4 rounded-full border ${
-              isChecked ? 'bg-primary border-white' : 'bg-white border-dark'
-            }`}
-          ></span>
-        </div>
+        <div
+          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow-md transition-all duration-300 ease-in-out transform ${
+            isChecked ? 'translate-x-5' : 'translate-x-0'
+          } group-hover:scale-110`}
+        ></div>
       </div>
     </label>
   );
@@ -1123,58 +1123,97 @@ export default function Profile({ onBack }) {
 
         {/* Privacy Tab */}
         {activeTab === "privacy" && (
-          <div className="bg-white/[0.04] rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <h2 className="text-xl font-bold text-white">Privacy Settings</h2>
-              <i className="fi fi-br-lock text-primary-teal text-sm"></i>
-            </div>
-            <div className="space-y-4">
-              {[
-                { 
-                  label: "Make my profile public", 
-                  desc: "Anyone can view your profile",
-                  key: "publicProfile"
-                },
-                { 
-                  label: "Show my email to others", 
-                  desc: "Your email will be visible on your profile",
-                  key: "showEmail"
-                },
-                { 
-                  label: "Allow messages from anyone", 
-                  desc: "Receive messages from all users",
-                  key: "allowMessages"
-                },
-                { 
-                  label: "Show online status", 
-                  desc: "Let others see when you're active",
-                  key: "showOnlineStatus"
-                },
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between py-3 border-b border-white/10 last:border-0">
-                  <div>
-                    <p className="font-semibold text-white">{item.label}</p>
-                    <p className="text-sm text-text-muted">{item.desc}</p>
-                  </div>
-                  <Switcher8
-                    isChecked={privacyToggles[item.key]}
-                    onChange={() => setPrivacyToggles(prev => ({
-                      ...prev,
-                      [item.key]: !prev[item.key]
-                    }))}
-                  />
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="bg-white/[0.04] rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-10 w-10 bg-gradient-to-br from-primary-teal to-blue-500 rounded-lg flex items-center justify-center">
+                  <i className="fi fi-br-lock text-white text-lg"></i>
                 </div>
-              ))}
-
-              <div className="pt-4">
-                <button 
-                  onClick={handleDeleteAccount}
-                  type="button"
-                  className="text-rose-400 hover:text-rose-300 font-semibold transition-colors"
-                >
-                  Delete Account
-                </button>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Privacy & Security</h2>
+                  <p className="text-sm text-text-muted">Manage your privacy preferences</p>
+                </div>
               </div>
+            </div>
+
+            {/* Privacy Options */}
+            <div className="bg-white/[0.04] rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <i className="fi fi-br-eye text-primary-teal"></i>
+                Visibility Settings
+              </h3>
+              <div className="space-y-3">
+                {[
+                  { 
+                    label: "Make my profile public", 
+                    desc: "Anyone can view your profile",
+                    icon: "fi-br-globe",
+                    key: "publicProfile"
+                  },
+                  { 
+                    label: "Show my email to others", 
+                    desc: "Your email will be visible on your profile",
+                    icon: "fi-br-envelope",
+                    key: "showEmail"
+                  },
+                  { 
+                    label: "Allow messages from anyone", 
+                    desc: "Receive messages from all users",
+                    icon: "fi-br-comment",
+                    key: "allowMessages"
+                  },
+                  { 
+                    label: "Show online status", 
+                    desc: "Let others see when you're active",
+                    icon: "fi-br-signal-alt",
+                    key: "showOnlineStatus"
+                  },
+                ].map((item, idx) => (
+                  <div 
+                    key={idx} 
+                    className="group p-4 bg-black/40 border border-white/10 rounded-lg hover:border-primary-teal/30 transition-all duration-300"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className="h-10 w-10 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary-teal/20 transition-colors">
+                          <i className={`fi ${item.icon} text-primary-teal text-lg`}></i>
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-white mb-1">{item.label}</p>
+                          <p className="text-sm text-text-muted leading-relaxed">{item.desc}</p>
+                        </div>
+                      </div>
+                      <div className="ml-4">
+                        <Switcher8
+                          isChecked={privacyToggles[item.key]}
+                          onChange={() => setPrivacyToggles(prev => ({
+                            ...prev,
+                            [item.key]: !prev[item.key]
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div className="bg-white/[0.04] rounded-xl p-6 border border-rose-500/20">
+              <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                <i className="fi fi-br-exclamation text-rose-400"></i>
+                Danger Zone
+              </h3>
+              <p className="text-sm text-text-muted mb-4">Irreversible actions that affect your account</p>
+              <button 
+                onClick={handleDeleteAccount}
+                type="button"
+                className="px-6 py-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-lg hover:bg-rose-500/20 hover:border-rose-500/50 transition-all font-semibold flex items-center gap-2"
+              >
+                <i className="fi fi-br-trash"></i>
+                Delete Account Permanently
+              </button>
             </div>
             {/* Simple Save Button */}
             <div className="flex justify-end mt-6">
