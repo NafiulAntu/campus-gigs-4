@@ -44,3 +44,24 @@ export const handleAuthCallback = (searchParams) => {
     alert('Auth failed—try again.');
   }
 };
+
+// Teacher Profile API
+export const createOrUpdateTeacherProfile = (data) => API.post('/teachers/profile', data);
+export const getTeacherProfile = (username) => API.get(`/teachers/${username}`);
+export const getMyTeacherProfile = () => API.get('/teachers/profile/me');
+export const deleteTeacherProfile = () => API.delete('/teachers/profile');
+export const getAllTeachers = (params) => API.get('/teachers', { params });
+
+// Student Profile API
+export const createOrUpdateStudentProfile = (data) => API.post('/students/profile', data);
+export const getStudentProfile = (username) => API.get(`/students/${username}`);
+export const getMyStudentProfile = () => API.get('/students/profile/me');
+export const deleteStudentProfile = () => API.delete('/students/profile');
+export const getAllStudents = (params) => API.get('/students', { params });
+
+// Employee Profile API
+export const createOrUpdateEmployeeProfile = (data) => API.post('/employees/profile', data);
+export const getEmployeeProfile = (username) => API.get(`/employees/${username}`);
+export const getMyEmployeeProfile = () => API.get('/employees/profile/me');
+export const deleteEmployeeProfile = () => API.delete('/employees/profile');
+export const getAllEmployees = (params) => API.get('/employees', { params });

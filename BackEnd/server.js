@@ -6,6 +6,7 @@ const sequelize = require('./config/sequelize');
 const passport = require('./config/passport');
 const Teacher = require('./models/Teacher');
 const Employee = require('./models/Employee');
+const Student = require('./models/Student');
 
 const app = express();
 
@@ -16,9 +17,9 @@ async function checkDatabaseConnection() {
     console.log('✅ Database connected:', result.rows[0].db);
     console.log('✅ Server time:', result.rows[0].now);
     
-    // Sync Teacher and Employee models with database
+    // Sync Teacher, Student, and Employee models with database
     await sequelize.sync({ alter: true });  // Use { force: true } for dev only
-    console.log('✅ Teacher and Employee models synced with database');
+    console.log('✅ Teacher, Student, and Employee models synced with database');
     
     // Check if users table exists
     const tableCheck = await pool.query(
@@ -41,11 +42,11 @@ checkDatabaseConnection();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000'],
+  origin: ['http://localhost:3004', 'http://localhost:3005', 'http://localhost:5173'],
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 // Initialize Passport
 app.use(passport.initialize());
@@ -53,22 +54,42 @@ app.use(passport.initialize());
 // Request logging (disable in production)
 if (process.env.NODE_ENV !== 'production') {
   app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
+    console.log(`📥 ${req.method} ${req.path}`);
+    next();
+  });
+  
+  // Log 404 errors
+  app.use((req, res, next) => {
+    const originalSend = res.send;
+    res.send = function(data) {
+      if (res.statusCode === 404) {
+        console.log(`❌ 404 Not Found: ${req.method} ${req.path}`);
+      }
+      originalSend.call(this, data);
+    };
     next();
   });
 }
 
 // Routes
-const Employee = require('./models/Employee');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const studentRoutes = require('./routes/studentRoutes');
+const employeeRoutes = require('./routes/employeeRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/students', studentRoutes);
+app.use('/api/employees', employeeRoutes);
+
+// Simple route test
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working!', timestamp: new Date().toISOString() });
+});
+
+console.log('\n✅ All routes registered successfully');
 
 app.get('/', (req, res) => {
   res.json({ 
