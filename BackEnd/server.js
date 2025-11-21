@@ -2,7 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const pool = require('./config/db');
+const sequelize = require('./config/sequelize');
 const passport = require('./config/passport');
+const Teacher = require('./models/Teacher');
 
 const app = express();
 
@@ -12,6 +14,10 @@ async function checkDatabaseConnection() {
     const result = await pool.query('SELECT NOW(), current_database() as db');
     console.log('✅ Database connected:', result.rows[0].db);
     console.log('✅ Server time:', result.rows[0].now);
+    
+    // Sync Teacher model with database
+    await sequelize.sync({ alter: true });  // Use { force: true } for dev only
+    console.log('✅ Teacher model synced with database');
     
     // Check if users table exists
     const tableCheck = await pool.query(
@@ -54,9 +60,11 @@ if (process.env.NODE_ENV !== 'production') {
 // Routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
+app.use('/api/teachers', teacherRoutes);
 
 app.get('/', (req, res) => {
   res.json({ 
@@ -65,7 +73,9 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: {
         signup: 'POST /api/auth/signup',
-        signin: 'POST /api/auth/signin'
+        signin: 'POST /api/auth/signin',
+        forgotPassword: 'POST /api/auth/forgot-password',
+        resetPassword: 'POST /api/auth/reset-password'
       },
       users: {
         getAll: 'GET /api/users',
@@ -73,6 +83,10 @@ app.get('/', (req, res) => {
         create: 'POST /api/users',
         update: 'PUT /api/users/:id',
         delete: 'DELETE /api/users/:id'
+      },
+      teachers: {
+        createOrUpdateProfile: 'POST /api/teachers/profile (auth required)',
+        getProfile: 'GET /api/teachers/:username (auth required)'
       }
     }
   });
