@@ -5,6 +5,7 @@ const pool = require('./config/db');
 const sequelize = require('./config/sequelize');
 const passport = require('./config/passport');
 const Teacher = require('./models/Teacher');
+const Employee = require('./models/Employee');
 
 const app = express();
 
@@ -15,9 +16,9 @@ async function checkDatabaseConnection() {
     console.log('✅ Database connected:', result.rows[0].db);
     console.log('✅ Server time:', result.rows[0].now);
     
-    // Sync Teacher model with database
+    // Sync Teacher and Employee models with database
     await sequelize.sync({ alter: true });  // Use { force: true } for dev only
-    console.log('✅ Teacher model synced with database');
+    console.log('✅ Teacher and Employee models synced with database');
     
     // Check if users table exists
     const tableCheck = await pool.query(
@@ -58,6 +59,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Routes
+const Employee = require('./models/Employee');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
