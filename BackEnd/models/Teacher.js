@@ -15,10 +15,19 @@ const Teacher = sequelize.define('Teacher', {
             key: 'id'
         }
     },
+    fullName: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        field: 'full_name'
+    },
     username: {
         type: DataTypes.STRING(255),
         allowNull: false,
         unique: true
+    },
+    phone: {
+        type: DataTypes.STRING(50),
+        allowNull: true
     },
     coverPicUrl: {
         type: DataTypes.TEXT,

@@ -109,7 +109,10 @@ export default function Profile({ onBack }) {
         const profile = response.data.data;
         setProfileData(prev => ({
           ...prev,
+          fullName: profile.fullName || profile.user?.full_name || prev.fullName,
           username: profile.username || "",
+          email: profile.user?.email || prev.email,
+          phone: profile.phone || "",
           bio: profile.bio || "",
           location: profile.location || "",
           websiteUrl: profile.websiteUrl || "",
@@ -162,6 +165,8 @@ export default function Profile({ onBack }) {
       const payload = {
         username: profileData.username,
         fullName: profileData.fullName,
+        phone: profileData.phone || '',
+        profilePicUrl: user?.profile_picture || '',
         bio: profileData.bio,
         location: profileData.location,
         websiteUrl: profileData.websiteUrl,
@@ -193,13 +198,14 @@ export default function Profile({ onBack }) {
         setHasUnsavedChanges(false);
         setEditingSection(null);
         
-        // Update localStorage with all user data including profession
+        // Update localStorage with all user data including profession and profile picture
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         const updatedUser = {
           ...currentUser,
           full_name: profileData.fullName,
           username: profileData.username,
-          profession: selectedProfession.charAt(0).toUpperCase() + selectedProfession.slice(1)
+          profession: selectedProfession.charAt(0).toUpperCase() + selectedProfession.slice(1),
+          profile_picture: currentUser.profile_picture || user?.profile_picture, // Preserve profile picture
         };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
@@ -323,6 +329,7 @@ export default function Profile({ onBack }) {
             localStorage.setItem('user', JSON.stringify(updatedUser));
             setUser(updatedUser);
           }
+          setHasUnsavedChanges(true);
           setSuccess('Profile picture updated! Remember to save changes.');
           setTimeout(() => setSuccess(''), 3000);
         };
@@ -1243,49 +1250,6 @@ export default function Profile({ onBack }) {
           </div>
         )}
       </div>
-
-      {/* Floating Save Button - appears when there are unsaved changes */}
-      {hasUnsavedChanges && (
-        <div className="fixed bottom-8 right-8 z-50 animate-slide-up">
-          <div className="bg-gradient-to-r from-primary-teal to-blue-500 rounded-xl shadow-2xl p-4 flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-3 w-3 bg-white rounded-full animate-pulse"></div>
-              <span className="text-white font-semibold">You have unsaved changes</span>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  loadProfile();
-                  setHasUnsavedChanges(false);
-                  setEditingSection(null);
-                }}
-                type="button"
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors font-semibold"
-              >
-                Discard
-              </button>
-              <button
-                onClick={handleSaveProfile}
-                disabled={loading}
-                type="button"
-                className="px-6 py-2 bg-white text-primary-teal rounded-lg hover:bg-white/90 transition-colors font-bold flex items-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <i className="fi fi-rr-spinner animate-spin"></i>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <i className="fi fi-br-disk"></i>
-                    Save All Changes
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Success/Error Toast */}
       {(success || error) && (

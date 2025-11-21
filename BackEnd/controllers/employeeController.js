@@ -9,6 +9,7 @@ exports.createOrUpdateEmployee = async (req, res) => {
             userId,
             fullName: req.body.fullName,
             username: req.body.username,
+            phone: req.body.phone || null,
             profilePicUrl: req.body.profilePicUrl,
             coverPicUrl: req.body.coverPicUrl,
             profession: req.body.profession || 'Employee',
@@ -34,6 +35,13 @@ exports.createOrUpdateEmployee = async (req, res) => {
             profession: 'Employee',
             username: req.body.username
         });
+        
+        // Update profile picture in users table if provided
+        if (req.body.profilePicUrl) {
+            await User.update(userId, {
+                profile_picture: req.body.profilePicUrl
+            });
+        }
 
         res.status(200).json({ success: true, data: employee });
     } catch (error) {

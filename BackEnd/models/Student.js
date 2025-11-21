@@ -25,6 +25,10 @@ const Student = sequelize.define('Student', {
         allowNull: false,
         unique: true
     },
+    phone: {
+        type: DataTypes.STRING(50),
+        allowNull: true
+    },
     profilePicUrl: {
         type: DataTypes.TEXT,
         field: 'profile_pic_url'

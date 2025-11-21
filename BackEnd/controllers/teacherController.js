@@ -29,7 +29,9 @@ exports.createOrUpdateTeacher = async (req, res) => {
 
         const teacherData = {
             userId,
+            fullName: req.body.fullName || null,
             username: req.body.username.trim().toLowerCase(),
+            phone: req.body.phone || null,
             coverPicUrl: req.body.coverPicUrl || null,
             profession: req.body.profession || 'Teacher',
             gender: req.body.gender || null,
@@ -54,11 +56,18 @@ exports.createOrUpdateTeacher = async (req, res) => {
             isNew = true;
         }
 
-        // Update users table with profession and username for persistence
+        // Update users table with profession, username, and profile picture for persistence
         await User.updateMetadata(userId, {
             profession: 'Teacher',
             username: req.body.username.trim().toLowerCase()
         });
+        
+        // Update profile picture in users table if provided
+        if (req.body.profilePicUrl) {
+            await User.update(userId, {
+                profile_picture: req.body.profilePicUrl
+            });
+        }
 
         // Get updated user details
         const userResult = await pool.query(

@@ -56,6 +56,7 @@ exports.signup = async (req, res) => {
         id: user.id,
         full_name: user.full_name,
         email: user.email,
+        profile_picture: user.profile_picture || null,
       },
     });
   } catch (error) {
@@ -102,6 +103,7 @@ exports.signin = async (req, res) => {
         username: user.username,
         full_name: user.full_name,
         email: user.email,
+        profile_picture: user.profile_picture,
       },
     });
   } catch (error) {
