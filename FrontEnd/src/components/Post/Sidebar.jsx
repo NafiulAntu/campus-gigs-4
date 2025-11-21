@@ -4,7 +4,16 @@ import { useNavigate } from "react-router-dom";
 export default function Sidebar({ onNavigate = () => {} }) {
   const navigate = useNavigate();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [user, setUser] = useState(null);
   const menuRef = useRef(null);
+
+  // Load user data from localStorage
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -112,12 +121,24 @@ export default function Sidebar({ onNavigate = () => {} }) {
           onClick={() => setShowAccountMenu(!showAccountMenu)}
           title="Account"
         >
-          <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary/30 to-blue-500/30 flex items-center justify-center font-bold text-white text-base transition-all duration-200 group-hover:scale-105">
-            Y
-          </div>
+          {user?.profile_picture ? (
+            <img 
+              src={user.profile_picture} 
+              alt="Profile" 
+              className="h-10 w-10 rounded-full object-cover transition-all duration-200 group-hover:scale-105 border-2 border-transparent group-hover:border-primary-teal"
+            />
+          ) : (
+            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-primary-teal to-blue-500 flex items-center justify-center font-bold text-white text-base transition-all duration-200 group-hover:scale-105">
+              {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
           <div className="flex-col leading-tight flex-1 overflow-hidden hidden 2xl:flex">
-            <span className="font-bold text-white text-[15px] transition-all duration-200 group-hover:text-primary-teal">You</span>
-            <span className="text-[15px] text-text-muted">@you_handle</span>
+            <span className="font-bold text-white text-[15px] transition-all duration-200 group-hover:text-primary-teal truncate">
+              {user?.full_name || 'Your Name'}
+            </span>
+            <span className="text-[15px] text-text-muted truncate">
+              @{user?.username || 'username'}
+            </span>
           </div>
           <div className="text-text-muted transition-all duration-200 group-hover:text-primary-teal hidden 2xl:block">
             <i className="fa-solid fa-ellipsis"></i>
@@ -135,7 +156,7 @@ export default function Sidebar({ onNavigate = () => {} }) {
               className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3"
             >
               <i className="fi fi-br-sign-out-alt text-lg"></i>
-              <span className="font-semibold">Log out @you_handle</span>
+              <span className="font-semibold">Log out @{user?.username || 'username'}</span>
             </button>
             <button
               onClick={() => {

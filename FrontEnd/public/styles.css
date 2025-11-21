@@ -100,6 +100,37 @@ input[placeholder*="Search"]:focus,
   outline-offset: 0 !important;
 }
 
+/* Profile Edit Animations */
+@keyframes slide-up {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-slide-down {
+  animation: slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Remove white borders from search box container and buttons */
 .search-input:focus-visible,
 .search-input:active,
@@ -1942,7 +1973,7 @@ input[type="password"].signup-input:focus {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: rgb(8, 8, 8);
+  color: white;
   font-size: 11px;
   font-weight: bold;
 }

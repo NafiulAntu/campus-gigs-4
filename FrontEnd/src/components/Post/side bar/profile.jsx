@@ -42,6 +42,10 @@ export default function Profile({ onBack }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [user, setUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingSection, setEditingSection] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [viewMode, setViewMode] = useState('editing'); // 'editing' or 'saved'
   
   const [profileData, setProfileData] = useState({
     username: "",
@@ -180,6 +184,16 @@ export default function Profile({ onBack }) {
 
       if (response?.data?.success) {
         setSuccess(response.data.message || "Profile saved successfully!");
+        setViewMode('saved');
+        setHasUnsavedChanges(false);
+        setEditingSection(null);
+        // Update localStorage user data for immediate header update
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        localStorage.setItem('user', JSON.stringify({
+          ...currentUser,
+          full_name: profileData.fullName,
+          username: profileData.username
+        }));
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (err) {
@@ -195,6 +209,51 @@ export default function Profile({ onBack }) {
   // Handle input changes
   const handleInputChange = (field, value) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
+  };
+
+  // Toggle edit mode
+  const toggleEditMode = () => {
+    setIsEditing(!isEditing);
+    if (isEditing && hasUnsavedChanges) {
+      if (!window.confirm('You have unsaved changes. Discard them?')) {
+        return;
+      }
+      loadProfile(); // Reload original data
+      setHasUnsavedChanges(false);
+    }
+  };
+
+  // Save specific section
+  const handleSaveSection = async (sectionName) => {
+    try {
+      setLoading(true);
+      await handleSaveProfile();
+      setEditingSection(null);
+      setHasUnsavedChanges(false);
+      setSuccess(`${sectionName} updated successfully!`);
+      setTimeout(() => setSuccess(""), 2000);
+    } catch (err) {
+      setError(`Failed to save ${sectionName}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cancel editing specific section
+  const handleCancelEdit = (sectionName) => {
+    if (hasUnsavedChanges && !window.confirm('Discard changes?')) {
+      return;
+    }
+    setEditingSection(null);
+    setHasUnsavedChanges(false);
+    loadProfile();
+  };
+
+  // Enable edit mode from saved view
+  const handleEnableEdit = () => {
+    setViewMode('editing');
+    setEditingSection('profile-info');
   };
 
   // Handle interest toggle
@@ -421,11 +480,75 @@ export default function Profile({ onBack }) {
         {/* Profile Tab */}
         {activeTab === "profile" && (
           <div className="space-y-6">
+            {/* Saved Profile Banner */}
+            {viewMode === 'saved' && (
+              <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/40 rounded-xl p-6 shadow-lg">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                      <i className="fi fi-br-check text-white text-2xl"></i>
+                    </div>
+                    <div>
+                      <h3 className="text-white font-bold text-lg mb-1">✨ Profile Saved Successfully!</h3>
+                      <p className="text-text-muted text-sm">Your profile is now up to date. Click edit to make changes anytime.</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleEnableEdit}
+                    type="button"
+                    className="px-8 py-3 bg-gradient-to-r from-primary-teal to-blue-500 text-white rounded-lg hover:opacity-90 transition-all font-bold flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                  >
+                    <i className="fi fi-br-pencil"></i>
+                    Edit Profile
+                  </button>
+                </div>
+              </div>
+            )}
             {/* Basic Information */}
             <div className="bg-white/[0.04] rounded-xl p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <h2 className="text-xl font-bold text-white">Profile Information</h2>
-                <i className="fi fi-br-pencil text-primary-teal text-sm"></i>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-bold text-white">Profile Information</h2>
+                  {editingSection !== 'profile-info' && <i className="fi fi-br-pencil text-primary-teal text-sm"></i>}
+                </div>
+                {editingSection === 'profile-info' ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleCancelEdit('Profile Information')}
+                      type="button"
+                      className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-sm font-semibold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleSaveSection('Profile Information')}
+                      type="button"
+                      disabled={loading}
+                      className="px-4 py-2 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/80 transition-colors text-sm font-semibold flex items-center gap-2"
+                    >
+                      {loading ? (
+                        <>
+                          <i className="fi fi-rr-spinner animate-spin"></i>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fi fi-br-check"></i>
+                          Save
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setEditingSection('profile-info')}
+                    type="button"
+                    className="px-4 py-2 bg-primary-teal/20 text-primary-teal rounded-lg hover:bg-primary-teal/30 transition-colors text-sm font-semibold flex items-center gap-2"
+                  >
+                    <i className="fi fi-br-edit"></i>
+                    Edit
+                  </button>
+                )}
               </div>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -438,7 +561,12 @@ export default function Profile({ onBack }) {
                       value={profileData.fullName}
                       onChange={(e) => handleInputChange('fullName', e.target.value)}
                       placeholder="Your Name"
-                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 hover:border-white/40 transition-all"
+                      readOnly={editingSection !== 'profile-info'}
+                      className={`w-full px-4 py-3 bg-black border rounded-lg text-white focus:outline-none transition-all ${
+                        editingSection === 'profile-info' 
+                          ? 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 hover:border-white/40' 
+                          : 'border-white/10 cursor-default'
+                      }`}
                     />
                   </div>
                   <div>
@@ -450,7 +578,12 @@ export default function Profile({ onBack }) {
                       value={profileData.username}
                       onChange={(e) => handleInputChange('username', e.target.value)}
                       placeholder="your_handle"
-                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                      readOnly={editingSection !== 'profile-info' && viewMode === 'saved'}
+                      className={`w-full px-4 py-3 bg-black border rounded-lg text-white focus:outline-none transition-all ${
+                        editingSection !== 'profile-info' && viewMode === 'saved'
+                          ? 'border-white/10 cursor-not-allowed opacity-70'
+                          : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50'
+                      }`}
                     />
                   </div>
                 </div>
@@ -463,7 +596,12 @@ export default function Profile({ onBack }) {
                   <select 
                     value={selectedProfession}
                     onChange={(e) => setSelectedProfession(e.target.value)}
-                    className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all cursor-pointer appearance-none"
+                    disabled={editingSection !== 'profile-info' && viewMode === 'saved'}
+                    className={`w-full px-4 py-3 bg-black border rounded-lg text-white focus:outline-none transition-all appearance-none ${
+                      editingSection !== 'profile-info' && viewMode === 'saved'
+                        ? 'border-white/10 cursor-not-allowed opacity-70'
+                        : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 cursor-pointer'
+                    }`}
                   >
                     <option value="" className="bg-black text-text-muted">Select your profession</option>
                     <option value="student" className="bg-black text-white">Student</option>
@@ -480,7 +618,12 @@ export default function Profile({ onBack }) {
                   <select 
                     value={profileData.gender}
                     onChange={(e) => handleInputChange('gender', e.target.value)}
-                    className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all cursor-pointer appearance-none"
+                    disabled={editingSection !== 'profile-info' && viewMode === 'saved'}
+                    className={`w-full px-4 py-3 bg-black border rounded-lg text-white focus:outline-none transition-all appearance-none ${
+                      editingSection !== 'profile-info' && viewMode === 'saved'
+                        ? 'border-white/10 cursor-not-allowed opacity-70'
+                        : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 cursor-pointer'
+                    }`}
                   >
                     <option value="" className="bg-black text-text-muted">Select your gender</option>
                     <option value="Male" className="bg-black text-white">Male</option>
@@ -499,7 +642,12 @@ export default function Profile({ onBack }) {
                     value={profileData.bio}
                     onChange={(e) => handleInputChange('bio', e.target.value)}
                     placeholder="Tell us about yourself, your skills, and what you're looking for..."
-                    className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all resize-none"
+                    readOnly={editingSection !== 'profile-info' && viewMode === 'saved'}
+                    className={`w-full px-4 py-3 bg-black border rounded-lg text-white placeholder:text-text-muted focus:outline-none transition-all resize-none ${
+                      editingSection !== 'profile-info' && viewMode === 'saved'
+                        ? 'border-white/10 cursor-not-allowed opacity-70'
+                        : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50'
+                    }`}
                   />
                   <p className="text-xs text-text-muted mt-1">{profileData.bio.length} / 500 characters</p>
                 </div>
@@ -513,7 +661,12 @@ export default function Profile({ onBack }) {
                     value={profileData.location}
                     onChange={(e) => handleInputChange('location', e.target.value)}
                     placeholder="City, Country"
-                    className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                    readOnly={editingSection !== 'profile-info' && viewMode === 'saved'}
+                    className={`w-full px-4 py-3 bg-black border rounded-lg text-white placeholder:text-text-muted focus:outline-none transition-all ${
+                      editingSection !== 'profile-info' && viewMode === 'saved'
+                        ? 'border-white/10 cursor-not-allowed opacity-70'
+                        : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50'
+                    }`}
                   />
                 </div>
 
@@ -526,7 +679,12 @@ export default function Profile({ onBack }) {
                     value={profileData.websiteUrl}
                     onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
                     placeholder="https://yourwebsite.com"
-                    className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                    readOnly={editingSection !== 'profile-info' && viewMode === 'saved'}
+                    className={`w-full px-4 py-3 bg-black border rounded-lg text-white placeholder:text-text-muted focus:outline-none transition-all ${
+                      editingSection !== 'profile-info' && viewMode === 'saved'
+                        ? 'border-white/10 cursor-not-allowed opacity-70'
+                        : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50'
+                    }`}
                   />
                 </div>
               </div>
@@ -571,14 +729,21 @@ export default function Profile({ onBack }) {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-bold text-white">Education</h2>
-                  <i className="fi fi-br-pencil text-primary-teal text-sm"></i>
+                  <i className="fi fi-br-graduation-cap text-primary-teal text-sm"></i>
+                  {education.length > 0 && (
+                    <span className="px-2 py-1 bg-primary-teal/20 text-primary-teal rounded-full text-xs font-bold">
+                      {education.length}
+                    </span>
+                  )}
                 </div>
                 <button 
                   onClick={handleAddEducation}
+                  disabled={viewMode === 'saved'}
                   type="button"
-                  className="px-4 py-2 bg-primary-teal/20 text-primary-teal rounded-lg hover:bg-primary-teal/30 transition-colors text-sm font-semibold"
+                  className="px-4 py-2 bg-primary-teal/20 text-primary-teal rounded-lg hover:bg-primary-teal/30 transition-colors text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  + Add Education
+                  <i className="fi fi-br-plus"></i>
+                  Add Education
                 </button>
               </div>
               <div className="space-y-4">
@@ -592,7 +757,8 @@ export default function Profile({ onBack }) {
                         <select 
                           value={edu.type}
                           onChange={(e) => handleUpdateEducation(edu.id, 'type', e.target.value)}
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all cursor-pointer appearance-none"
+                          disabled={viewMode === 'saved'}
+                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <option value="" className="bg-black text-text-muted">Select type</option>
                           <option value="school" className="bg-black text-white">School</option>
@@ -609,7 +775,8 @@ export default function Profile({ onBack }) {
                           value={edu.institution}
                           onChange={(e) => handleUpdateEducation(edu.id, 'institution', e.target.value)}
                           placeholder="e.g., Stanford University"
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                          readOnly={viewMode === 'saved'}
+                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
@@ -623,7 +790,8 @@ export default function Profile({ onBack }) {
                           value={edu.degree}
                           onChange={(e) => handleUpdateEducation(edu.id, 'degree', e.target.value)}
                           placeholder="e.g., Bachelor of Science"
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                          readOnly={viewMode === 'saved'}
+                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
                       <div>
@@ -635,14 +803,16 @@ export default function Profile({ onBack }) {
                           value={edu.yearRange}
                           onChange={(e) => handleUpdateEducation(edu.id, 'yearRange', e.target.value)}
                           placeholder="e.g., 2020 - 2024"
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                          readOnly={viewMode === 'saved'}
+                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
                     <button 
                       onClick={() => handleRemoveEducation(edu.id)}
+                      disabled={viewMode === 'saved'}
                       type="button"
-                      className="text-rose-400 hover:text-rose-300 text-sm font-semibold flex items-center gap-2 hover:gap-3 transition-all"
+                      className="text-rose-400 hover:text-rose-300 text-sm font-semibold flex items-center gap-2 hover:gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <i className="fi fi-br-trash"></i>
                       Remove
@@ -693,7 +863,8 @@ export default function Profile({ onBack }) {
                           {skill}
                           <button 
                             onClick={() => removeSkill(skill)}
-                            className="hover:text-white hover:scale-110 transition-transform"
+                            disabled={viewMode === 'saved'}
+                            className="hover:text-white hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                             type="button"
                           >
                             <i className="fi fi-br-cross-small"></i>
@@ -706,14 +877,15 @@ export default function Profile({ onBack }) {
                     <input
                       type="text"
                       placeholder="Add student skill and press Enter"
+                      readOnly={viewMode === 'saved'}
                       onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === 'Enter' && viewMode !== 'saved') {
                           e.preventDefault();
                           addSkill(e.target.value.trim());
                           e.target.value = '';
                         }
                       }}
-                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all"
+                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <p className="text-xs text-text-muted mt-2">💡 Example skills: Academic writing, Laboratory work, Collaborative projects, Note-taking</p>
                   </div>
@@ -728,7 +900,8 @@ export default function Profile({ onBack }) {
                           {skill}
                           <button 
                             onClick={() => removeSkill(skill)}
-                            className="hover:text-white hover:scale-110 transition-transform"
+                            disabled={viewMode === 'saved'}
+                            className="hover:text-white hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                             type="button"
                           >
                             <i className="fi fi-br-cross-small"></i>
@@ -741,14 +914,15 @@ export default function Profile({ onBack }) {
                     <input
                       type="text"
                       placeholder="Add teaching skill and press Enter"
+                      readOnly={viewMode === 'saved'}
                       onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === 'Enter' && viewMode !== 'saved') {
                           e.preventDefault();
                           addSkill(e.target.value.trim());
                           e.target.value = '';
                         }
                       }}
-                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 transition-all"
+                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <p className="text-xs text-text-muted mt-2">💡 Example skills: Classroom management, Differentiated instruction, Subject expertise, Student engagement</p>
                   </div>
@@ -763,7 +937,8 @@ export default function Profile({ onBack }) {
                           {skill}
                           <button 
                             onClick={() => removeSkill(skill)}
-                            className="hover:text-white hover:scale-110 transition-transform"
+                            disabled={viewMode === 'saved'}
+                            className="hover:text-white hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                             type="button"
                           >
                             <i className="fi fi-br-cross-small"></i>
@@ -776,14 +951,15 @@ export default function Profile({ onBack }) {
                     <input
                       type="text"
                       placeholder="Add professional skill and press Enter"
+                      readOnly={viewMode === 'saved'}
                       onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
+                        if (e.key === 'Enter' && viewMode !== 'saved') {
                           e.preventDefault();
                           addSkill(e.target.value.trim());
                           e.target.value = '';
                         }
                       }}
-                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <p className="text-xs text-text-muted mt-2">💡 Example skills: Programming languages, Design tools, Business analysis, Marketing strategy</p>
                   </div>
@@ -796,14 +972,21 @@ export default function Profile({ onBack }) {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <h2 className="text-xl font-bold text-white">Degrees & Certificates</h2>
-                  <i className="fi fi-br-pencil text-primary-teal text-sm"></i>
+                  <i className="fi fi-br-diploma text-primary-teal text-sm"></i>
+                  {certificates.length > 0 && (
+                    <span className="px-2 py-1 bg-primary-teal/20 text-primary-teal rounded-full text-xs font-bold">
+                      {certificates.length}
+                    </span>
+                  )}
                 </div>
                 <button 
                   onClick={handleAddCertificate}
+                  disabled={viewMode === 'saved'}
                   type="button"
-                  className="px-4 py-2 bg-primary-teal/20 text-primary-teal rounded-lg hover:bg-primary-teal/30 transition-colors text-sm font-semibold"
+                  className="px-4 py-2 bg-primary-teal/20 text-primary-teal rounded-lg hover:bg-primary-teal/30 transition-colors text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  + Add Certificate
+                  <i className="fi fi-br-plus"></i>
+                  Add Certificate
                 </button>
               </div>
               <div className="space-y-4">
@@ -819,14 +1002,16 @@ export default function Profile({ onBack }) {
                           value={cert.name}
                           onChange={(e) => handleUpdateCertificate(cert.id, 'name', e.target.value)}
                           placeholder="Certificate/Degree Name"
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all mb-3"
+                          readOnly={viewMode === 'saved'}
+                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <input
                           type="text"
                           value={cert.organization}
                           onChange={(e) => handleUpdateCertificate(cert.id, 'organization', e.target.value)}
                           placeholder="Issuing Organization"
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all mb-3"
+                          readOnly={viewMode === 'saved'}
+                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                         <div className="grid grid-cols-2 gap-3 mb-3">
                           <input
@@ -834,20 +1019,23 @@ export default function Profile({ onBack }) {
                             value={cert.issueDate}
                             onChange={(e) => handleUpdateCertificate(cert.id, 'issueDate', e.target.value)}
                             placeholder="Issue Date"
-                            className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                            readOnly={viewMode === 'saved'}
+                            className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <input
                             type="text"
                             value={cert.certificateId}
                             onChange={(e) => handleUpdateCertificate(cert.id, 'certificateId', e.target.value)}
                             placeholder="Certificate ID (optional)"
-                            className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                            readOnly={viewMode === 'saved'}
+                            className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                         </div>
                         <button 
                           onClick={() => handleRemoveCertificate(cert.id)}
+                          disabled={viewMode === 'saved'}
                           type="button"
-                          className="text-rose-400 hover:text-rose-300 text-sm font-semibold flex items-center gap-2 hover:gap-3 transition-all"
+                          className="text-rose-400 hover:text-rose-300 text-sm font-semibold flex items-center gap-2 hover:gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <i className="fi fi-br-trash"></i>
                           Remove
@@ -863,23 +1051,6 @@ export default function Profile({ onBack }) {
 
             {/* Save Button */}
             <div className="bg-white/[0.04] rounded-xl p-6">
-              {error && (
-                <div className="mb-4 p-3 bg-rose-500/20 border border-rose-500/50 rounded-lg text-rose-300 text-sm">
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="mb-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-300 text-sm">
-                  {success}
-                </div>
-              )}
-              <button 
-                onClick={handleSaveProfile}
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-primary-teal to-blue-500 text-white py-3 px-6 rounded-lg font-bold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Saving..." : "Save All Changes"}
-              </button>
             </div>
           </div>
         )}
@@ -1005,9 +1176,83 @@ export default function Profile({ onBack }) {
                 </button>
               </div>
             </div>
+            {/* Simple Save Button */}
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={handleSaveProfile}
+                disabled={loading}
+                type="button"
+                className="px-8 py-3 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/90 transition-colors font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <i className="fi fi-rr-spinner animate-spin"></i>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="fi fi-br-disk"></i>
+                    Save All Changes
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Floating Save Button - appears when there are unsaved changes */}
+      {hasUnsavedChanges && (
+        <div className="fixed bottom-8 right-8 z-50 animate-slide-up">
+          <div className="bg-gradient-to-r from-primary-teal to-blue-500 rounded-xl shadow-2xl p-4 flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-3 w-3 bg-white rounded-full animate-pulse"></div>
+              <span className="text-white font-semibold">You have unsaved changes</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  loadProfile();
+                  setHasUnsavedChanges(false);
+                  setEditingSection(null);
+                }}
+                type="button"
+                className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors font-semibold"
+              >
+                Discard
+              </button>
+              <button
+                onClick={handleSaveProfile}
+                disabled={loading}
+                type="button"
+                className="px-6 py-2 bg-white text-primary-teal rounded-lg hover:bg-white/90 transition-colors font-bold flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <i className="fi fi-rr-spinner animate-spin"></i>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="fi fi-br-disk"></i>
+                    Save All Changes
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success/Error Toast */}
+      {(success || error) && (
+        <div className={`fixed top-20 right-8 z-50 animate-slide-down ${
+          success ? 'bg-green-500' : 'bg-rose-500'
+        } text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3`}>
+          <i className={`fi ${success ? 'fi-br-check-circle' : 'fi-br-cross-circle'} text-2xl`}></i>
+          <span className="font-semibold">{success || error}</span>
+        </div>
+      )}
     </div>
   );
 }
