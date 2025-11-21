@@ -71,7 +71,7 @@ export default function Profile({ onBack }) {
     showOnlineStatus: false,
   });
 
-  // Load user data on mount
+  // Load user data on mount and auto-detect profession
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
@@ -81,9 +81,14 @@ export default function Profile({ onBack }) {
         ...prev,
         fullName: parsedUser.full_name || "",
         email: parsedUser.email || "",
+        username: parsedUser.username || "",
       }));
+      
+      // Auto-load profession if user has one saved
+      if (parsedUser.profession) {
+        setSelectedProfession(parsedUser.profession.toLowerCase());
+      }
     }
-    loadProfile();
   }, []);
 
   // Load profile based on profession
@@ -125,7 +130,7 @@ export default function Profile({ onBack }) {
     }
   };
 
-  // Reload profile when profession changes
+  // Auto-load profile when profession is set (including from localStorage)
   useEffect(() => {
     if (selectedProfession) {
       loadProfile();
@@ -187,13 +192,18 @@ export default function Profile({ onBack }) {
         setViewMode('saved');
         setHasUnsavedChanges(false);
         setEditingSection(null);
-        // Update localStorage user data for immediate header update
+        
+        // Update localStorage with all user data including profession
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        localStorage.setItem('user', JSON.stringify({
+        const updatedUser = {
           ...currentUser,
           full_name: profileData.fullName,
-          username: profileData.username
-        }));
+          username: profileData.username,
+          profession: selectedProfession.charAt(0).toUpperCase() + selectedProfession.slice(1)
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        
         setTimeout(() => setSuccess(""), 3000);
       }
     } catch (err) {

@@ -82,6 +82,21 @@ class User {
     const result = await pool.query(query, [hashedPassword, id]);
     return result.rows[0];
   }
+
+  // Update user metadata (profession, username)
+  static async updateMetadata(id, { profession, username }) {
+    const query = `
+      UPDATE users 
+      SET profession = COALESCE($1, profession),
+          username = COALESCE($2, username),
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+      RETURNING id, full_name, email, profession, username, profile_picture
+    `;
+    const values = [profession, username, id];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  }
 }
 
 module.exports = User;

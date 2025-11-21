@@ -150,8 +150,12 @@ export default function Sidebar({ onNavigate = () => {} }) {
           <div className="absolute bottom-full left-0 right-0 mb-2 bg-black border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
             <button
               onClick={() => {
+                // Clear user data from localStorage
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
                 setShowAccountMenu(false);
-                // Add logout logic here
+                // Navigate to login page
+                navigate('/login');
               }}
               className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3"
             >
@@ -161,7 +165,8 @@ export default function Sidebar({ onNavigate = () => {} }) {
             <button
               onClick={() => {
                 setShowAccountMenu(false);
-                // Add another account logic here
+                // Navigate to signup page to add another account
+                navigate('/signup');
               }}
               className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 border-t border-white/10"
             >

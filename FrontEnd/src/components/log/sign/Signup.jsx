@@ -222,6 +222,11 @@ export default function Signup() {
               Sign in
             </Link>
           </p>
+          
+          {/* Add Another Account Info */}
+          <p className="signin-link-text" style={{ marginTop: '10px', fontSize: '13px', color: '#9ca3af' }}>
+            Creating another account? You can switch between accounts after signing up.
+          </p>
         </div>
       </div>
     </div>

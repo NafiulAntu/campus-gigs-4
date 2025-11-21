@@ -172,6 +172,14 @@ export default function Signin() {
               Sign up
             </Link>
           </p>
+          
+          {/* Add Another Account Link */}
+          <p className="signup-link-text" style={{ marginTop: '10px' }}>
+            Already have multiple accounts?{" "}
+            <Link to="/signup" className="signup-link">
+              Add another account
+            </Link>
+          </p>
         </div>
       </div>
     </div>

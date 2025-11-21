@@ -1,4 +1,5 @@
 const Student = require('../models/Student');
+const User = require('../models/User');
 
 // Create or update student profile
 exports.createOrUpdateStudent = async (req, res) => {
@@ -27,6 +28,12 @@ exports.createOrUpdateStudent = async (req, res) => {
         } else {
             student = await Student.create(studentData);
         }
+
+        // Update users table with profession and username
+        await User.updateMetadata(userId, {
+            profession: 'Student',
+            username: req.body.username
+        });
 
         res.status(200).json({ success: true, data: student });
     } catch (error) {

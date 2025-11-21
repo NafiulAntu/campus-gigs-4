@@ -1,4 +1,5 @@
 const Employee = require('../models/Employee');
+const User = require('../models/User');
 
 // Create or update employee profile
 exports.createOrUpdateEmployee = async (req, res) => {
@@ -27,6 +28,12 @@ exports.createOrUpdateEmployee = async (req, res) => {
         } else {
             employee = await Employee.create(employeeData);
         }
+
+        // Update users table with profession and username
+        await User.updateMetadata(userId, {
+            profession: 'Employee',
+            username: req.body.username
+        });
 
         res.status(200).json({ success: true, data: employee });
     } catch (error) {

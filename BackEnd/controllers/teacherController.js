@@ -54,9 +54,15 @@ exports.createOrUpdateTeacher = async (req, res) => {
             isNew = true;
         }
 
-        // Get user details
+        // Update users table with profession and username for persistence
+        await User.updateMetadata(userId, {
+            profession: 'Teacher',
+            username: req.body.username.trim().toLowerCase()
+        });
+
+        // Get updated user details
         const userResult = await pool.query(
-            'SELECT id, full_name, email, profile_picture FROM users WHERE id = $1', 
+            'SELECT id, full_name, email, profile_picture, profession, username FROM users WHERE id = $1', 
             [userId]
         );
         const user = userResult.rows[0];
