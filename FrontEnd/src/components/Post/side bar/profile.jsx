@@ -1344,10 +1344,6 @@ export default function Profile({ onBack }) {
                 </div>
               )}
             </div>
-
-            {/* Save Button */}
-            <div className="bg-white/[0.04] rounded-xl p-6">
-            </div>
           </div>
         )}
 
