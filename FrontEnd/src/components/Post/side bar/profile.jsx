@@ -467,7 +467,7 @@ export default function Profile({ onBack }) {
         </div>
         
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
           <div className="max-w-4xl mx-auto py-6 px-4 lg:px-8">
         {/* Profile Header */}
         <div className="bg-white/[0.04] rounded-xl overflow-hidden mb-6">
