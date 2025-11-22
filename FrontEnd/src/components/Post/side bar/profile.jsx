@@ -443,23 +443,27 @@ export default function Profile({ onBack }) {
   };
 
   return (
-    <div className="min-h-screen bg-black">
-      {/* Header with back button */}
-      <div className="sticky top-0 z-10 bg-black/95 backdrop-blur-sm border-b border-white/10">
-        <div className="flex items-center gap-4 px-4 py-3">
-          <button
-            onClick={onBack}
-            className="h-9 w-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
-          >
-            <i className="fi fi-br-arrow-left text-white text-xl"></i>
-          </button>
-          <div>
-            <h2 className="text-xl font-bold text-white">Profile</h2>
+    <div className="fixed inset-0 bg-black overflow-hidden flex items-center justify-center">
+      {/* Centered Container */}
+      <div className="w-full h-full max-w-6xl flex flex-col">
+        {/* Header with back button */}
+        <div className="flex-shrink-0 bg-black/95 backdrop-blur-sm border-b border-white/10">
+          <div className="flex items-center gap-4 px-4 py-3">
+            <button
+              onClick={onBack}
+              className="h-9 w-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+            >
+              <i className="fi fi-br-arrow-left text-white text-xl"></i>
+            </button>
+            <div>
+              <h2 className="text-xl font-bold text-white">Profile</h2>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div className="max-w-4xl mx-auto py-6 px-4 lg:px-8">
+        
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto py-6 px-4 lg:px-8">
         {/* Profile Header */}
         <div className="bg-white/[0.04] rounded-xl overflow-hidden mb-6">
           {/* Cover Photo */}
@@ -1521,6 +1525,8 @@ export default function Profile({ onBack }) {
             </div>
           </div>
         )}
+          </div>
+        </div>
       </div>
 
       {/* Success/Error Toast */}
