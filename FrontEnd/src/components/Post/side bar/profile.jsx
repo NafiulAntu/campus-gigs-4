@@ -294,12 +294,14 @@ export default function Profile({ onBack }) {
   const addSkill = (skill) => {
     if (skill && !skills.includes(skill)) {
       setSkills(prev => [...prev, skill]);
+      setHasUnsavedChanges(true);
     }
   };
 
   // Handle skill removal
   const removeSkill = (skill) => {
     setSkills(prev => prev.filter(s => s !== skill));
+    setHasUnsavedChanges(true);
   };
 
   // Handle cover photo upload
@@ -946,7 +948,7 @@ export default function Profile({ onBack }) {
               )}
             </div>
 
-            {/* Skills by Role - Dynamic based on Profession */}
+            {/* Professional Skills */}
             {!selectedProfession && (
               <div className="bg-gradient-to-r from-blue-500/10 to-primary-teal/10 rounded-xl p-8 border border-primary-teal/30 text-center">
                 <div className="h-16 w-16 bg-primary-teal/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-primary-teal/50">
@@ -960,130 +962,200 @@ export default function Profile({ onBack }) {
             )}
 
             {selectedProfession && (
-              <div className="bg-white/[0.04] rounded-xl p-6 border border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="flex items-center gap-2">
+              <div className="bg-white/[0.04] rounded-xl p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-primary-teal/20 rounded-lg flex items-center justify-center">
+                      <i className="fi fi-br-sparkles text-primary-teal text-lg"></i>
+                    </div>
+                    <div>
                       <h2 className="text-xl font-bold text-white">Professional Skills</h2>
-                      <i className="fi fi-br-sparkles text-primary-teal text-sm"></i>
+                      {skills.length > 0 && (
+                        <p className="text-sm text-text-muted">{skills.length} skill{skills.length !== 1 ? 's' : ''}</p>
+                      )}
                     </div>
-                    <p className="text-sm text-text-muted mt-1">
-                      Skills for {selectedProfession === "student" ? "Students" : selectedProfession === "teacher" ? "Teachers" : "Employees"}
-                    </p>
                   </div>
-                  <span className="px-3 py-1 bg-primary-teal/20 text-primary-teal rounded-full text-xs font-bold uppercase tracking-wide">
-                    {selectedProfession}
-                  </span>
+                  {editingSection === 'skills' ? (
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleCancelEdit('skills')}
+                        type="button"
+                        className="px-4 py-2 text-text-muted hover:text-white transition-colors text-sm font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={() => handleSaveSection('Skills')}
+                        disabled={loading}
+                        type="button"
+                        className="px-5 py-2 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/90 transition-all text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
+                      >
+                        {loading ? (
+                          <>
+                            <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Saving...
+                          </>
+                        ) : (
+                          <>
+                            <i className="fi fi-br-check"></i>
+                            Save
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => setEditingSection('skills')}
+                      type="button"
+                      className="p-2 hover:bg-white/5 rounded-lg transition-colors text-text-muted hover:text-white"
+                    >
+                      <i className="fi fi-br-pencil text-lg"></i>
+                    </button>
+                  )}
                 </div>
-                
-                {/* Student Skills */}
-                {selectedProfession === "student" && (
-                  <div>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {skills.length > 0 ? skills.map((skill) => (
-                        <span key={skill} className="px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg text-sm font-semibold flex items-center gap-2 border border-blue-500/30 hover:bg-blue-500/30 transition-all">
-                          {skill}
-                          <button 
-                            onClick={() => removeSkill(skill)}
-                            disabled={viewMode === 'saved'}
-                            className="hover:text-white hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                            type="button"
-                          >
-                            <i className="fi fi-br-cross-small"></i>
-                          </button>
-                        </span>
-                      )) : (
-                        <p className="text-sm text-text-muted">No skills added yet. Start by adding your first skill below.</p>
-                      )}
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Add student skill and press Enter"
-                      readOnly={viewMode === 'saved'}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && viewMode !== 'saved') {
-                          e.preventDefault();
-                          addSkill(e.target.value.trim());
-                          e.target.value = '';
-                        }
-                      }}
-                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    <p className="text-xs text-text-muted mt-2">💡 Example skills: Academic writing, Laboratory work, Collaborative projects, Note-taking</p>
-                  </div>
-                )}
 
-                {/* Teacher Skills */}
-                {selectedProfession === "teacher" && (
-                  <div>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {skills.length > 0 ? skills.map((skill) => (
-                        <span key={skill} className="px-4 py-2 bg-green-500/20 text-green-300 rounded-lg text-sm font-semibold flex items-center gap-2 border border-green-500/30 hover:bg-green-500/30 transition-all">
-                          {skill}
-                          <button 
-                            onClick={() => removeSkill(skill)}
-                            disabled={viewMode === 'saved'}
-                            className="hover:text-white hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+                {editingSection === 'skills' ? (
+                  // Edit Mode
+                  <div className="space-y-4">
+                    {/* Suggested Skills */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="text-sm font-medium text-white">
+                          Suggested for {selectedProfession === "student" ? "Students" : selectedProfession === "teacher" ? "Teachers" : "Employees"}
+                        </label>
+                        <span className="text-xs text-text-muted">Click to add</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedProfession === "student" && [
+                          "Research & Analysis", "Academic Writing", "Critical Thinking", "Time Management",
+                          "Team Collaboration", "Presentation Skills", "Problem Solving", "Note-Taking",
+                          "Laboratory Skills", "Data Analysis", "Microsoft Office", "Google Workspace"
+                        ].filter(skill => !skills.includes(skill)).map(skill => (
+                          <button
+                            key={skill}
                             type="button"
+                            onClick={() => addSkill(skill)}
+                            className="px-3 py-1.5 bg-white/5 text-text-muted rounded-lg text-sm hover:bg-blue-500/20 hover:text-blue-300 border border-white/10 hover:border-blue-500/30 transition-all"
                           >
-                            <i className="fi fi-br-cross-small"></i>
+                            + {skill}
                           </button>
-                        </span>
-                      )) : (
-                        <p className="text-sm text-text-muted">No skills added yet. Start by adding your first skill below.</p>
-                      )}
+                        ))}
+                        {selectedProfession === "teacher" && [
+                          "Curriculum Design", "Classroom Management", "Student Assessment", "Differentiated Instruction",
+                          "Educational Technology", "Parent Communication", "Lesson Planning", "Subject Expertise",
+                          "Student Engagement", "Special Education", "Online Teaching", "Mentoring"
+                        ].filter(skill => !skills.includes(skill)).map(skill => (
+                          <button
+                            key={skill}
+                            type="button"
+                            onClick={() => addSkill(skill)}
+                            className="px-3 py-1.5 bg-white/5 text-text-muted rounded-lg text-sm hover:bg-green-500/20 hover:text-green-300 border border-white/10 hover:border-green-500/30 transition-all"
+                          >
+                            + {skill}
+                          </button>
+                        ))}
+                        {selectedProfession === "employee" && [
+                          "Project Management", "Communication", "Leadership", "Strategic Planning",
+                          "Data Analysis", "Problem Solving", "Team Collaboration", "Time Management",
+                          "Business Analysis", "Marketing Strategy", "Financial Analysis", "Technical Skills"
+                        ].filter(skill => !skills.includes(skill)).map(skill => (
+                          <button
+                            key={skill}
+                            type="button"
+                            onClick={() => addSkill(skill)}
+                            className="px-3 py-1.5 bg-white/5 text-text-muted rounded-lg text-sm hover:bg-primary-teal/20 hover:text-primary-teal border border-white/10 hover:border-primary-teal/30 transition-all"
+                          >
+                            + {skill}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Add teaching skill and press Enter"
-                      readOnly={viewMode === 'saved'}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && viewMode !== 'saved') {
-                          e.preventDefault();
-                          addSkill(e.target.value.trim());
-                          e.target.value = '';
-                        }
-                      }}
-                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    <p className="text-xs text-text-muted mt-2">💡 Example skills: Classroom management, Differentiated instruction, Subject expertise, Student engagement</p>
-                  </div>
-                )}
 
-                {/* Employee Skills */}
-                {selectedProfession === "employee" && (
-                  <div>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {skills.length > 0 ? skills.map((skill) => (
-                        <span key={skill} className="px-4 py-2 bg-primary-teal/20 text-primary-teal rounded-lg text-sm font-semibold flex items-center gap-2 border border-primary-teal/30 hover:bg-primary-teal/30 transition-all">
-                          {skill}
-                          <button 
-                            onClick={() => removeSkill(skill)}
-                            disabled={viewMode === 'saved'}
-                            className="hover:text-white hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-                            type="button"
-                          >
-                            <i className="fi fi-br-cross-small"></i>
-                          </button>
-                        </span>
-                      )) : (
-                        <p className="text-sm text-text-muted">No skills added yet. Start by adding your first skill below.</p>
-                      )}
+                    {/* Selected Skills */}
+                    {skills.length > 0 && (
+                      <div>
+                        <label className="text-sm font-medium text-white mb-3 block">Your Skills</label>
+                        <div className="flex flex-wrap gap-2">
+                          {skills.map((skill) => (
+                            <span 
+                              key={skill} 
+                              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border ${
+                                selectedProfession === "student" 
+                                  ? "bg-blue-500/20 text-blue-300 border-blue-500/30" 
+                                  : selectedProfession === "teacher"
+                                  ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                  : "bg-primary-teal/20 text-primary-teal border-primary-teal/30"
+                              }`}
+                            >
+                              {skill}
+                              <button 
+                                onClick={() => removeSkill(skill)}
+                                type="button"
+                                className="hover:scale-110 transition-transform"
+                              >
+                                <i className="fi fi-br-cross-small"></i>
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Custom Skill Input */}
+                    <div>
+                      <label className="text-sm font-medium text-white mb-2 block">Add Custom Skill</label>
+                      <input
+                        type="text"
+                        placeholder="Type a skill and press Enter..."
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const value = e.target.value.trim();
+                            if (value) {
+                              addSkill(value);
+                              e.target.value = '';
+                            }
+                          }
+                        }}
+                        className="w-full px-4 py-2.5 bg-black/50 border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                      />
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Add professional skill and press Enter"
-                      readOnly={viewMode === 'saved'}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && viewMode !== 'saved') {
-                          e.preventDefault();
-                          addSkill(e.target.value.trim());
-                          e.target.value = '';
-                        }
-                      }}
-                      className="w-full px-4 py-3 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    <p className="text-xs text-text-muted mt-2">💡 Example skills: Programming languages, Design tools, Business analysis, Marketing strategy</p>
+                  </div>
+                ) : (
+                  // View Mode
+                  <div>
+                    {skills.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {skills.map((skill) => (
+                          <span 
+                            key={skill} 
+                            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                              selectedProfession === "student" 
+                                ? "bg-blue-500/20 text-blue-300 border border-blue-500/30" 
+                                : selectedProfession === "teacher"
+                                ? "bg-green-500/20 text-green-300 border border-green-500/30"
+                                : "bg-primary-teal/20 text-primary-teal border border-primary-teal/30"
+                            }`}
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="h-12 w-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <i className="fi fi-br-sparkles text-text-muted text-xl"></i>
+                        </div>
+                        <p className="text-sm text-text-muted">No skills added yet</p>
+                        <button 
+                          onClick={() => setEditingSection('skills')}
+                          type="button"
+                          className="mt-3 text-sm text-primary-teal hover:text-primary-teal/80 font-medium"
+                        >
+                          Add your first skill →
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
