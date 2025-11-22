@@ -501,37 +501,21 @@ export default function Profile({ onBack }) {
         {/* Profile Tab */}
         {activeTab === "profile" && (
           <div className="space-y-6">
-            {/* Saved Profile Banner */}
-            {viewMode === 'saved' && (
-              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <i className="fi fi-br-check-circle text-green-400 text-xl"></i>
-                    <span className="text-white font-semibold">Profile saved successfully</span>
-                  </div>
-                  <button
-                    onClick={handleEnableEdit}
-                    type="button"
-                    className="px-4 py-2 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/90 transition-colors font-semibold text-sm"
-                  >
-                    Edit
-                  </button>
-                </div>
-              </div>
-            )}
             {/* Basic Information */}
             <div className="bg-white/[0.04] rounded-xl p-6">
               <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-primary-teal/20 rounded-lg flex items-center justify-center">
+                    <i className="fi fi-br-user text-primary-teal text-lg"></i>
+                  </div>
                   <h2 className="text-xl font-bold text-white">Profile Information</h2>
-                  {editingSection !== 'profile-info' && <i className="fi fi-br-pencil text-primary-teal text-sm"></i>}
                 </div>
                 {editingSection === 'profile-info' ? (
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleCancelEdit('Profile Information')}
                       type="button"
-                      className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors text-sm font-semibold"
+                      className="px-4 py-2 text-text-muted hover:text-white transition-colors text-sm font-medium"
                     >
                       Cancel
                     </button>
@@ -539,11 +523,11 @@ export default function Profile({ onBack }) {
                       onClick={() => handleSaveSection('Profile Information')}
                       type="button"
                       disabled={loading}
-                      className="px-4 py-2 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/80 transition-colors text-sm font-semibold flex items-center gap-2"
+                      className="px-5 py-2 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/90 transition-all text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
                     >
                       {loading ? (
                         <>
-                          <i className="fi fi-rr-spinner animate-spin"></i>
+                          <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                           Saving...
                         </>
                       ) : (
@@ -558,285 +542,408 @@ export default function Profile({ onBack }) {
                   <button
                     onClick={() => setEditingSection('profile-info')}
                     type="button"
-                    className="px-4 py-2 bg-primary-teal/20 text-primary-teal rounded-lg hover:bg-primary-teal/30 transition-colors text-sm font-semibold flex items-center gap-2"
+                    className="px-4 py-2 text-primary-teal hover:bg-primary-teal/10 rounded-lg transition-all text-sm font-medium flex items-center gap-2"
                   >
-                    <i className="fi fi-br-edit"></i>
+                    <i className="fi fi-br-pencil"></i>
                     Edit
                   </button>
                 )}
               </div>
-              <div className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {editingSection === 'profile-info' ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-muted mb-2">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        value={profileData.fullName}
+                        onChange={(e) => handleInputChange('fullName', e.target.value)}
+                        placeholder="Your Name"
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-muted mb-2">
+                        Username
+                      </label>
+                      <input
+                        type="text"
+                        value={profileData.username}
+                        onChange={(e) => handleInputChange('username', e.target.value)}
+                        placeholder="your_handle"
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-muted mb-2">
+                        Profession
+                      </label>
+                      <select 
+                        value={selectedProfession}
+                        onChange={(e) => setSelectedProfession(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-teal transition-all"
+                      >
+                        <option value="" className="bg-black">Select profession</option>
+                        <option value="student" className="bg-black">Student</option>
+                        <option value="teacher" className="bg-black">Teacher</option>
+                        <option value="employee" className="bg-black">Employee</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-muted mb-2">
+                        Gender
+                      </label>
+                      <select 
+                        value={profileData.gender}
+                        onChange={(e) => handleInputChange('gender', e.target.value)}
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-teal transition-all"
+                      >
+                        <option value="" className="bg-black">Select gender</option>
+                        <option value="Male" className="bg-black">Male</option>
+                        <option value="Female" className="bg-black">Female</option>
+                        <option value="Other" className="bg-black">Other</option>
+                        <option value="Prefer not to say" className="bg-black">Prefer not to say</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="block text-sm font-semibold text-white mb-2">
-                      Full Name
+                    <label className="block text-sm font-medium text-text-muted mb-2">
+                      Bio
                     </label>
-                    <input
-                      type="text"
-                      value={profileData.fullName}
-                      onChange={(e) => handleInputChange('fullName', e.target.value)}
-                      placeholder="Your Name"
-                      readOnly={editingSection !== 'profile-info'}
-                      className={`w-full px-4 py-3 bg-black border rounded-lg text-white focus:outline-none transition-all ${
-                        editingSection === 'profile-info' 
-                          ? 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 hover:border-white/40' 
-                          : 'border-white/10 cursor-default'
-                      }`}
+                    <textarea
+                      rows={4}
+                      value={profileData.bio}
+                      onChange={(e) => handleInputChange('bio', e.target.value)}
+                      placeholder="Tell us about yourself..."
+                      className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all resize-none"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-white mb-2">
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      value={profileData.username}
-                      onChange={(e) => handleInputChange('username', e.target.value)}
-                      placeholder="your_handle"
-                      readOnly={editingSection !== 'profile-info' && viewMode === 'saved'}
-                      className={`w-full px-4 py-3 bg-black border rounded-lg text-white focus:outline-none transition-all ${
-                        editingSection !== 'profile-info' && viewMode === 'saved'
-                          ? 'border-white/10 cursor-not-allowed opacity-70'
-                          : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50'
-                      }`}
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-text-muted mb-2">
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        value={profileData.location}
+                        onChange={(e) => handleInputChange('location', e.target.value)}
+                        placeholder="City, Country"
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-text-muted mb-2">
+                        Website
+                      </label>
+                      <input
+                        type="url"
+                        value={profileData.websiteUrl}
+                        onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
+                        placeholder="https://yourwebsite.com"
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
+                      />
+                    </div>
                   </div>
                 </div>
-
-                {/* Profession */}
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Profession
-                  </label>
-                  <select 
-                    value={selectedProfession}
-                    onChange={(e) => setSelectedProfession(e.target.value)}
-                    disabled={editingSection !== 'profile-info' && viewMode === 'saved'}
-                    className={`w-full px-4 py-3 bg-black border rounded-lg text-white focus:outline-none transition-all appearance-none ${
-                      editingSection !== 'profile-info' && viewMode === 'saved'
-                        ? 'border-white/10 cursor-not-allowed opacity-70'
-                        : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 cursor-pointer'
-                    }`}
-                  >
-                    <option value="" className="bg-black text-text-muted">Select your profession</option>
-                    <option value="student" className="bg-black text-white">Student</option>
-                    <option value="teacher" className="bg-black text-white">Teacher</option>
-                    <option value="employee" className="bg-black text-white">Employee</option>
-                  </select>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                    <div>
+                      <p className="text-sm text-text-muted mb-1">Full Name</p>
+                      <p className="text-white font-medium">{profileData.fullName || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-muted mb-1">Username</p>
+                      <p className="text-white font-medium">@{profileData.username || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-muted mb-1">Profession</p>
+                      <p className="text-white font-medium capitalize">{selectedProfession || '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-text-muted mb-1">Gender</p>
+                      <p className="text-white font-medium">{profileData.gender || '—'}</p>
+                    </div>
+                    {profileData.location && (
+                      <div>
+                        <p className="text-sm text-text-muted mb-1">Location</p>
+                        <p className="text-white font-medium">{profileData.location}</p>
+                      </div>
+                    )}
+                    {profileData.websiteUrl && (
+                      <div>
+                        <p className="text-sm text-text-muted mb-1">Website</p>
+                        <a href={profileData.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary-teal hover:text-blue-400 font-medium break-all">
+                          {profileData.websiteUrl}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                  {profileData.bio && (
+                    <div className="pt-2 border-t border-white/5">
+                      <p className="text-sm text-text-muted mb-2">Bio</p>
+                      <p className="text-white leading-relaxed">{profileData.bio}</p>
+                    </div>
+                  )}
                 </div>
-
-                {/* Gender */}
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Gender
-                  </label>
-                  <select 
-                    value={profileData.gender}
-                    onChange={(e) => handleInputChange('gender', e.target.value)}
-                    disabled={editingSection !== 'profile-info' && viewMode === 'saved'}
-                    className={`w-full px-4 py-3 bg-black border rounded-lg text-white focus:outline-none transition-all appearance-none ${
-                      editingSection !== 'profile-info' && viewMode === 'saved'
-                        ? 'border-white/10 cursor-not-allowed opacity-70'
-                        : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 cursor-pointer'
-                    }`}
-                  >
-                    <option value="" className="bg-black text-text-muted">Select your gender</option>
-                    <option value="Male" className="bg-black text-white">Male</option>
-                    <option value="Female" className="bg-black text-white">Female</option>
-                    <option value="Other" className="bg-black text-white">Other</option>
-                    <option value="Prefer not to say" className="bg-black text-white">Prefer not to say</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Bio
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={profileData.bio}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                    placeholder="Tell us about yourself, your skills, and what you're looking for..."
-                    readOnly={editingSection !== 'profile-info' && viewMode === 'saved'}
-                    className={`w-full px-4 py-3 bg-black border rounded-lg text-white placeholder:text-text-muted focus:outline-none transition-all resize-none ${
-                      editingSection !== 'profile-info' && viewMode === 'saved'
-                        ? 'border-white/10 cursor-not-allowed opacity-70'
-                        : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50'
-                    }`}
-                  />
-                  <p className="text-xs text-text-muted mt-1">{profileData.bio.length} / 500 characters</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    placeholder="City, Country"
-                    readOnly={editingSection !== 'profile-info' && viewMode === 'saved'}
-                    className={`w-full px-4 py-3 bg-black border rounded-lg text-white placeholder:text-text-muted focus:outline-none transition-all ${
-                      editingSection !== 'profile-info' && viewMode === 'saved'
-                        ? 'border-white/10 cursor-not-allowed opacity-70'
-                        : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50'
-                    }`}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
-                    Website
-                  </label>
-                  <input
-                    type="url"
-                    value={profileData.websiteUrl}
-                    onChange={(e) => handleInputChange('websiteUrl', e.target.value)}
-                    placeholder="https://yourwebsite.com"
-                    readOnly={editingSection !== 'profile-info' && viewMode === 'saved'}
-                    className={`w-full px-4 py-3 bg-black border rounded-lg text-white placeholder:text-text-muted focus:outline-none transition-all ${
-                      editingSection !== 'profile-info' && viewMode === 'saved'
-                        ? 'border-white/10 cursor-not-allowed opacity-70'
-                        : 'border-white/20 focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50'
-                    }`}
-                  />
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Interests */}
-            <div className="bg-white/[0.04] rounded-xl p-6 border border-white/10">
-              <div className="mb-6">
-                <h2 className="text-xl font-bold text-white mb-2">Interests</h2>
-                <p className="text-sm text-text-muted">What are you looking for on Campus Gigs?</p>
+            <div className="bg-white/[0.04] rounded-xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-primary-teal/20 rounded-lg flex items-center justify-center">
+                    <i className="fi fi-br-heart text-primary-teal text-lg"></i>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Interests</h2>
+                    {interests.length > 0 && (
+                      <p className="text-sm text-text-muted">{interests.length} selected</p>
+                    )}
+                  </div>
+                </div>
+                {editingSection === 'interests' ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleCancelEdit('Interests')}
+                      type="button"
+                      className="px-4 py-2 text-text-muted hover:text-white transition-colors text-sm font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleSaveSection('Interests')}
+                      type="button"
+                      disabled={loading}
+                      className="px-5 py-2 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/90 transition-all text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fi fi-br-check"></i>
+                          Save
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setEditingSection('interests')}
+                    type="button"
+                    className="px-4 py-2 text-primary-teal hover:bg-primary-teal/10 rounded-lg transition-all text-sm font-medium flex items-center gap-2"
+                  >
+                    <i className="fi fi-br-pencil"></i>
+                    Edit
+                  </button>
+                )}
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {[
-                  "Projects",
-                  "Research Paper",
-                  "Thesis",
-                  "Team Project",
-                  "Individual Work",
-                  "Freelance",
-                  "Internship",
-                  "Part-time Job",
-                  "Collaboration"
-                ].map((interest) => (
-                  <label key={interest} className="relative flex items-center gap-3 cursor-pointer group p-3 rounded-lg bg-black border border-white/20 hover:border-primary-teal/50 transition-all">
-                    <input
-                      type="checkbox"
-                      checked={interests.includes(interest)}
-                      onChange={() => toggleInterest(interest)}
-                      className="w-5 h-5 rounded border-white/30 bg-transparent checked:bg-primary-teal checked:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all cursor-pointer accent-primary-teal"
-                    />
-                    <span className="text-sm font-medium text-text-muted group-hover:text-white transition-colors select-none">
-                      {interest}
-                    </span>
-                    <div className="absolute inset-0 rounded-lg bg-primary-teal/0 group-hover:bg-primary-teal/5 transition-all pointer-events-none"></div>
-                  </label>
-                ))}
-              </div>
+
+              {editingSection === 'interests' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {[
+                    "Projects",
+                    "Research Paper",
+                    "Thesis",
+                    "Team Project",
+                    "Individual Work",
+                    "Freelance",
+                    "Internship",
+                    "Part-time Job",
+                    "Collaboration"
+                  ].map((interest) => (
+                    <label key={interest} className="relative flex items-center gap-2.5 cursor-pointer group p-3 rounded-lg bg-white/5 border border-white/10 hover:border-primary-teal transition-all">
+                      <input
+                        type="checkbox"
+                        checked={interests.includes(interest)}
+                        onChange={() => toggleInterest(interest)}
+                        className="w-4 h-4 rounded border-white/30 bg-transparent checked:bg-primary-teal checked:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all cursor-pointer accent-primary-teal"
+                      />
+                      <span className="text-sm font-medium text-white select-none">
+                        {interest}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <div>
+                  {interests.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {interests.map((interest) => (
+                        <span key={interest} className="px-4 py-2 bg-primary-teal/10 text-primary-teal rounded-lg text-sm font-medium border border-primary-teal/20">
+                          {interest}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="h-12 w-12 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i className="fi fi-br-heart text-text-muted text-xl"></i>
+                      </div>
+                      <p className="text-text-muted text-sm">No interests selected yet</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Education */}
             <div className="bg-white/[0.04] rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold text-white">Education</h2>
-                  <i className="fi fi-br-graduation-cap text-primary-teal text-sm"></i>
-                  {education.length > 0 && (
-                    <span className="px-2 py-1 bg-primary-teal/20 text-primary-teal rounded-full text-xs font-bold">
-                      {education.length}
-                    </span>
-                  )}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-primary-teal/20 rounded-lg flex items-center justify-center">
+                    <i className="fi fi-br-graduation-cap text-primary-teal text-lg"></i>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Education</h2>
+                    {education.length > 0 && (
+                      <p className="text-sm text-text-muted">{education.length} institution{education.length !== 1 ? 's' : ''}</p>
+                    )}
+                  </div>
                 </div>
-                <button 
-                  onClick={handleAddEducation}
-                  disabled={viewMode === 'saved'}
-                  type="button"
-                  className="px-4 py-2 bg-primary-teal/20 text-primary-teal rounded-lg hover:bg-primary-teal/30 transition-colors text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <i className="fi fi-br-plus"></i>
-                  Add Education
-                </button>
+                {editingSection === 'education' ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleCancelEdit('Education')}
+                      type="button"
+                      className="px-4 py-2 text-text-muted hover:text-white transition-colors text-sm font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleSaveSection('Education')}
+                      type="button"
+                      disabled={loading}
+                      className="px-5 py-2 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/90 transition-all text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fi fi-br-check"></i>
+                          Save
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setEditingSection('education')}
+                    type="button"
+                    className="px-4 py-2 text-primary-teal hover:bg-primary-teal/10 rounded-lg transition-all text-sm font-medium flex items-center gap-2"
+                  >
+                    <i className="fi fi-br-pencil"></i>
+                    Edit
+                  </button>
+                )}
               </div>
-              <div className="space-y-4">
-                {education.length > 0 ? education.map((edu) => (
-                  <div key={edu.id} className="p-4 bg-black border border-white/20 rounded-lg hover:border-primary-teal/50 transition-all">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-white mb-2">
-                          Institution Type
-                        </label>
-                        <select 
-                          value={edu.type}
-                          onChange={(e) => handleUpdateEducation(edu.id, 'type', e.target.value)}
-                          disabled={viewMode === 'saved'}
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <option value="" className="bg-black text-text-muted">Select type</option>
-                          <option value="school" className="bg-black text-white">School</option>
-                          <option value="college" className="bg-black text-white">College</option>
-                          <option value="university" className="bg-black text-white">University</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-white mb-2">
-                          Institution Name
-                        </label>
+
+              {editingSection === 'education' ? (
+                <div className="space-y-4">
+                  {education.map((edu) => (
+                    <div key={edu.id} className="p-5 bg-black/50 border border-white/10 rounded-lg">
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <select 
+                            value={edu.type}
+                            onChange={(e) => handleUpdateEducation(edu.id, 'type', e.target.value)}
+                            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-teal transition-all"
+                          >
+                            <option value="" className="bg-black">Institution Type</option>
+                            <option value="school" className="bg-black">School</option>
+                            <option value="college" className="bg-black">College</option>
+                            <option value="university" className="bg-black">University</option>
+                          </select>
+                          <input
+                            type="text"
+                            value={edu.yearRange}
+                            onChange={(e) => handleUpdateEducation(edu.id, 'yearRange', e.target.value)}
+                            placeholder="Year Range (e.g., 2020-2024)"
+                            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
+                          />
+                        </div>
                         <input
                           type="text"
                           value={edu.institution}
                           onChange={(e) => handleUpdateEducation(edu.id, 'institution', e.target.value)}
-                          placeholder="e.g., Stanford University"
-                          readOnly={viewMode === 'saved'}
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          placeholder="Institution Name"
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
                         />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-semibold text-white mb-2">
-                          Degree/Field
-                        </label>
                         <input
                           type="text"
                           value={edu.degree}
                           onChange={(e) => handleUpdateEducation(edu.id, 'degree', e.target.value)}
-                          placeholder="e.g., Bachelor of Science"
-                          readOnly={viewMode === 'saved'}
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          placeholder="Degree/Field of Study"
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
                         />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-white mb-2">
-                          Year Range
-                        </label>
-                        <input
-                          type="text"
-                          value={edu.yearRange}
-                          onChange={(e) => handleUpdateEducation(edu.id, 'yearRange', e.target.value)}
-                          placeholder="e.g., 2020 - 2024"
-                          readOnly={viewMode === 'saved'}
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
+                        <button 
+                          onClick={() => handleRemoveEducation(edu.id)}
+                          type="button"
+                          className="text-rose-400 hover:text-rose-300 text-sm font-medium flex items-center gap-1.5 transition-colors"
+                        >
+                          <i className="fi fi-br-trash text-sm"></i>
+                          Remove
+                        </button>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => handleRemoveEducation(edu.id)}
-                      disabled={viewMode === 'saved'}
-                      type="button"
-                      className="text-rose-400 hover:text-rose-300 text-sm font-semibold flex items-center gap-2 hover:gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <i className="fi fi-br-trash"></i>
-                      Remove
-                    </button>
-                  </div>
-                )) : (
-                  <p className="text-center text-text-muted py-8">No education added yet. Click "+ Add Education" to get started.</p>
-                )}
-              </div>
+                  ))}
+                  
+                  <button 
+                    onClick={handleAddEducation}
+                    type="button"
+                    className="w-full py-3 border-2 border-dashed border-white/20 rounded-lg text-text-muted hover:text-white hover:border-primary-teal/50 transition-all text-sm font-medium flex items-center justify-center gap-2"
+                  >
+                    <i className="fi fi-br-plus"></i>
+                    Add Education
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {education.length > 0 ? education.map((edu) => (
+                    <div key={edu.id} className="p-4 bg-black/30 rounded-lg border border-white/5 hover:border-white/10 transition-all">
+                      <div className="flex gap-3">
+                        <div className="h-11 w-11 bg-primary-teal/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <i className="fi fi-br-graduation-cap text-primary-teal"></i>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-white mb-1 truncate">{edu.institution || 'Institution'}</h3>
+                          <p className="text-sm text-text-muted mb-1">{edu.degree || 'Degree'}</p>
+                          <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <span className="capitalize">{edu.type || 'Type'}</span>
+                            {edu.yearRange && (
+                              <>
+                                <span>•</span>
+                                <span>{edu.yearRange}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="text-center py-12">
+                      <div className="h-16 w-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i className="fi fi-br-graduation-cap text-text-muted text-2xl"></i>
+                      </div>
+                      <p className="text-text-muted text-sm">No education added yet</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Skills by Role - Dynamic based on Profession */}
@@ -984,84 +1091,147 @@ export default function Profile({ onBack }) {
 
             {/* Degrees & Certificates */}
             <div className="bg-white/[0.04] rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-bold text-white">Degrees & Certificates</h2>
-                  <i className="fi fi-br-diploma text-primary-teal text-sm"></i>
-                  {certificates.length > 0 && (
-                    <span className="px-2 py-1 bg-primary-teal/20 text-primary-teal rounded-full text-xs font-bold">
-                      {certificates.length}
-                    </span>
-                  )}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-primary-teal/20 rounded-lg flex items-center justify-center">
+                    <i className="fi fi-br-diploma text-primary-teal text-lg"></i>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Degrees & Certificates</h2>
+                    {certificates.length > 0 && (
+                      <p className="text-sm text-text-muted">{certificates.length} certificate{certificates.length !== 1 ? 's' : ''}</p>
+                    )}
+                  </div>
                 </div>
-                <button 
-                  onClick={handleAddCertificate}
-                  disabled={viewMode === 'saved'}
-                  type="button"
-                  className="px-4 py-2 bg-primary-teal/20 text-primary-teal rounded-lg hover:bg-primary-teal/30 transition-colors text-sm font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <i className="fi fi-br-plus"></i>
-                  Add Certificate
-                </button>
+                {editingSection === 'certificates' ? (
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleCancelEdit('certificates')}
+                      type="button"
+                      className="px-4 py-2 text-text-muted hover:text-white transition-colors text-sm font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={() => handleSaveSection('Certificates')}
+                      disabled={loading}
+                      type="button"
+                      className="px-5 py-2 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/90 transition-all text-sm font-semibold flex items-center gap-2 disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fi fi-br-check"></i>
+                          Save
+                        </>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => setEditingSection('certificates')}
+                    type="button"
+                    className="px-4 py-2 text-primary-teal hover:bg-primary-teal/10 rounded-lg transition-all text-sm font-medium flex items-center gap-2"
+                  >
+                    <i className="fi fi-br-pencil"></i>
+                    Edit
+                  </button>
+                )}
               </div>
-              <div className="space-y-4">
-                {certificates.length > 0 ? certificates.map((cert) => (
-                  <div key={cert.id} className="p-4 bg-black border border-white/20 rounded-lg hover:border-primary-teal/50 transition-all">
-                    <div className="flex items-start gap-4">
-                      <div className="h-12 w-12 bg-primary-teal/20 rounded-lg flex items-center justify-center flex-shrink-0 border border-primary-teal/30">
-                        <i className="fi fi-br-diploma text-primary-teal text-xl"></i>
-                      </div>
-                      <div className="flex-1">
+
+              {editingSection === 'certificates' ? (
+                <div className="space-y-4">
+                  {certificates.map((cert) => (
+                    <div key={cert.id} className="p-5 bg-black/50 border border-white/10 rounded-lg">
+                      <div className="space-y-3">
                         <input
                           type="text"
                           value={cert.name}
                           onChange={(e) => handleUpdateCertificate(cert.id, 'name', e.target.value)}
                           placeholder="Certificate/Degree Name"
-                          readOnly={viewMode === 'saved'}
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
                         />
                         <input
                           type="text"
                           value={cert.organization}
                           onChange={(e) => handleUpdateCertificate(cert.id, 'organization', e.target.value)}
                           placeholder="Issuing Organization"
-                          readOnly={viewMode === 'saved'}
-                          className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
                         />
-                        <div className="grid grid-cols-2 gap-3 mb-3">
+                        <div className="grid grid-cols-2 gap-3">
                           <input
                             type="text"
                             value={cert.issueDate}
                             onChange={(e) => handleUpdateCertificate(cert.id, 'issueDate', e.target.value)}
                             placeholder="Issue Date"
-                            readOnly={viewMode === 'saved'}
-                            className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
                           />
                           <input
                             type="text"
                             value={cert.certificateId}
                             onChange={(e) => handleUpdateCertificate(cert.id, 'certificateId', e.target.value)}
-                            placeholder="Certificate ID (optional)"
-                            readOnly={viewMode === 'saved'}
-                            className="w-full px-4 py-2 bg-black border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            placeholder="Certificate ID"
+                            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
                           />
                         </div>
                         <button 
                           onClick={() => handleRemoveCertificate(cert.id)}
-                          disabled={viewMode === 'saved'}
                           type="button"
-                          className="text-rose-400 hover:text-rose-300 text-sm font-semibold flex items-center gap-2 hover:gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="text-rose-400 hover:text-rose-300 text-sm font-medium flex items-center gap-1.5 transition-colors"
                         >
-                          <i className="fi fi-br-trash"></i>
+                          <i className="fi fi-br-trash text-sm"></i>
                           Remove
                         </button>
                       </div>
                     </div>
-                  </div>
-                )) : (
-                  <p className="text-center text-text-muted py-8">No certificates added yet. Click "+ Add Certificate" to get started.</p>
-                )}
-              </div>
+                  ))}
+                  
+                  <button 
+                    onClick={handleAddCertificate}
+                    type="button"
+                    className="w-full py-3 border-2 border-dashed border-white/20 rounded-lg text-text-muted hover:text-white hover:border-primary-teal/50 transition-all text-sm font-medium flex items-center justify-center gap-2"
+                  >
+                    <i className="fi fi-br-plus"></i>
+                    Add Certificate
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {certificates.length > 0 ? certificates.map((cert) => (
+                    <div key={cert.id} className="p-4 bg-black/30 rounded-lg border border-white/5 hover:border-white/10 transition-all">
+                      <div className="flex gap-3">
+                        <div className="h-11 w-11 bg-primary-teal/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <i className="fi fi-br-diploma text-primary-teal"></i>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-white mb-1 truncate">{cert.name || 'Untitled Certificate'}</h3>
+                          <p className="text-sm text-text-muted mb-1 truncate">{cert.organization || 'Organization'}</p>
+                          <div className="flex items-center gap-3 text-xs text-text-muted">
+                            <span>{cert.issueDate || 'Date not specified'}</span>
+                            {cert.certificateId && (
+                              <>
+                                <span>•</span>
+                                <span>ID: {cert.certificateId}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="text-center py-12">
+                      <div className="h-16 w-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i className="fi fi-br-diploma text-text-muted text-2xl"></i>
+                      </div>
+                      <p className="text-text-muted text-sm">No certificates added yet</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Save Button */}
