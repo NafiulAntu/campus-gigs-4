@@ -3,9 +3,18 @@ import React, { useState, useRef, useEffect } from "react";
 export default function PostComposer({ onPost, onEdit, editingPost, brightOn = false }) {
   const [text, setText] = useState("");
   const [files, setFiles] = useState([]);
+  const [user, setUser] = useState(null);
   const mediaInputRef = useRef(null);
   const attachInputRef = useRef(null);
   const MAX_CHARS = 280; // Free user limit
+
+  // Load user data from localStorage
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   function handleFiles(e) {
     const list = Array.from(e.target.files || []);
@@ -88,9 +97,17 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
     }`}>
       <div className="flex flex-col gap-2 md:gap-3">
         <div className="flex items-start gap-3 sm:gap-4">
-          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary-teal/30 to-primary-teal/10 flex items-center justify-center text-white font-bold text-sm sm:text-base shadow-md ring-2 ring-primary-teal/20">
-            Y
-          </div>
+          {user?.profile_picture ? (
+            <img 
+              src={user.profile_picture} 
+              alt="Profile" 
+              className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover ring-2 ring-primary-teal/20 shadow-md"
+            />
+          ) : (
+            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary-teal to-blue-500 flex items-center justify-center text-white font-bold text-sm sm:text-base shadow-md ring-2 ring-primary-teal/20">
+              {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+            </div>
+          )}
           <textarea
             value={text}
             onChange={(e) => {

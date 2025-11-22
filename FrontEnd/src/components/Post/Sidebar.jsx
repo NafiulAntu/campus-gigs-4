@@ -113,18 +113,37 @@ export default function Sidebar({ onNavigate = () => {} }) {
         <div className="mt-4 px-3">
           <button
             onClick={() => {
-              const composer = document.getElementById('post-composer');
-              if (composer) {
-                composer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                const textarea = composer.querySelector('textarea');
-                if (textarea) textarea.focus();
-              }
+              // First, navigate to home if not already there
+              onNavigate("home");
+              
+              // Wait for navigation to complete, then scroll to composer
+              setTimeout(() => {
+                const composer = document.getElementById('post-composer');
+                if (composer) {
+                  // Smooth scroll to composer
+                  composer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  
+                  // Focus on textarea after scroll completes
+                  setTimeout(() => {
+                    const textarea = composer.querySelector('textarea');
+                    if (textarea) {
+                      textarea.focus();
+                      // Add a subtle pulse effect to draw attention
+                      textarea.style.transition = 'all 0.3s ease';
+                      textarea.style.transform = 'scale(1.02)';
+                      setTimeout(() => {
+                        textarea.style.transform = 'scale(1)';
+                      }, 300);
+                    }
+                  }, 500);
+                }
+              }, 100);
             }}
-            className="w-full text-center rounded-full bg-primary-teal hover:bg-primary-blue text-white font-bold py-3.5 transition-colors text-[17px] flex items-center justify-center"
-            title="Post"
+            className="group w-full text-center rounded-full bg-gradient-to-r from-primary-teal to-blue-500 hover:from-primary-blue hover:to-primary-teal text-white font-bold py-3.5 transition-all duration-300 text-[17px] flex items-center justify-center shadow-lg shadow-primary-teal/30 hover:shadow-primary-teal/50 hover:scale-105 active:scale-95"
+            title="Create a new post"
           >
             <span className="hidden 2xl:inline">Post</span>
-            <i className="fi fi-br-edit inline 2xl:hidden text-[20px]"></i>
+            <i className="fi fi-br-edit inline 2xl:hidden text-[20px] transition-transform duration-300 group-hover:rotate-12"></i>
           </button>
         </div>
       </div>
