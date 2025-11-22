@@ -1007,9 +1007,10 @@ export default function Profile({ onBack }) {
                     <button 
                       onClick={() => setEditingSection('skills')}
                       type="button"
-                      className="p-2 hover:bg-white/5 rounded-lg transition-colors text-text-muted hover:text-white"
+                      className="px-4 py-2 text-primary-teal hover:bg-primary-teal/10 rounded-lg transition-all text-sm font-medium flex items-center gap-2"
                     >
-                      <i className="fi fi-br-pencil text-lg"></i>
+                      <i className="fi fi-br-pencil"></i>
+                      Edit
                     </button>
                   )}
                 </div>
@@ -1025,7 +1026,7 @@ export default function Profile({ onBack }) {
                         </label>
                         <span className="text-xs text-text-muted">Click to add</span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                         {selectedProfession === "student" && [
                           "Research & Analysis", "Academic Writing", "Critical Thinking", "Time Management",
                           "Team Collaboration", "Presentation Skills", "Problem Solving", "Note-Taking",
@@ -1035,9 +1036,10 @@ export default function Profile({ onBack }) {
                             key={skill}
                             type="button"
                             onClick={() => addSkill(skill)}
-                            className="px-3 py-1.5 bg-white/5 text-text-muted rounded-lg text-sm hover:bg-blue-500/20 hover:text-blue-300 border border-white/10 hover:border-blue-500/30 transition-all"
+                            className="px-3 py-2 bg-white/5 text-text-muted rounded-lg text-xs hover:bg-blue-500/20 hover:text-blue-300 border border-white/10 hover:border-blue-500/30 transition-all text-left"
                           >
-                            + {skill}
+                            <i className="fi fi-br-plus text-[10px] mr-1"></i>
+                            {skill}
                           </button>
                         ))}
                         {selectedProfession === "teacher" && [
@@ -1049,9 +1051,10 @@ export default function Profile({ onBack }) {
                             key={skill}
                             type="button"
                             onClick={() => addSkill(skill)}
-                            className="px-3 py-1.5 bg-white/5 text-text-muted rounded-lg text-sm hover:bg-green-500/20 hover:text-green-300 border border-white/10 hover:border-green-500/30 transition-all"
+                            className="px-3 py-2 bg-white/5 text-text-muted rounded-lg text-xs hover:bg-green-500/20 hover:text-green-300 border border-white/10 hover:border-green-500/30 transition-all text-left"
                           >
-                            + {skill}
+                            <i className="fi fi-br-plus text-[10px] mr-1"></i>
+                            {skill}
                           </button>
                         ))}
                         {selectedProfession === "employee" && [
@@ -1063,9 +1066,10 @@ export default function Profile({ onBack }) {
                             key={skill}
                             type="button"
                             onClick={() => addSkill(skill)}
-                            className="px-3 py-1.5 bg-white/5 text-text-muted rounded-lg text-sm hover:bg-primary-teal/20 hover:text-primary-teal border border-white/10 hover:border-primary-teal/30 transition-all"
+                            className="px-3 py-2 bg-white/5 text-text-muted rounded-lg text-xs hover:bg-primary-teal/20 hover:text-primary-teal border border-white/10 hover:border-primary-teal/30 transition-all text-left"
                           >
-                            + {skill}
+                            <i className="fi fi-br-plus text-[10px] mr-1"></i>
+                            {skill}
                           </button>
                         ))}
                       </div>
@@ -1073,13 +1077,13 @@ export default function Profile({ onBack }) {
 
                     {/* Selected Skills */}
                     {skills.length > 0 && (
-                      <div>
+                      <div className="p-4 bg-black/30 rounded-lg border border-white/10">
                         <label className="text-sm font-medium text-white mb-3 block">Your Skills</label>
                         <div className="flex flex-wrap gap-2">
                           {skills.map((skill) => (
                             <span 
                               key={skill} 
-                              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 border ${
+                              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 border ${
                                 selectedProfession === "student" 
                                   ? "bg-blue-500/20 text-blue-300 border-blue-500/30" 
                                   : selectedProfession === "teacher"
@@ -1117,7 +1121,7 @@ export default function Profile({ onBack }) {
                             }
                           }
                         }}
-                        className="w-full px-4 py-2.5 bg-black/50 border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal focus:ring-2 focus:ring-primary-teal/50 transition-all"
+                        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-all"
                       />
                     </div>
                   </div>
