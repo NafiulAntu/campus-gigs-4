@@ -83,11 +83,11 @@ class Post {
   static async update(postId, userId, content, mediaUrls) {
     const query = `
       UPDATE posts
-      SET content = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2 AND posted_by = $3
+      SET content = $1, media = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3 AND posted_by = $4
       RETURNING *
     `;
-    const result = await pool.query(query, [content, postId, userId]);
+    const result = await pool.query(query, [content, mediaUrls || [], postId, userId]);
     return result.rows[0];
   }
 

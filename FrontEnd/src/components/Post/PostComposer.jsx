@@ -49,8 +49,25 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
 
   useEffect(() => {
     if (editingPost) {
-      setText(editingPost.text || "");
-      setFiles(editingPost.files || []);
+      setText(editingPost.content || editingPost.text || "");
+      
+      // Load existing media URLs as file objects
+      if (editingPost.media_urls && editingPost.media_urls.length > 0) {
+        const existingMedia = editingPost.media_urls.map((url, index) => {
+          const fileName = url.split('/').pop();
+          const isImage = url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+          return {
+            url: url, // Keep the existing URL
+            name: fileName,
+            type: isImage ? 'image/jpeg' : 'application/octet-stream',
+            preview: isImage ? url : null,
+            existing: true // Flag to know it's already uploaded
+          };
+        });
+        setFiles(existingMedia);
+      } else {
+        setFiles([]);
+      }
     } else {
       setText("");
       setFiles([]);
@@ -69,34 +86,44 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
     try {
       let mediaUrls = [];
       
-      // Upload files if any
-      if (files.length > 0) {
+      // Separate existing media URLs from new files
+      const existingMediaUrls = files.filter(f => f.existing).map(f => f.url);
+      const newFiles = files.filter(f => !f.existing && f.file);
+      
+      // Upload new files if any
+      if (newFiles.length > 0) {
+        console.log('📤 Uploading', newFiles.length, 'new files...');
         const formData = new FormData();
-        files.forEach(f => {
-          if (f.file) {
-            formData.append('files', f.file);
-          }
+        newFiles.forEach(f => {
+          formData.append('files', f.file);
+          console.log('Adding file:', f.file.name, f.file.type);
         });
         
         const uploadResponse = await uploadFiles(formData);
-        mediaUrls = uploadResponse.data.files || [];
+        const newUrls = uploadResponse.data.files || [];
+        console.log('✅ Upload successful, URLs:', newUrls);
+        mediaUrls = [...existingMediaUrls, ...newUrls];
+      } else {
+        mediaUrls = existingMediaUrls;
       }
+
+      const postData = {
+        text: text.trim(),
+        media_urls: mediaUrls,
+      };
+      
+      console.log('📝 Submitting post:', postData);
 
       if (editingPost) {
         // Edit mode
         const updatedPost = {
-          ...editingPost,
-          text,
-          media_urls: mediaUrls,
+          id: editingPost.id,
+          ...postData
         };
         if (onEdit) onEdit(updatedPost);
       } else {
         // Create mode
-        const newPost = {
-          text,
-          media_urls: mediaUrls,
-        };
-        if (onPost) onPost(newPost);
+        if (onPost) onPost(postData);
       }
       
       // Cleanup
@@ -106,8 +133,9 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
       if (mediaInputRef.current) mediaInputRef.current.value = null;
       if (attachInputRef.current) attachInputRef.current.value = null;
     } catch (error) {
-      console.error('Error submitting post:', error);
-      alert('Failed to upload files. Please try again.');
+      console.error('❌ Error submitting post:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      alert(`Failed to ${files.length > 0 ? 'upload files' : 'create post'}. ${error.response?.data?.error || error.message || 'Please try again.'}`);
     }
   }
 

@@ -147,18 +147,22 @@ export default function PostPage({ onNavigate = () => {} }) {
 
   async function handleNewPost(postData) {
     try {
+      console.log('📤 Creating post with data:', postData);
       const response = await createPost({
         content: postData.text || '',
         media_urls: postData.media_urls || []
       });
+      
+      console.log('✅ Post created:', response.data);
       
       // Add new post to the top of the list
       if (response.data && response.data.post) {
         setPosts(prev => [response.data.post, ...prev]);
       }
     } catch (error) {
-      console.error('Error creating post:', error);
-      alert('Failed to create post. Please try again.');
+      console.error('❌ Error creating post:', error);
+      console.error('Error response:', error.response?.data);
+      alert(`Failed to create post. ${error.response?.data?.error || error.message || 'Please try again.'}`);
     }
   }
 
@@ -542,6 +546,19 @@ export default function PostPage({ onNavigate = () => {} }) {
             ) : filteredPosts.map((p, index) => {
               const avatarLetter = p.full_name ? p.full_name[0].toUpperCase() : "U";
               const isCurrentUserPost = currentUser && p.posted_by === currentUser.id;
+              
+              // Debug logging (only for first post to avoid spam)
+              if (index === 0) {
+                console.log('🔍 Post debug:', {
+                  postId: p.id,
+                  posted_by: p.posted_by,
+                  currentUserId: currentUser?.id,
+                  isCurrentUserPost,
+                  hasMedia: p.media_urls?.length > 0,
+                  mediaUrls: p.media_urls
+                });
+              }
+              
               return (
                 <div
                   key={p.id}
@@ -696,7 +713,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                                 return (
                                   <div
                                     key={i}
-                                    className={`rounded-xl overflow-hidden border ${
+                                    className={`rounded-xl overflow-hidden border relative group ${
                                       brightOn ? 'border-white/20 bg-[#1E293B]' : 'border-primary-teal/20 bg-gray-800/30'
                                     } ${itemClass}`}
                                   >
@@ -709,38 +726,111 @@ export default function PostPage({ onNavigate = () => {} }) {
                                         e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="50%" y="50%" text-anchor="middle" fill="gray">Image not found</text></svg>';
                                       }}
                                     />
+                                    {/* Hover overlay with download button */}
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+                                      <a
+                                        href={url}
+                                        download
+                                        onClick={(e) => e.stopPropagation()}
+                                        className={`p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all hover:scale-110`}
+                                        title="Download image"
+                                      >
+                                        <i className="fas fa-download text-white text-lg" />
+                                      </a>
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className={`p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all hover:scale-110`}
+                                        title="Open in new tab"
+                                      >
+                                        <i className="fas fa-expand text-white text-lg" />
+                                      </a>
+                                    </div>
                                   </div>
                                 );
                               } else {
                                 // File attachment
                                 const fileName = url.split('/').pop();
+                                const fileExt = fileName.split('.').pop().toLowerCase();
+                                
+                                // Get appropriate icon based on file type
+                                let fileIcon = '📎';
+                                let fileColor = brightOn ? 'bg-white/10' : 'bg-primary-teal/10';
+                                
+                                if (['pdf'].includes(fileExt)) {
+                                  fileIcon = '📄';
+                                  fileColor = 'bg-red-500/20 text-red-400';
+                                } else if (['doc', 'docx'].includes(fileExt)) {
+                                  fileIcon = '📝';
+                                  fileColor = 'bg-blue-500/20 text-blue-400';
+                                } else if (['zip', 'rar', '7z'].includes(fileExt)) {
+                                  fileIcon = '📦';
+                                  fileColor = 'bg-yellow-500/20 text-yellow-400';
+                                } else if (['txt'].includes(fileExt)) {
+                                  fileIcon = '📃';
+                                  fileColor = 'bg-gray-500/20 text-gray-400';
+                                }
+                                
                                 return (
-                                  <a
+                                  <div
                                     key={i}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all hover:scale-[1.02] ${
+                                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
                                       brightOn 
-                                        ? 'border-white/20 bg-[#1E293B] hover:bg-[#2D3B4E]' 
-                                        : 'border-primary-teal/20 bg-gray-800/30 hover:bg-gray-800/50'
+                                        ? 'border-white/20 bg-[#1E293B]' 
+                                        : 'border-primary-teal/20 bg-gray-800/30'
                                     } ${itemClass}`}
                                   >
-                                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
-                                      brightOn ? 'bg-white/10' : 'bg-primary-teal/10'
+                                    <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-2xl ${
+                                      fileColor
                                     }`}>
-                                      📎
+                                      {fileIcon}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <div className={`font-semibold text-sm truncate ${
-                                        brightOn ? 'text-white' : 'text-blue-300'
+                                      <div className={`font-semibold truncate transition-colors duration-300 text-sm ${
+                                        brightOn ? 'text-white' : 'text-white'
                                       }`}>
                                         {fileName}
                                       </div>
-                                      <div className="text-xs text-gray-400">Click to download</div>
+                                      <div className={`text-xs mt-0.5 transition-colors duration-300 ${
+                                        brightOn ? 'text-[#008B8B]' : 'text-primary-teal'
+                                      }`}>
+                                        {fileExt.toUpperCase()} File
+                                      </div>
                                     </div>
-                                    <i className="fi fi-br-download text-primary-teal"></i>
-                                  </a>
+                                    <div className="flex items-center gap-2">
+                                      {/* Download Button */}
+                                      <a
+                                        href={url}
+                                        download
+                                        onClick={(e) => e.stopPropagation()}
+                                        className={`p-2.5 rounded-lg transition-all hover:scale-110 ${
+                                          brightOn 
+                                            ? 'bg-white/10 hover:bg-white/20 text-white' 
+                                            : 'bg-primary-teal/20 hover:bg-primary-teal/30 text-primary-teal'
+                                        }`}
+                                        title="Download"
+                                      >
+                                        <i className="fas fa-download text-sm" />
+                                      </a>
+                                      {/* Open in New Tab Button */}
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className={`p-2.5 rounded-lg transition-all hover:scale-110 ${
+                                          brightOn 
+                                            ? 'bg-white/10 hover:bg-white/20 text-white' 
+                                            : 'bg-primary-teal/20 hover:bg-primary-teal/30 text-primary-teal'
+                                        }`}
+                                        title="Open in new tab"
+                                      >
+                                        <i className="fas fa-external-link-alt text-sm" />
+                                      </a>
+                                    </div>
+                                  </div>
                                 );
                               }
                             })}

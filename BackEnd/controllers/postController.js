@@ -85,30 +85,37 @@ exports.getPostById = async (req, res) => {
 // Update a post
 exports.updatePost = async (req, res) => {
   try {
+    console.log('✏️ Update post request received');
+    console.log('Post ID:', req.params.postId);
+    console.log('Request body:', req.body);
+    console.log('User ID:', req.user?.id);
+    
     const { postId } = req.params;
     const { content, media_urls } = req.body;
     const userId = req.user.id;
 
-    if (!content || content.trim() === '') {
-      return res.status(400).json({ error: 'Post content is required' });
-    }
+    // Allow posts with just media (no text content required)
+    const postContent = content && content.trim() !== '' ? content.trim() : '[Media]';
 
-    const post = await Post.update(postId, userId, content, media_urls || []);
+    console.log('✅ Updating post with:', { postId, userId, content: postContent, media_urls });
+    const post = await Post.update(postId, userId, postContent, media_urls || []);
 
     if (!post) {
       return res.status(404).json({ error: 'Post not found or unauthorized' });
     }
-
-    // Get the full updated post with user info
-    const fullPost = await Post.getById(post.id);
+    
+    // Get the full post with user info
+    const fullPost = await Post.getById(postId);
+    console.log('✅ Post updated successfully:', fullPost);
 
     res.status(200).json({ 
       message: 'Post updated successfully', 
       post: fullPost 
     });
   } catch (error) {
-    console.error('Error updating post:', error);
-    res.status(500).json({ error: 'Failed to update post' });
+    console.error('❌ Error updating post:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to update post', details: error.message });
   }
 };
 
