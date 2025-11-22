@@ -220,3 +220,52 @@ exports.oauthCallback = async (req, res) => {
     res.redirect(`${process.env.FRONTEND_URL}/login?error=oauth_failed`);
   }
 };
+
+// Delete Account Controller
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { password } = req.body;
+
+    // Get user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    // Verify password for local accounts
+    if (user.provider === 'local') {
+      if (!password) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Password is required to delete account' 
+        });
+      }
+
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Incorrect password' 
+        });
+      }
+    }
+
+    // Delete user (this will cascade delete related profile data if configured)
+    await User.delete(userId);
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'Account deleted successfully' 
+    });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to delete account. Please try again.' 
+    });
+  }
+};

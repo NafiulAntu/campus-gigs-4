@@ -5,8 +5,10 @@ import {
   createOrUpdateEmployeeProfile,
   getMyTeacherProfile,
   getMyStudentProfile,
-  getMyEmployeeProfile
+  getMyEmployeeProfile,
+  deleteAccount
 } from "../../../services/api";
+import { useNavigate } from 'react-router-dom';
 
 const Switcher8 = ({ isChecked, onChange }) => {
   return (
@@ -36,6 +38,7 @@ const Switcher8 = ({ isChecked, onChange }) => {
 };
 
 export default function Profile({ onBack }) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("profile");
   const [selectedProfession, setSelectedProfession] = useState("");
   const [loading, setLoading] = useState(false);
@@ -46,6 +49,8 @@ export default function Profile({ onBack }) {
   const [editingSection, setEditingSection] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [viewMode, setViewMode] = useState('editing'); // 'editing' or 'saved'
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
   
   const [profileData, setProfileData] = useState({
     username: "",
@@ -408,11 +413,32 @@ export default function Profile({ onBack }) {
   };
 
   // Handle delete account
-  const handleDeleteAccount = () => {
-    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      // Implement delete account logic
-      console.log('Delete account');
-      setError('Account deletion feature coming soon');
+  const handleDeleteAccount = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      const response = await deleteAccount({ password: deletePassword });
+      
+      if (response.data.success) {
+        setSuccess("Account deleted successfully. Redirecting...");
+        
+        // Clear all local storage
+        localStorage.clear();
+        
+        // Wait 2 seconds then redirect to login
+        setTimeout(() => {
+          navigate('/signin');
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Delete account error:", err);
+      const errorMessage = err.response?.data?.message || "Failed to delete account. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+      setShowDeleteModal(false);
+      setDeletePassword("");
     }
   };
 
@@ -1464,7 +1490,7 @@ export default function Profile({ onBack }) {
               </h3>
               <p className="text-sm text-text-muted mb-4">Irreversible actions that affect your account</p>
               <button 
-                onClick={handleDeleteAccount}
+                onClick={() => setShowDeleteModal(true)}
                 type="button"
                 className="px-6 py-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 rounded-lg hover:bg-rose-500/20 hover:border-rose-500/50 transition-all font-semibold flex items-center gap-2"
               >
@@ -1504,6 +1530,98 @@ export default function Profile({ onBack }) {
         } text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3`}>
           <i className={`fi ${success ? 'fi-br-check-circle' : 'fi-br-cross-circle'} text-2xl`}></i>
           <span className="font-semibold">{success || error}</span>
+        </div>
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-rose-500/30 rounded-2xl max-w-md w-full p-8 shadow-2xl">
+            {/* Warning Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="h-20 w-20 bg-rose-500/20 rounded-full flex items-center justify-center border-2 border-rose-500/50">
+                <i className="fi fi-br-exclamation text-rose-400 text-4xl"></i>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-white text-center mb-3">
+              Delete Account Permanently?
+            </h2>
+            <p className="text-text-muted text-center mb-6">
+              This action cannot be undone. All your data, including profile information, posts, and connections will be permanently deleted.
+            </p>
+
+            {/* Password Input */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-white mb-2">
+                Confirm with your password
+              </label>
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Enter your password"
+                className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-500/50 transition-all"
+                autoFocus
+              />
+            </div>
+
+            {/* Warning List */}
+            <div className="bg-rose-500/10 border border-rose-500/30 rounded-lg p-4 mb-6">
+              <p className="text-sm font-semibold text-rose-400 mb-2">You will lose:</p>
+              <ul className="space-y-1 text-sm text-text-muted">
+                <li className="flex items-center gap-2">
+                  <i className="fi fi-br-cross-small text-rose-400"></i>
+                  All profile information and settings
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fi fi-br-cross-small text-rose-400"></i>
+                  All posts and content
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fi fi-br-cross-small text-rose-400"></i>
+                  All connections and messages
+                </li>
+                <li className="flex items-center gap-2">
+                  <i className="fi fi-br-cross-small text-rose-400"></i>
+                  Access to this account forever
+                </li>
+              </ul>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeletePassword("");
+                }}
+                type="button"
+                className="flex-1 px-6 py-3 bg-white/5 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-all font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={!deletePassword || loading}
+                type="button"
+                className="flex-1 px-6 py-3 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fi fi-br-trash"></i>
+                    Delete Forever
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

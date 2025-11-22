@@ -18,6 +18,7 @@ export const signup = (data) => API.post('/auth/signup', data);
 export const signin = (data) => API.post('/auth/signin', data);
 export const forgotPassword = (data) => API.post('/auth/forgot-password', data);
 export const resetPassword = (data) => API.post('/auth/reset-password', data);
+export const deleteAccount = (data) => API.delete('/auth/delete-account', { data });
 
 // Protected Endpoints (require JWT token)
 export const getProfile = () => API.get('/auth/profile');
