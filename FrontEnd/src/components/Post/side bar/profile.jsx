@@ -1609,7 +1609,7 @@ export default function Profile({ onBack }) {
                   setDeletePassword("");
                 }}
                 type="button"
-                className="flex-1 px-6 py-3 bg-white/5 border border-white/20 text-white rounded-lg hover:bg-white/10 transition-all font-semibold"
+                className="flex-1 px-5 py-2.5 bg-white/[0.08] hover:bg-white/[0.12] text-white rounded-lg transition-all duration-200 font-medium text-sm shadow-md hover:shadow-lg"
               >
                 Cancel
               </button>
@@ -1617,7 +1617,7 @@ export default function Profile({ onBack }) {
                 onClick={handleDeleteAccount}
                 disabled={!deletePassword || loading}
                 type="button"
-                className="flex-1 px-6 py-3 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-5 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-lg transition-all duration-200 font-medium text-sm flex items-center justify-center gap-2 shadow-md shadow-rose-500/30 hover:shadow-lg hover:shadow-rose-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
@@ -1626,7 +1626,7 @@ export default function Profile({ onBack }) {
                   </>
                 ) : (
                   <>
-                    <i className="fi fi-br-trash"></i>
+                    <i className="fi fi-br-trash text-sm"></i>
                     Delete Forever
                   </>
                 )}
