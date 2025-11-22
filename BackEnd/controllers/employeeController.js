@@ -1,5 +1,6 @@
 const Employee = require('../models/Employee');
 const User = require('../models/User');
+const pool = require('../config/db');
 
 // Create or update employee profile
 exports.createOrUpdateEmployee = async (req, res) => {
@@ -24,10 +25,12 @@ exports.createOrUpdateEmployee = async (req, res) => {
         };
 
         let employee = await Employee.findOne({ where: { userId } });
+        let isNew = false;
         if (employee) {
             employee = await employee.update(employeeData);
         } else {
             employee = await Employee.create(employeeData);
+            isNew = true;
         }
 
         // Update users table with profession and username
@@ -43,9 +46,27 @@ exports.createOrUpdateEmployee = async (req, res) => {
             });
         }
 
-        res.status(200).json({ success: true, data: employee });
+        // Get updated user details to return with profile picture
+        const userResult = await pool.query(
+            'SELECT id, full_name, email, profile_picture, profession, username FROM users WHERE id = $1',
+            [userId]
+        );
+        const user = userResult.rows[0];
+
+        res.status(200).json({ 
+            success: true,
+            message: isNew ? 'Employee profile created successfully' : 'Employee profile updated successfully',
+            data: {
+                ...employee.toJSON(),
+                user: user || null
+            }
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Employee profile error:', error);
+        res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
     }
 };
 

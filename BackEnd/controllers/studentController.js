@@ -1,5 +1,6 @@
 const Student = require('../models/Student');
 const User = require('../models/User');
+const pool = require('../config/db');
 
 // Create or update student profile
 exports.createOrUpdateStudent = async (req, res) => {
@@ -24,10 +25,12 @@ exports.createOrUpdateStudent = async (req, res) => {
         };
 
         let student = await Student.findOne({ where: { userId } });
+        let isNew = false;
         if (student) {
             student = await student.update(studentData);
         } else {
             student = await Student.create(studentData);
+            isNew = true;
         }
 
         // Update users table with profession and username
@@ -43,9 +46,27 @@ exports.createOrUpdateStudent = async (req, res) => {
             });
         }
 
-        res.status(200).json({ success: true, data: student });
+        // Get updated user details to return with profile picture
+        const userResult = await pool.query(
+            'SELECT id, full_name, email, profile_picture, profession, username FROM users WHERE id = $1',
+            [userId]
+        );
+        const user = userResult.rows[0];
+
+        res.status(200).json({ 
+            success: true, 
+            message: isNew ? 'Student profile created successfully' : 'Student profile updated successfully',
+            data: {
+                ...student.toJSON(),
+                user: user || null
+            }
+        });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Student profile error:', error);
+        res.status(500).json({ 
+            success: false,
+            error: error.message 
+        });
     }
 };
 

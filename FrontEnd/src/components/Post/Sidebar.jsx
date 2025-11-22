@@ -9,10 +9,25 @@ export default function Sidebar({ onNavigate = () => {} }) {
 
   // Load user data from localStorage
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
+    const loadUser = () => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
+      }
+    };
+    
+    loadUser();
+    
+    // Listen for custom storage events to refresh user data
+    const handleStorageChange = () => {
+      loadUser();
+    };
+    
+    window.addEventListener('userUpdated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('userUpdated', handleStorageChange);
+    };
   }, []);
 
   // Close menu when clicking outside

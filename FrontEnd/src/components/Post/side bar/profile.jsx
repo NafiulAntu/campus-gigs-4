@@ -57,6 +57,7 @@ export default function Profile({ onBack }) {
     websiteUrl: "",
     gender: "",
     coverPicUrl: "",
+    profilePicUrl: "",
   });
 
   const [interests, setInterests] = useState([]);
@@ -82,6 +83,7 @@ export default function Profile({ onBack }) {
         fullName: parsedUser.full_name || "",
         email: parsedUser.email || "",
         username: parsedUser.username || "",
+        profilePicUrl: parsedUser.profile_picture || "", // Load profile picture from localStorage
       }));
       
       // Auto-load profession if user has one saved
@@ -118,6 +120,7 @@ export default function Profile({ onBack }) {
           websiteUrl: profile.websiteUrl || "",
           gender: profile.gender || "",
           coverPicUrl: profile.coverPicUrl || "",
+          profilePicUrl: profile.profilePicUrl || profile.user?.profile_picture || "",
         }));
         setInterests(profile.interests || []);
         setEducation(profile.education || []);
@@ -162,11 +165,14 @@ export default function Profile({ onBack }) {
         return;
       }
 
+      // Get current user from localStorage
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
       const payload = {
         username: profileData.username,
         fullName: profileData.fullName,
         phone: profileData.phone || '',
-        profilePicUrl: user?.profile_picture || '',
+        profilePicUrl: profileData.profilePicUrl || '', // Use profile picture from profileData state
         bio: profileData.bio,
         location: profileData.location,
         websiteUrl: profileData.websiteUrl,
@@ -198,17 +204,20 @@ export default function Profile({ onBack }) {
         setHasUnsavedChanges(false);
         setEditingSection(null);
         
-        // Update localStorage with all user data including profession and profile picture
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        // Update localStorage with user data from backend response (includes saved profile_picture)
+        const savedUserData = response.data.data?.user;
         const updatedUser = {
           ...currentUser,
-          full_name: profileData.fullName,
-          username: profileData.username,
-          profession: selectedProfession.charAt(0).toUpperCase() + selectedProfession.slice(1),
-          profile_picture: currentUser.profile_picture || user?.profile_picture, // Preserve profile picture
+          full_name: savedUserData?.full_name || profileData.fullName,
+          username: savedUserData?.username || profileData.username,
+          profession: savedUserData?.profession || (selectedProfession.charAt(0).toUpperCase() + selectedProfession.slice(1)),
+          profile_picture: savedUserData?.profile_picture || currentUser.profile_picture, // Use profile picture from backend response
         };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
+        
+        // Dispatch custom event to notify other components (like Sidebar) that user data updated
+        window.dispatchEvent(new Event('userUpdated'));
         
         setTimeout(() => setSuccess(""), 3000);
       }
@@ -323,13 +332,8 @@ export default function Profile({ onBack }) {
       if (file) {
         const reader = new FileReader();
         reader.onload = (event) => {
-          // Update user profile picture in localStorage
-          if (user) {
-            const updatedUser = { ...user, profile_picture: event.target.result };
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-            setUser(updatedUser);
-          }
-          setHasUnsavedChanges(true);
+          // Store in profileData state like cover photo
+          handleInputChange('profilePicUrl', event.target.result);
           setSuccess('Profile picture updated! Remember to save changes.');
           setTimeout(() => setSuccess(''), 3000);
         };
@@ -447,9 +451,9 @@ export default function Profile({ onBack }) {
           <div className="p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6 -mt-16 mb-6">
               <div className="relative">
-                {user?.profile_picture ? (
+                {profileData.profilePicUrl ? (
                   <img 
-                    src={user.profile_picture} 
+                    src={profileData.profilePicUrl} 
                     alt="Profile" 
                     className="h-32 w-32 rounded-full object-cover border-4 border-black"
                   />
@@ -1074,6 +1078,33 @@ export default function Profile({ onBack }) {
               <i className="fi fi-br-settings text-primary-teal text-sm"></i>
             </div>
             <div className="space-y-5">
+              {/* Profile Picture Section */}
+              <div className="flex items-center gap-4 pb-5 border-b border-white/10">
+                <div className="relative">
+                  {profileData.profilePicUrl ? (
+                    <img 
+                      src={profileData.profilePicUrl} 
+                      alt="Profile" 
+                      className="h-20 w-20 rounded-full object-cover border-2 border-primary-teal"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-full bg-gradient-to-r from-primary-teal to-blue-500 flex items-center justify-center font-bold text-white text-2xl border-2 border-primary-teal">
+                      {profileData.fullName ? profileData.fullName.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-white">{profileData.fullName || 'Your Name'}</h3>
+                  <p className="text-sm text-text-muted">@{profileData.username || 'username'}</p>
+                  <button 
+                    onClick={handleProfilePicUpload}
+                    className="mt-2 text-sm text-primary-teal hover:text-blue-400 transition-colors"
+                  >
+                    Change Profile Picture
+                  </button>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-semibold text-white mb-2">
                   Email Address
