@@ -6,37 +6,60 @@ const pool = require('../config/db');
 exports.createOrUpdateEmployee = async (req, res) => {
     try {
         const userId = req.user.id;  // From auth middleware
+        
+        // Validate required fields
+        if (!req.body.username) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Username is required' 
+            });
+        }
+
+        // Check if username is already taken by another user
+        const existingEmployee = await Employee.findOne({ 
+            where: { username: req.body.username } 
+        });
+        
+        if (existingEmployee && existingEmployee.userId !== userId) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Username is already taken' 
+            });
+        }
+
         const employeeData = {
             userId,
-            fullName: req.body.fullName,
-            username: req.body.username,
+            fullName: req.body.fullName || null,
+            username: req.body.username.trim().toLowerCase(),
             phone: req.body.phone || null,
-            profilePicUrl: req.body.profilePicUrl,
-            coverPicUrl: req.body.coverPicUrl,
+            coverPicUrl: req.body.coverPicUrl || null,
             profession: req.body.profession || 'Employee',
-            gender: req.body.gender,
-            bio: req.body.bio,
-            location: req.body.location,
-            websiteUrl: req.body.websiteUrl,
-            interests: req.body.interests || [],
-            education: req.body.education || [],
-            professionalSkills: req.body.professionalSkills || [],
-            certificates: req.body.certificates || []
+            gender: req.body.gender || null,
+            bio: req.body.bio || null,
+            location: req.body.location || null,
+            websiteUrl: req.body.websiteUrl || null,
+            interests: Array.isArray(req.body.interests) ? req.body.interests : [],
+            education: Array.isArray(req.body.education) ? req.body.education : [],
+            professionalSkills: Array.isArray(req.body.professionalSkills) ? req.body.professionalSkills : [],
+            certificates: Array.isArray(req.body.certificates) ? req.body.certificates : []
         };
 
         let employee = await Employee.findOne({ where: { userId } });
         let isNew = false;
+        
         if (employee) {
+            // Update existing
             employee = await employee.update(employeeData);
         } else {
+            // Create new
             employee = await Employee.create(employeeData);
             isNew = true;
         }
 
-        // Update users table with profession and username
+        // Update users table with profession, username, and profile picture for persistence
         await User.updateMetadata(userId, {
             profession: 'Employee',
-            username: req.body.username
+            username: req.body.username.trim().toLowerCase()
         });
         
         // Update profile picture in users table if provided
@@ -46,14 +69,14 @@ exports.createOrUpdateEmployee = async (req, res) => {
             });
         }
 
-        // Get updated user details to return with profile picture
+        // Get updated user details
         const userResult = await pool.query(
-            'SELECT id, full_name, email, profile_picture, profession, username FROM users WHERE id = $1',
+            'SELECT id, full_name, email, profile_picture, profession, username FROM users WHERE id = $1', 
             [userId]
         );
         const user = userResult.rows[0];
 
-        res.status(200).json({ 
+        res.status(isNew ? 201 : 200).json({ 
             success: true,
             message: isNew ? 'Employee profile created successfully' : 'Employee profile updated successfully',
             data: {

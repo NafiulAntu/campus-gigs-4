@@ -6,37 +6,60 @@ const pool = require('../config/db');
 exports.createOrUpdateStudent = async (req, res) => {
     try {
         const userId = req.user.id;  // From auth middleware
+        
+        // Validate required fields
+        if (!req.body.username) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Username is required' 
+            });
+        }
+
+        // Check if username is already taken by another user
+        const existingStudent = await Student.findOne({ 
+            where: { username: req.body.username } 
+        });
+        
+        if (existingStudent && existingStudent.userId !== userId) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Username is already taken' 
+            });
+        }
+
         const studentData = {
             userId,
-            fullName: req.body.fullName,
-            username: req.body.username,
+            fullName: req.body.fullName || null,
+            username: req.body.username.trim().toLowerCase(),
             phone: req.body.phone || null,
-            profilePicUrl: req.body.profilePicUrl,
-            coverPicUrl: req.body.coverPicUrl,
+            coverPicUrl: req.body.coverPicUrl || null,
             profession: req.body.profession || 'Student',
-            gender: req.body.gender,
-            bio: req.body.bio,
-            location: req.body.location,
-            websiteUrl: req.body.websiteUrl,
-            interests: req.body.interests || [],
-            education: req.body.education || [],
-            professionalSkills: req.body.professionalSkills || [],
-            certificates: req.body.certificates || []
+            gender: req.body.gender || null,
+            bio: req.body.bio || null,
+            location: req.body.location || null,
+            websiteUrl: req.body.websiteUrl || null,
+            interests: Array.isArray(req.body.interests) ? req.body.interests : [],
+            education: Array.isArray(req.body.education) ? req.body.education : [],
+            professionalSkills: Array.isArray(req.body.professionalSkills) ? req.body.professionalSkills : [],
+            certificates: Array.isArray(req.body.certificates) ? req.body.certificates : []
         };
 
         let student = await Student.findOne({ where: { userId } });
         let isNew = false;
+        
         if (student) {
+            // Update existing
             student = await student.update(studentData);
         } else {
+            // Create new
             student = await Student.create(studentData);
             isNew = true;
         }
 
-        // Update users table with profession and username
+        // Update users table with profession, username, and profile picture for persistence
         await User.updateMetadata(userId, {
             profession: 'Student',
-            username: req.body.username
+            username: req.body.username.trim().toLowerCase()
         });
         
         // Update profile picture in users table if provided
@@ -46,14 +69,14 @@ exports.createOrUpdateStudent = async (req, res) => {
             });
         }
 
-        // Get updated user details to return with profile picture
+        // Get updated user details
         const userResult = await pool.query(
-            'SELECT id, full_name, email, profile_picture, profession, username FROM users WHERE id = $1',
+            'SELECT id, full_name, email, profile_picture, profession, username FROM users WHERE id = $1', 
             [userId]
         );
         const user = userResult.rows[0];
 
-        res.status(200).json({ 
+        res.status(isNew ? 201 : 200).json({ 
             success: true, 
             message: isNew ? 'Student profile created successfully' : 'Student profile updated successfully',
             data: {
