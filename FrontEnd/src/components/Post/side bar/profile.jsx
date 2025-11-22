@@ -1508,12 +1508,12 @@ export default function Profile({ onBack }) {
               </button>
             </div>
             {/* Simple Save Button */}
-            <div className="flex justify-end mt-6">
+            <div className="mt-6">
               <button
                 onClick={handleSaveProfile}
                 disabled={loading}
                 type="button"
-                className="px-8 py-3 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/90 transition-colors font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-8 py-3 bg-primary-teal text-white rounded-lg hover:bg-primary-teal/90 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
