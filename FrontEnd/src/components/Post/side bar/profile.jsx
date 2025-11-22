@@ -1319,38 +1319,7 @@ export default function Profile({ onBack }) {
         {/* Account Tab */}
         {activeTab === "account" && (
           <div className="bg-white/[0.04] rounded-xl p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <h2 className="text-xl font-bold text-white">Account Settings</h2>
-              <i className="fi fi-br-settings text-primary-teal text-sm"></i>
-            </div>
             <div className="space-y-5">
-              {/* Profile Picture Section */}
-              <div className="flex items-center gap-4 pb-5 border-b border-white/10">
-                <div className="relative">
-                  {profileData.profilePicUrl ? (
-                    <img 
-                      src={profileData.profilePicUrl} 
-                      alt="Profile" 
-                      className="h-20 w-20 rounded-full object-cover border-2 border-primary-teal"
-                    />
-                  ) : (
-                    <div className="h-20 w-20 rounded-full bg-gradient-to-r from-primary-teal to-blue-500 flex items-center justify-center font-bold text-white text-2xl border-2 border-primary-teal">
-                      {profileData.fullName ? profileData.fullName.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white">{profileData.fullName || 'Your Name'}</h3>
-                  <p className="text-sm text-text-muted">@{profileData.username || 'username'}</p>
-                  <button 
-                    onClick={handleProfilePicUpload}
-                    className="mt-2 text-sm text-primary-teal hover:text-blue-400 transition-colors"
-                  >
-                    Change Profile Picture
-                  </button>
-                </div>
-              </div>
-
               <div>
                 <label className="block text-sm font-semibold text-white mb-2">
                   Email Address
