@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "./Sidebar";
 import PostComposer from "./PostComposer";
 import Profile from "./side bar/profile";
@@ -83,6 +83,8 @@ export default function PostPage({ onNavigate = () => {} }) {
   const [isWideScreen, setIsWideScreen] = useState(window.innerWidth >= 1536);
   const [editingPost, setEditingPost] = useState(null);
   const [currentView, setCurrentView] = useState("home");
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRef = useRef(null);
 
   // Initialize CSS vars on mount (light teal accent, default text colors) and set dim mode
   useEffect(() => {
@@ -245,6 +247,28 @@ export default function PostPage({ onNavigate = () => {} }) {
       prev.map((p) => (p.id === id ? { ...p, reacted: !p.reacted } : p))
     );
   }
+
+  function deletePost(id) {
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      setPosts((prev) => prev.filter((p) => p.id !== id));
+      setOpenMenuId(null);
+    }
+  }
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+    }
+    if (openMenuId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuId]);
 
   function handleNav(key) {
     if (key === "jobs") {
@@ -480,14 +504,76 @@ export default function PostPage({ onNavigate = () => {} }) {
                               </a>
                             </div>
                           </div>
-                          <button
-                            className={`shrink-0 rounded p-1 transition-colors duration-300 ${
-                              brightOn ? 'text-[#008B8B] hover:text-[#00CED1] hover:bg-[#1E293B]' : 'text-text-muted hover:text-white hover:bg-white/5'
-                            }`}
-                            aria-label="More options"
-                          >
-                            <i className="fa-solid fa-ellipsis" />
-                          </button>
+                          <div className="relative" ref={openMenuId === p.id ? menuRef : null}>
+                            <button
+                              onClick={() => setOpenMenuId(openMenuId === p.id ? null : p.id)}
+                              className={`shrink-0 rounded-full p-2 transition-all duration-300 ${
+                                openMenuId === p.id 
+                                  ? 'bg-primary-teal/20 text-primary-teal' 
+                                  : brightOn ? 'text-[#008B8B] hover:text-[#00CED1] hover:bg-[#1E293B]' : 'text-text-muted hover:text-white hover:bg-white/5'
+                              }`}
+                              aria-label="More options"
+                            >
+                              <i className="fa-solid fa-ellipsis" />
+                            </button>
+                            
+                            {/* Dropdown Menu */}
+                            {openMenuId === p.id && (
+                              <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl overflow-hidden z-50 border transition-colors duration-300 ${
+                                brightOn ? 'bg-[#1E293B] border-white/20' : 'bg-gray-900 border-white/10'
+                              }`}>
+                                {p.author?.name === "You" && (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        setEditingPost(p);
+                                        setOpenMenuId(null);
+                                      }}
+                                      className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 ${
+                                        brightOn ? 'text-white hover:bg-[#2D3B4E]' : 'text-white hover:bg-white/10'
+                                      }`}
+                                    >
+                                      <i className="fi fi-br-edit text-lg"></i>
+                                      <span className="font-semibold">Edit Post</span>
+                                    </button>
+                                    <button
+                                      onClick={() => deletePost(p.id)}
+                                      className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 border-t ${
+                                        brightOn 
+                                          ? 'text-rose-400 hover:bg-rose-500/10 border-white/10' 
+                                          : 'text-rose-400 hover:bg-rose-500/10 border-white/10'
+                                      }`}
+                                    >
+                                      <i className="fi fi-br-trash text-lg"></i>
+                                      <span className="font-semibold">Delete Post</span>
+                                    </button>
+                                  </>
+                                )}
+                                {p.author?.name !== "You" && (
+                                  <>
+                                    <button
+                                      className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 ${
+                                        brightOn ? 'text-white hover:bg-[#2D3B4E]' : 'text-white hover:bg-white/10'
+                                      }`}
+                                    >
+                                      <i className="fi fi-br-bookmark text-lg"></i>
+                                      <span className="font-semibold">Save Post</span>
+                                    </button>
+                                    <button
+                                      className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 border-t ${
+                                        brightOn 
+                                          ? 'text-rose-400 hover:bg-rose-500/10 border-white/10' 
+                                          : 'text-rose-400 hover:bg-rose-500/10 border-white/10'
+                                      }`}
+                                    >
+                                      <i className="fi fi-br-flag text-lg"></i>
+                                      <span className="font-semibold">Report Post</span>
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         <div className={`mt-2 leading-[1.6] whitespace-pre-wrap font-medium text-[15px] sm:text-[17px] break-words transition-colors duration-300 ${
