@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const postController = require('../controllers/postController');
-const authMiddleware = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 // Post CRUD routes
-router.post('/', authMiddleware, postController.createPost);
-router.get('/', authMiddleware, postController.getAllPosts);
-router.get('/user/:userId', authMiddleware, postController.getUserPosts);
-router.get('/:postId', authMiddleware, postController.getPostById);
-router.put('/:postId', authMiddleware, postController.updatePost);
-router.delete('/:postId', authMiddleware, postController.deletePost);
+router.post('/', protect, postController.createPost);
+router.get('/', protect, postController.getAllPosts);
+router.get('/user/:userId', protect, postController.getUserPosts);
+router.get('/:postId', protect, postController.getPostById);
+router.put('/:postId', protect, postController.updatePost);
+router.delete('/:postId', protect, postController.deletePost);
 
 // Post interaction routes
-router.post('/:postId/like', authMiddleware, postController.toggleLike);
-router.post('/:postId/share', authMiddleware, postController.toggleShare);
-router.post('/:postId/comment', authMiddleware, postController.addComment);
-router.get('/:postId/comments', authMiddleware, postController.getComments);
+router.post('/:postId/like', protect, postController.toggleLike);
+router.post('/:postId/share', protect, postController.toggleShare);
+router.post('/:postId/comment', protect, postController.addComment);
+router.get('/:postId/comments', protect, postController.getComments);
 
 module.exports = router;

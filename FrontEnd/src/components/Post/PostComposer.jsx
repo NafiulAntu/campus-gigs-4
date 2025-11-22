@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { uploadFiles } from '../../services/api';
 
 export default function PostComposer({ onPost, onEdit, editingPost, brightOn = false }) {
   const [text, setText] = useState("");
@@ -64,31 +65,50 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
     if (onEdit) onEdit(null); // This will set editingPost to null
   }
 
-  function submit() {
-    if (editingPost) {
-      // Edit mode
-      const updatedPost = {
-        ...editingPost,
-        text,
-        files,
-      };
-      if (onEdit) onEdit(updatedPost);
-    } else {
-      // Create mode
-      const newPost = {
-        id: Date.now(),
-        text,
-        files,
-        author: { name: "You", avatar: null },
-        createdAt: new Date().toISOString(),
-      };
-      if (onPost) onPost(newPost);
+  async function submit() {
+    try {
+      let mediaUrls = [];
+      
+      // Upload files if any
+      if (files.length > 0) {
+        const formData = new FormData();
+        files.forEach(f => {
+          if (f.file) {
+            formData.append('files', f.file);
+          }
+        });
+        
+        const uploadResponse = await uploadFiles(formData);
+        mediaUrls = uploadResponse.data.files || [];
+      }
+
+      if (editingPost) {
+        // Edit mode
+        const updatedPost = {
+          ...editingPost,
+          text,
+          media_urls: mediaUrls,
+        };
+        if (onEdit) onEdit(updatedPost);
+      } else {
+        // Create mode
+        const newPost = {
+          text,
+          media_urls: mediaUrls,
+        };
+        if (onPost) onPost(newPost);
+      }
+      
+      // Cleanup
+      files.forEach((f) => f.preview && URL.revokeObjectURL(f.preview));
+      setText("");
+      setFiles([]);
+      if (mediaInputRef.current) mediaInputRef.current.value = null;
+      if (attachInputRef.current) attachInputRef.current.value = null;
+    } catch (error) {
+      console.error('Error submitting post:', error);
+      alert('Failed to upload files. Please try again.');
     }
-    files.forEach((f) => f.preview && URL.revokeObjectURL(f.preview));
-    setText("");
-    setFiles([]);
-    if (mediaInputRef.current) mediaInputRef.current.value = null;
-    if (attachInputRef.current) attachInputRef.current.value = null;
   }
 
   return (

@@ -148,12 +148,14 @@ export default function PostPage({ onNavigate = () => {} }) {
   async function handleNewPost(postData) {
     try {
       const response = await createPost({
-        content: postData.text,
-        media_urls: postData.files?.map(f => f.preview) || []
+        content: postData.text || '',
+        media_urls: postData.media_urls || []
       });
       
       // Add new post to the top of the list
-      setPosts(prev => [response.data.post, ...prev]);
+      if (response.data && response.data.post) {
+        setPosts(prev => [response.data.post, ...prev]);
+      }
     } catch (error) {
       console.error('Error creating post:', error);
       alert('Failed to create post. Please try again.');
@@ -163,12 +165,14 @@ export default function PostPage({ onNavigate = () => {} }) {
   async function handleUpdatePost(updatedPost) {
     try {
       const response = await updatePost(updatedPost.id, {
-        content: updatedPost.text,
-        media_urls: updatedPost.files?.map(f => f.preview) || []
+        content: updatedPost.text || '',
+        media_urls: updatedPost.media_urls || []
       });
       
       // Update the post in the list
-      setPosts(prev => prev.map(p => p.id === updatedPost.id ? response.data.post : p));
+      if (response.data && response.data.post) {
+        setPosts(prev => prev.map(p => p.id === updatedPost.id ? response.data.post : p));
+      }
       setEditingPost(null);
     } catch (error) {
       console.error('Error updating post:', error);
@@ -316,14 +320,29 @@ export default function PostPage({ onNavigate = () => {} }) {
   }
 
   async function deletePost(id) {
-    if (window.confirm('Are you sure you want to delete this post?')) {
+    const confirmed = window.confirm('🗑️ Delete this post?\n\nThis action cannot be undone.');
+    
+    if (confirmed) {
       try {
         await deletePostAPI(id);
         setPosts((prev) => prev.filter((p) => p.id !== id));
         setOpenMenuId(null);
+        
+        // Show success feedback
+        const message = document.createElement('div');
+        message.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in';
+        message.innerHTML = '✓ Post deleted successfully';
+        document.body.appendChild(message);
+        setTimeout(() => message.remove(), 3000);
       } catch (error) {
         console.error('Error deleting post:', error);
-        alert('Failed to delete post. Please try again.');
+        
+        // Show error feedback
+        const message = document.createElement('div');
+        message.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in';
+        message.innerHTML = '✗ Failed to delete post. Please try again.';
+        document.body.appendChild(message);
+        setTimeout(() => message.remove(), 3000);
       }
     }
   }
@@ -522,7 +541,7 @@ export default function PostPage({ onNavigate = () => {} }) {
               </div>
             ) : filteredPosts.map((p, index) => {
               const avatarLetter = p.full_name ? p.full_name[0].toUpperCase() : "U";
-              const isCurrentUserPost = currentUser && p.user_id === currentUser.id;
+              const isCurrentUserPost = currentUser && p.posted_by === currentUser.id;
               return (
                 <div
                   key={p.id}
@@ -652,40 +671,78 @@ export default function PostPage({ onNavigate = () => {} }) {
 
                         {p.media_urls && p.media_urls.length > 0 && (
                           <div
-                            className={`mt-2 grid ${
+                            className={`mt-3 grid ${
                               p.media_urls.length === 1
                                 ? "grid-cols-1"
                                 : p.media_urls.length === 2
                                 ? "grid-cols-2"
                                 : "grid-cols-2"
-                            } gap-0.5 sm:gap-1`}
+                            } gap-2`}
                           >
                             {p.media_urls.map((url, i) => {
+                              if (!url) return null;
+                              
                               const count = p.media_urls.length;
                               const isFirstLarge = count === 3 && i === 0;
-                              const itemClass = isFirstLarge
-                                ? "col-span-2"
-                                : "";
-                              const imgHeight =
-                                count === 1
-                                  ? "h-64"
-                                  : count === 2
-                                  ? "h-40"
-                                  : isFirstLarge
-                                  ? "h-56"
-                                  : "h-20";
-                              return (
-                                <div
-                                  key={i}
-                                  className={`rounded-2xl overflow-hidden bg-input border border-white/10 ${itemClass}`}
-                                >
-                                  <img
-                                    src={url}
-                                    alt="Post media"
-                                    className={`object-cover w-full ${imgHeight}`}
-                                  />
-                                </div>
-                              );
+                              const itemClass = isFirstLarge ? "col-span-2" : "";
+                              
+                              // Check if it's an image
+                              const isImage = url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                              
+                              if (isImage) {
+                                const imgHeight =
+                                  count === 1 ? "h-96" : count === 2 ? "h-64" : isFirstLarge ? "h-80" : "h-48";
+                                
+                                return (
+                                  <div
+                                    key={i}
+                                    className={`rounded-xl overflow-hidden border ${
+                                      brightOn ? 'border-white/20 bg-[#1E293B]' : 'border-primary-teal/20 bg-gray-800/30'
+                                    } ${itemClass}`}
+                                  >
+                                    <img
+                                      src={url}
+                                      alt={`Media ${i + 1}`}
+                                      className={`object-cover w-full ${imgHeight} hover:scale-105 transition-transform duration-300`}
+                                      onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="50%" y="50%" text-anchor="middle" fill="gray">Image not found</text></svg>';
+                                      }}
+                                    />
+                                  </div>
+                                );
+                              } else {
+                                // File attachment
+                                const fileName = url.split('/').pop();
+                                return (
+                                  <a
+                                    key={i}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all hover:scale-[1.02] ${
+                                      brightOn 
+                                        ? 'border-white/20 bg-[#1E293B] hover:bg-[#2D3B4E]' 
+                                        : 'border-primary-teal/20 bg-gray-800/30 hover:bg-gray-800/50'
+                                    } ${itemClass}`}
+                                  >
+                                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
+                                      brightOn ? 'bg-white/10' : 'bg-primary-teal/10'
+                                    }`}>
+                                      📎
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className={`font-semibold text-sm truncate ${
+                                        brightOn ? 'text-white' : 'text-blue-300'
+                                      }`}>
+                                        {fileName}
+                                      </div>
+                                      <div className="text-xs text-gray-400">Click to download</div>
+                                    </div>
+                                    <i className="fi fi-br-download text-primary-teal"></i>
+                                  </a>
+                                );
+                              }
                             })}
                           </div>
                         )}

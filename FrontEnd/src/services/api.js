@@ -67,6 +67,11 @@ export const getMyEmployeeProfile = () => API.get('/employees/profile/me');
 export const deleteEmployeeProfile = () => API.delete('/employees/profile');
 export const getAllEmployees = (params) => API.get('/employees', { params });
 
+// Upload API
+export const uploadFiles = (formData) => API.post('/upload', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+});
+
 // Post API
 export const createPost = (data) => API.post('/posts', data);
 export const getAllPosts = (params) => API.get('/posts', { params });

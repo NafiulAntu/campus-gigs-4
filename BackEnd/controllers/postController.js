@@ -3,25 +3,32 @@ const Post = require('../models/Post');
 // Create a new post
 exports.createPost = async (req, res) => {
   try {
+    console.log('📝 Create post request received');
+    console.log('Request body:', req.body);
+    console.log('User ID:', req.user?.id);
+    
     const { content, media_urls } = req.body;
     const userId = req.user.id;
 
-    if (!content || content.trim() === '') {
-      return res.status(400).json({ error: 'Post content is required' });
-    }
+    // Allow posts with just media (no text content required)
+    const postContent = content && content.trim() !== '' ? content.trim() : '[Media]';
 
-    const post = await Post.create(userId, content, media_urls || []);
+    console.log('✅ Creating post with:', { userId, content: postContent, media_urls });
+    const post = await Post.create(userId, postContent, media_urls || []);
+    console.log('✅ Post created:', post);
     
     // Get the full post with user info
     const fullPost = await Post.getById(post.id);
+    console.log('✅ Full post retrieved:', fullPost);
 
     res.status(201).json({ 
       message: 'Post created successfully', 
       post: fullPost 
     });
   } catch (error) {
-    console.error('Error creating post:', error);
-    res.status(500).json({ error: 'Failed to create post' });
+    console.error('❌ Error creating post:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to create post', details: error.message });
   }
 };
 
