@@ -418,10 +418,14 @@ export default function Profile({ onBack }) {
       setLoading(true);
       setError("");
       
+      console.log("Sending delete account request...");
       const response = await deleteAccount({ password: deletePassword });
+      console.log("Delete account response:", response.data);
       
       if (response.data.success) {
         setSuccess("Account deleted successfully. Redirecting...");
+        setShowDeleteModal(false);
+        setDeletePassword("");
         
         // Clear all local storage
         localStorage.clear();
@@ -433,12 +437,13 @@ export default function Profile({ onBack }) {
       }
     } catch (err) {
       console.error("Delete account error:", err);
-      const errorMessage = err.response?.data?.message || "Failed to delete account. Please try again.";
+      console.error("Error response:", err.response?.data);
+      const errorMessage = err.response?.data?.message || err.response?.data?.error || "Failed to delete account. Please try again.";
       setError(errorMessage);
-    } finally {
-      setLoading(false);
       setShowDeleteModal(false);
       setDeletePassword("");
+    } finally {
+      setLoading(false);
     }
   };
 

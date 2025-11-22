@@ -227,6 +227,8 @@ exports.deleteAccount = async (req, res) => {
     const userId = req.user.id;
     const { password } = req.body;
 
+    console.log('Delete account request for userId:', userId);
+
     // Get user
     const user = await User.findById(userId);
     if (!user) {
@@ -235,6 +237,8 @@ exports.deleteAccount = async (req, res) => {
         message: 'User not found' 
       });
     }
+
+    console.log('User found:', user.email, 'Provider:', user.provider);
 
     // Verify password for local accounts
     if (user.provider === 'local') {
@@ -252,10 +256,39 @@ exports.deleteAccount = async (req, res) => {
           message: 'Incorrect password' 
         });
       }
+      console.log('Password verified successfully');
     }
 
-    // Delete user (this will cascade delete related profile data if configured)
-    await User.delete(userId);
+    // Delete related profile data first to avoid foreign key constraints
+    const pool = require('../config/db');
+    
+    try {
+      // Delete teacher profile if exists
+      await pool.query('DELETE FROM teachers WHERE user_id = $1', [userId]);
+      console.log('Teacher profile deleted (if existed)');
+      
+      // Delete student profile if exists
+      await pool.query('DELETE FROM students WHERE user_id = $1', [userId]);
+      console.log('Student profile deleted (if existed)');
+      
+      // Delete employee profile if exists
+      await pool.query('DELETE FROM employees WHERE user_id = $1', [userId]);
+      console.log('Employee profile deleted (if existed)');
+      
+      // Delete any other related data (messages, payments, etc.)
+      await pool.query('DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1', [userId]);
+      console.log('Messages deleted (if existed)');
+      
+      await pool.query('DELETE FROM payments WHERE user_id = $1', [userId]);
+      console.log('Payments deleted (if existed)');
+    } catch (relatedDataError) {
+      console.error('Error deleting related data:', relatedDataError);
+      // Continue with user deletion even if related data deletion fails
+    }
+
+    // Finally delete the user
+    const deletedUser = await User.delete(userId);
+    console.log('User deleted successfully:', deletedUser);
 
     res.status(200).json({ 
       success: true, 
@@ -263,9 +296,11 @@ exports.deleteAccount = async (req, res) => {
     });
   } catch (error) {
     console.error('Delete account error:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ 
       success: false, 
-      message: 'Failed to delete account. Please try again.' 
+      message: 'Failed to delete account. Please try again.',
+      error: error.message
     });
   }
 };
