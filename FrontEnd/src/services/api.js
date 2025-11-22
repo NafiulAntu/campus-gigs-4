@@ -66,3 +66,15 @@ export const getEmployeeProfile = (username) => API.get(`/employees/${username}`
 export const getMyEmployeeProfile = () => API.get('/employees/profile/me');
 export const deleteEmployeeProfile = () => API.delete('/employees/profile');
 export const getAllEmployees = (params) => API.get('/employees', { params });
+
+// Post API
+export const createPost = (data) => API.post('/posts', data);
+export const getAllPosts = (params) => API.get('/posts', { params });
+export const getUserPosts = (userId, params) => API.get(`/posts/user/${userId}`, { params });
+export const getPostById = (postId) => API.get(`/posts/${postId}`);
+export const updatePost = (postId, data) => API.put(`/posts/${postId}`, data);
+export const deletePost = (postId) => API.delete(`/posts/${postId}`);
+export const toggleLike = (postId) => API.post(`/posts/${postId}/like`);
+export const toggleShare = (postId) => API.post(`/posts/${postId}/share`);
+export const addComment = (postId, data) => API.post(`/posts/${postId}/comment`, data);
+export const getComments = (postId) => API.get(`/posts/${postId}/comments`);

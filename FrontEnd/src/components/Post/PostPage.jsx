@@ -7,6 +7,7 @@ import Notifications from "./side bar/notifications";
 import Communities from "./side bar/communities";
 import Premium from "./side bar/premium";
 import Payments from "./side bar/payments";
+import { getAllPosts, createPost, updatePost, deletePost as deletePostAPI, toggleLike as toggleLikeAPI, toggleShare as toggleShareAPI } from "../../services/api";
 
 const Switcher8 = ({ isChecked, onChange }) => {
   return (
@@ -75,7 +76,8 @@ const initialPosts = [
 ];
 
 export default function PostPage({ onNavigate = () => {} }) {
-  const [posts, setPosts] = useState(initialPosts);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [query, setQuery] = useState("");
   const [peopleTab, setPeopleTab] = useState("active");
@@ -84,7 +86,33 @@ export default function PostPage({ onNavigate = () => {} }) {
   const [editingPost, setEditingPost] = useState(null);
   const [currentView, setCurrentView] = useState("home");
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const menuRef = useRef(null);
+
+  // Load current user
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setCurrentUser(JSON.parse(userData));
+    }
+  }, []);
+
+  // Fetch posts from API
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllPosts();
+      setPosts(response.data.posts);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Initialize CSS vars on mount (light teal accent, default text colors) and set dim mode
   useEffect(() => {
@@ -117,7 +145,38 @@ export default function PostPage({ onNavigate = () => {} }) {
 
   // No external navbar toggle; search can still be opened via Explore or local top button
 
-  function handleNewPost(post) {
+  async function handleNewPost(postData) {
+    try {
+      const response = await createPost({
+        content: postData.text,
+        media_urls: postData.files?.map(f => f.preview) || []
+      });
+      
+      // Add new post to the top of the list
+      setPosts(prev => [response.data.post, ...prev]);
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Failed to create post. Please try again.');
+    }
+  }
+
+  async function handleUpdatePost(updatedPost) {
+    try {
+      const response = await updatePost(updatedPost.id, {
+        content: updatedPost.text,
+        media_urls: updatedPost.files?.map(f => f.preview) || []
+      });
+      
+      // Update the post in the list
+      setPosts(prev => prev.map(p => p.id === updatedPost.id ? response.data.post : p));
+      setEditingPost(null);
+    } catch (error) {
+      console.error('Error updating post:', error);
+      alert('Failed to update post. Please try again.');
+    }
+  }
+
+  function handleNewPostOld(post) {
     const p = {
       id: post.id || Date.now(),
       text: post.text || "",
@@ -186,32 +245,40 @@ export default function PostPage({ onNavigate = () => {} }) {
     return `${(n / 1_000_000).toFixed(n % 1_000_000 >= 100_000 ? 1 : 0)}M`;
   }
 
-  function toggleLike(id) {
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p;
-        const nextLiked = !p.liked;
-        return {
-          ...p,
-          liked: nextLiked,
-          likes: Math.max(0, (p.likes || 0) + (nextLiked ? 1 : -1)),
-        };
-      })
-    );
+  async function toggleLike(id) {
+    try {
+      const response = await toggleLikeAPI(id);
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          return {
+            ...p,
+            user_liked: response.data.liked,
+            likes_count: response.data.likesCount,
+          };
+        })
+      );
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
   }
 
-  function toggleRepost(id) {
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p;
-        const nextReposted = !p.reposted;
-        return {
-          ...p,
-          reposted: nextReposted,
-          reposts: Math.max(0, (p.reposts || 0) + (nextReposted ? 1 : -1)),
-        };
-      })
-    );
+  async function toggleRepost(id) {
+    try {
+      const response = await toggleShareAPI(id);
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          return {
+            ...p,
+            user_shared: response.data.shared,
+            shares_count: response.data.sharesCount,
+          };
+        })
+      );
+    } catch (error) {
+      console.error('Error toggling share:', error);
+    }
   }
 
   function toggleAccept(id) {
@@ -248,10 +315,16 @@ export default function PostPage({ onNavigate = () => {} }) {
     );
   }
 
-  function deletePost(id) {
+  async function deletePost(id) {
     if (window.confirm('Are you sure you want to delete this post?')) {
-      setPosts((prev) => prev.filter((p) => p.id !== id));
-      setOpenMenuId(null);
+      try {
+        await deletePostAPI(id);
+        setPosts((prev) => prev.filter((p) => p.id !== id));
+        setOpenMenuId(null);
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        alert('Failed to delete post. Please try again.');
+      }
     }
   }
 
@@ -373,7 +446,7 @@ export default function PostPage({ onNavigate = () => {} }) {
           </div>
 
           {/* Status composer is hidden while searching */}
-          {!isSearching && <PostComposer onPost={handleNewPost} onEdit={handleEditPost} editingPost={editingPost} brightOn={brightOn} />}
+          {!isSearching && <PostComposer onPost={handleNewPost} onEdit={handleUpdatePost} editingPost={editingPost} brightOn={brightOn} />}
 
           {/* Divider after composer or under sticky search */}
           <div className={`transition-colors duration-300 ${
@@ -443,9 +516,13 @@ export default function PostPage({ onNavigate = () => {} }) {
                 </div>
               </div>
             )}
-            {filteredPosts.map((p, index) => {
-              const avatarLetter =
-                (p.author && p.author.name && p.author.name[0]) || "P";
+            {loading ? (
+              <div className="p-10 text-center">
+                <div className="text-primary-teal text-lg">Loading posts...</div>
+              </div>
+            ) : filteredPosts.map((p, index) => {
+              const avatarLetter = p.full_name ? p.full_name[0].toUpperCase() : "U";
+              const isCurrentUserPost = currentUser && p.user_id === currentUser.id;
               return (
                 <div
                   key={p.id}
@@ -457,14 +534,14 @@ export default function PostPage({ onNavigate = () => {} }) {
                     brightOn ? 'bg-[#0F172A] hover:bg-[#1E293B]' : 'bg-gray-900/30 hover:bg-gray-900/40'
                   }`}>
                     <div className="flex items-start gap-3 sm:gap-4">
-                      {p.author?.avatar ? (
+                      {p.profile_picture ? (
                         <img
-                          src={p.author.avatar}
-                          alt={p.author.name}
+                          src={p.profile_picture}
+                          alt={p.full_name}
                           className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover shadow-md ring-2 ring-primary-teal/20"
                         />
                       ) : (
-                        <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary-teal/30 to-primary-teal/10 flex items-center justify-center font-bold text-white text-sm sm:text-base shadow-md ring-2 ring-primary-teal/20">
+                        <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary-teal to-blue-500 flex items-center justify-center font-bold text-white text-sm sm:text-base shadow-md ring-2 ring-primary-teal/20">
                           {avatarLetter}
                         </div>
                       )}
@@ -475,21 +552,12 @@ export default function PostPage({ onNavigate = () => {} }) {
                               <span className={`font-bold text-[15px] sm:text-[17px] transition-colors duration-300 ${
                                 brightOn ? 'text-white' : 'text-blue-400'
                               }`}>
-                                {p.author?.name || "Unknown"}
+                                {p.full_name || "Unknown"}
                               </span>
-                              {p.author?.verified && (
-                                <i
-                                  className="fa-solid fa-circle-check text-sky-400 text-xs sm:text-sm"
-                                  aria-label="Verified"
-                                />
-                              )}
                               <span className={`text-xs sm:text-sm truncate transition-colors duration-300 ${
                                 brightOn ? 'text-[#008B8B]' : 'text-text-muted'
                               }`}>
-                                @
-                                {(p.author?.name || "unknown")
-                                  .toLowerCase()
-                                  .replace(/\s+/g, "")}
+                                @{p.username || "unknown"}
                               </span>
                               <span className={`hidden sm:inline transition-colors duration-300 ${
                                 brightOn ? 'text-[#008B8B]' : 'text-text-muted'
@@ -522,7 +590,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                               <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl overflow-hidden z-50 border transition-colors duration-300 ${
                                 brightOn ? 'bg-[#1E293B] border-white/20' : 'bg-gray-900 border-white/10'
                               }`}>
-                                {p.author?.name === "You" && (
+                                {isCurrentUserPost && (
                                   <>
                                     <button
                                       onClick={() => {
@@ -549,7 +617,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                                     </button>
                                   </>
                                 )}
-                                {p.author?.name !== "You" && (
+                                {!isCurrentUserPost && (
                                   <>
                                     <button
                                       className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 ${
@@ -579,21 +647,21 @@ export default function PostPage({ onNavigate = () => {} }) {
                         <div className={`mt-2 leading-[1.6] whitespace-pre-wrap font-medium text-[15px] sm:text-[17px] break-words transition-colors duration-300 ${
                           brightOn ? 'text-white' : 'text-white'
                         }`}>
-                          {p.text}
+                          {p.content}
                         </div>
 
-                        {p.files && p.files.length > 0 && (
+                        {p.media_urls && p.media_urls.length > 0 && (
                           <div
                             className={`mt-2 grid ${
-                              p.files.length === 1
+                              p.media_urls.length === 1
                                 ? "grid-cols-1"
-                                : p.files.length === 2
+                                : p.media_urls.length === 2
                                 ? "grid-cols-2"
                                 : "grid-cols-2"
                             } gap-0.5 sm:gap-1`}
                           >
-                            {p.files.map((f, i) => {
-                              const count = p.files.length;
+                            {p.media_urls.map((url, i) => {
+                              const count = p.media_urls.length;
                               const isFirstLarge = count === 3 && i === 0;
                               const itemClass = isFirstLarge
                                 ? "col-span-2"
@@ -611,40 +679,11 @@ export default function PostPage({ onNavigate = () => {} }) {
                                   key={i}
                                   className={`rounded-2xl overflow-hidden bg-input border border-white/10 ${itemClass}`}
                                 >
-                                  {f.preview ? (
-                                    f.type?.startsWith("image/") ? (
-                                      <img
-                                        src={f.preview}
-                                        alt={f.name}
-                                        className={`object-cover w-full ${imgHeight}`}
-                                      />
-                                    ) : f.type?.startsWith("video/") ? (
-                                      <video
-                                        src={f.preview}
-                                        className={`object-cover w-full ${imgHeight}`}
-                                        controls
-                                        muted
-                                      />
-                                    ) : (
-                                      <div className="p-3 flex items-center gap-2">
-                                        <div className="h-8 w-8 bg-primary/10 rounded flex items-center justify-center">
-                                          📄
-                                        </div>
-                                        <div className="text-sm truncate">
-                                          {f.name}
-                                        </div>
-                                      </div>
-                                    )
-                                  ) : (
-                                    <div className="p-3 flex items-center gap-2">
-                                      <div className="h-8 w-8 bg-primary/10 rounded flex items-center justify-center">
-                                        📄
-                                      </div>
-                                      <div className="text-sm truncate">
-                                        {f.name}
-                                      </div>
-                                    </div>
-                                  )}
+                                  <img
+                                    src={url}
+                                    alt="Post media"
+                                    className={`object-cover w-full ${imgHeight}`}
+                                  />
                                 </div>
                               );
                             })}
@@ -657,7 +696,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                             <button
                               onClick={() => toggleLike(p.id)}
                               className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all ${
-                                p.liked
+                                p.user_liked
                                   ? "text-[#89CFF0] bg-[#89CFF0]/10"
                                   : `transition-colors duration-300 ${
                                       brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
@@ -665,15 +704,15 @@ export default function PostPage({ onNavigate = () => {} }) {
                               }`}
                               title="Sup"
                             >
-                              <span className="text-[18px]" style={{ filter: p.liked ? 'sepia(1) saturate(5) hue-rotate(160deg) brightness(1.1)' : 'grayscale(1)' }}>🤙</span>
-                              <span className="text-sm font-semibold">{p.likes}</span>
+                              <span className="text-[18px]" style={{ filter: p.user_liked ? 'sepia(1) saturate(5) hue-rotate(160deg) brightness(1.1)' : 'grayscale(1)' }}>🤙</span>
+                              <span className="text-sm font-semibold">{p.likes_count || 0}</span>
                             </button>
 
                             {/* Repost button */}
                             <button
                               onClick={() => toggleRepost(p.id)}
                               className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all ${
-                                p.reposted
+                                p.user_shared
                                   ? "text-[#89CFF0] bg-[#89CFF0]/10"
                                   : `transition-colors duration-300 ${
                                       brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
@@ -682,7 +721,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                               title="Repost"
                             >
                               <i className="fi fi-br-refresh text-[18px]" />
-                              <span className="text-sm font-semibold">{p.reposts}</span>
+                              <span className="text-sm font-semibold">{p.shares_count || 0}</span>
                             </button>
 
                             {/* Send button */}
@@ -697,7 +736,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                             </button>
 
                             {/* Edit button - only for user's own posts */}
-                            {p.author?.name === "You" && (
+                            {isCurrentUserPost && (
                               <button
                                 onClick={() => setEditingPost(p)}
                                 className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all transition-colors duration-300 ${

@@ -77,12 +77,14 @@ const userRoutes = require('./routes/userRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
+const postRoutes = require('./routes/postRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/employees', employeeRoutes);
+app.use('/api/posts', postRoutes);
 
 // Simple route test
 app.get('/api/test', (req, res) => {
