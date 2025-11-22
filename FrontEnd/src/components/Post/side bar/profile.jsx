@@ -450,8 +450,8 @@ export default function Profile({ onBack }) {
           </div>
 
           {/* Profile Info */}
-          <div className="p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6 -mt-16 mb-6">
+          <div className="p-6 pt-10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6 -mt-16 mb-8">
               <div className="relative">
                 {profileData.profilePicUrl ? (
                   <img 
@@ -473,7 +473,7 @@ export default function Profile({ onBack }) {
               </div>
               <div className="flex-1">
                 <h1 className="text-2xl font-bold text-white mb-1">{profileData.fullName || 'Your Name'}</h1>
-                <p className="text-text-muted mb-2">@{profileData.username || 'your_handle'}</p>
+                <p className="text-text-muted mb-3">@{profileData.username || 'your_handle'}</p>
                 <div className="flex gap-4 text-sm">
                   <span className="text-text-muted"><span className="text-white font-semibold">125</span> Following</span>
                   <span className="text-text-muted"><span className="text-white font-semibold">1.2K</span> Followers</span>
