@@ -719,7 +719,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                                   >
                                     <img
                                       src={url}
-                                      alt={`Media ${i + 1}`}
+                                      alt=""
                                       className={`object-cover w-full ${imgHeight} hover:scale-105 transition-transform duration-300`}
                                       onError={(e) => {
                                         e.target.onerror = null;
@@ -728,15 +728,33 @@ export default function PostPage({ onNavigate = () => {} }) {
                                     />
                                     {/* Hover overlay with download button */}
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
-                                      <a
-                                        href={url}
-                                        download
-                                        onClick={(e) => e.stopPropagation()}
-                                        className={`p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all hover:scale-110`}
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const fileName = url.split('/').pop();
+                                          // Force download for images
+                                          fetch(url)
+                                            .then(response => response.blob())
+                                            .then(blob => {
+                                              const downloadUrl = window.URL.createObjectURL(blob);
+                                              const link = document.createElement('a');
+                                              link.href = downloadUrl;
+                                              link.download = fileName;
+                                              document.body.appendChild(link);
+                                              link.click();
+                                              document.body.removeChild(link);
+                                              window.URL.revokeObjectURL(downloadUrl);
+                                            })
+                                            .catch(err => {
+                                              console.error('Download error:', err);
+                                              window.open(url, '_blank');
+                                            });
+                                        }}
+                                        className={`p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all hover:scale-110 cursor-pointer`}
                                         title="Download image"
                                       >
                                         <i className="fas fa-download text-white text-lg" />
-                                      </a>
+                                      </button>
                                       <a
                                         href={url}
                                         target="_blank"
@@ -765,6 +783,12 @@ export default function PostPage({ onNavigate = () => {} }) {
                                 } else if (['doc', 'docx', 'odt', 'rtf'].includes(fileExt)) {
                                   fileIcon = '📝';
                                   fileColor = 'bg-blue-500/20 text-blue-400';
+                                } else if (['xls', 'xlsx', 'csv'].includes(fileExt)) {
+                                  fileIcon = '📊';
+                                  fileColor = 'bg-green-500/20 text-green-400';
+                                } else if (['ppt', 'pptx'].includes(fileExt)) {
+                                  fileIcon = '📽️';
+                                  fileColor = 'bg-orange-500/20 text-orange-400';
                                 } else if (['zip', 'rar', '7z'].includes(fileExt)) {
                                   fileIcon = '📦';
                                   fileColor = 'bg-yellow-500/20 text-yellow-400';
@@ -803,14 +827,34 @@ export default function PostPage({ onNavigate = () => {} }) {
                                       {/* Download Button */}
                                       <a
                                         href={url}
-                                        download
-                                        onClick={(e) => e.stopPropagation()}
-                                        className={`p-2.5 rounded-lg transition-all hover:scale-110 ${
+                                        download={fileName}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          // Force download for all file types
+                                          fetch(url)
+                                            .then(response => response.blob())
+                                            .then(blob => {
+                                              const downloadUrl = window.URL.createObjectURL(blob);
+                                              const link = document.createElement('a');
+                                              link.href = downloadUrl;
+                                              link.download = fileName;
+                                              document.body.appendChild(link);
+                                              link.click();
+                                              document.body.removeChild(link);
+                                              window.URL.revokeObjectURL(downloadUrl);
+                                            })
+                                            .catch(err => {
+                                              console.error('Download error:', err);
+                                              // Fallback to direct download
+                                              window.open(url, '_blank');
+                                            });
+                                        }}
+                                        className={`p-2.5 rounded-lg transition-all hover:scale-110 cursor-pointer ${
                                           brightOn 
                                             ? 'bg-white/10 hover:bg-white/20 text-white' 
                                             : 'bg-primary-teal/20 hover:bg-primary-teal/30 text-primary-teal'
                                         }`}
-                                        title="Download"
+                                        title={`Download ${fileName}`}
                                       >
                                         <i className="fas fa-download text-sm" />
                                       </a>

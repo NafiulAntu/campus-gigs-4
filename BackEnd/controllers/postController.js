@@ -11,7 +11,7 @@ exports.createPost = async (req, res) => {
     const userId = req.user.id;
 
     // Allow posts with just media (no text content required)
-    const postContent = content && content.trim() !== '' ? content.trim() : '[Media]';
+    const postContent = content && content.trim() !== '' ? content.trim() : '';
 
     console.log('✅ Creating post with:', { userId, content: postContent, media_urls });
     const post = await Post.create(userId, postContent, media_urls || []);
@@ -95,7 +95,7 @@ exports.updatePost = async (req, res) => {
     const userId = req.user.id;
 
     // Allow posts with just media (no text content required)
-    const postContent = content && content.trim() !== '' ? content.trim() : '[Media]';
+    const postContent = content && content.trim() !== '' ? content.trim() : '';
 
     console.log('✅ Updating post with:', { postId, userId, content: postContent, media_urls });
     const post = await Post.update(postId, userId, postContent, media_urls || []);
