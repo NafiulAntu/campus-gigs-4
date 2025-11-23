@@ -91,6 +91,9 @@ export default function PostPage({ onNavigate = () => {} }) {
   const [viewingUserId, setViewingUserId] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState(null);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImages, setCurrentImages] = useState([]);
   const menuRef = useRef(null);
 
   // Load current user
@@ -365,6 +368,56 @@ export default function PostPage({ onNavigate = () => {} }) {
     setPostToDelete(null);
   }
 
+  function openImageViewer(images, startIndex) {
+    const imageUrls = images.filter(url => url.match(/\.(jpg|jpeg|png|gif|webp)$/i));
+    if (imageUrls.length === 0) return;
+    
+    // Find the correct index in the filtered image array
+    const clickedImage = images[startIndex];
+    const actualIndex = imageUrls.findIndex(url => url === clickedImage);
+    
+    setCurrentImages(imageUrls);
+    setCurrentImageIndex(actualIndex >= 0 ? actualIndex : 0);
+    setImageViewerOpen(true);
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+  }
+
+  function closeImageViewer() {
+    setImageViewerOpen(false);
+    setCurrentImages([]);
+    setCurrentImageIndex(0);
+    document.body.style.overflow = 'unset'; // Restore scrolling
+  }
+
+  function nextImage() {
+    setCurrentImageIndex((prev) => (prev + 1) % currentImages.length);
+  }
+
+  function previousImage() {
+    setCurrentImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length);
+  }
+
+  function downloadCurrentImage() {
+    const url = currentImages[currentImageIndex];
+    const fileName = url.split('/').pop();
+    fetch(url)
+      .then(response => response.blob())
+      .then(blob => {
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      })
+      .catch(err => {
+        console.error('Download error:', err);
+        window.open(url, '_blank');
+      });
+  }
+
   // Close menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -379,6 +432,29 @@ export default function PostPage({ onNavigate = () => {} }) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [openMenuId]);
+
+  // Keyboard navigation for image viewer
+  useEffect(() => {
+    if (!imageViewerOpen) return;
+
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        setImageViewerOpen(false);
+        setCurrentImages([]);
+        setCurrentImageIndex(0);
+        document.body.style.overflow = 'unset';
+      } else if (e.key === 'ArrowLeft') {
+        setCurrentImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length);
+      } else if (e.key === 'ArrowRight') {
+        setCurrentImageIndex((prev) => (prev + 1) % currentImages.length);
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [imageViewerOpen, currentImages.length]);
 
   function handleNav(key) {
     if (key === "jobs") {
@@ -739,9 +815,10 @@ export default function PostPage({ onNavigate = () => {} }) {
                                 return (
                                   <div
                                     key={i}
-                                    className={`rounded-xl overflow-hidden border relative group ${
+                                    className={`rounded-xl overflow-hidden border relative group cursor-pointer ${
                                       brightOn ? 'border-white/20 bg-[#1E293B]' : 'border-primary-teal/20 bg-gray-800/30'
                                     } ${itemClass}`}
+                                    onClick={() => openImageViewer(p.media_urls, i)}
                                   >
                                     <img
                                       src={url}
@@ -752,46 +829,6 @@ export default function PostPage({ onNavigate = () => {} }) {
                                         e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="50%" y="50%" text-anchor="middle" fill="gray">Image not found</text></svg>';
                                       }}
                                     />
-                                    {/* Hover overlay with download button */}
-                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const fileName = url.split('/').pop();
-                                          // Force download for images
-                                          fetch(url)
-                                            .then(response => response.blob())
-                                            .then(blob => {
-                                              const downloadUrl = window.URL.createObjectURL(blob);
-                                              const link = document.createElement('a');
-                                              link.href = downloadUrl;
-                                              link.download = fileName;
-                                              document.body.appendChild(link);
-                                              link.click();
-                                              document.body.removeChild(link);
-                                              window.URL.revokeObjectURL(downloadUrl);
-                                            })
-                                            .catch(err => {
-                                              console.error('Download error:', err);
-                                              window.open(url, '_blank');
-                                            });
-                                        }}
-                                        className={`p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all hover:scale-110 cursor-pointer`}
-                                        title="Download image"
-                                      >
-                                        <i className="fas fa-download text-white text-lg" />
-                                      </button>
-                                      <a
-                                        href={url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        className={`p-3 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-all hover:scale-110`}
-                                        title="Open in new tab"
-                                      >
-                                        <i className="fas fa-expand text-white text-lg" />
-                                      </a>
-                                    </div>
                                   </div>
                                 );
                               } else {
@@ -1201,6 +1238,102 @@ export default function PostPage({ onNavigate = () => {} }) {
           </div>
         </div>
       )}
+
+      {/* Image Viewer Modal */}
+      {imageViewerOpen && currentImages.length > 0 && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black"
+          onClick={closeImageViewer}
+        >
+          {/* Control buttons in top-right corner */}
+          <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+            {/* Download button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadCurrentImage();
+              }}
+              className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all flex items-center justify-center group shadow-lg border border-white/10"
+              aria-label="Download"
+              title="Download image"
+            >
+              <i className="fas fa-download text-white text-base group-hover:scale-110 transition-transform" />
+            </button>
+
+            {/* Close button */}
+            <button
+              onClick={closeImageViewer}
+              className="w-11 h-11 rounded-full bg-white/10 hover:bg-red-500/80 backdrop-blur-md transition-all flex items-center justify-center group shadow-lg border border-white/10"
+              aria-label="Close"
+              title="Close viewer"
+            >
+              <i className="fas fa-times text-white text-xl group-hover:scale-110 transition-transform" />
+            </button>
+          </div>
+
+          {/* Image counter */}
+          {currentImages.length > 1 && (
+            <div className="absolute top-6 left-6 z-20 px-5 py-2.5 rounded-full bg-black/60 backdrop-blur-md text-white text-sm font-semibold shadow-lg border border-white/10">
+              {currentImageIndex + 1} / {currentImages.length}
+            </div>
+          )}
+
+          {/* Main image container - takes full viewport */}
+          <div 
+            className="relative w-full h-full flex items-center justify-center px-4 py-20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={currentImages[currentImageIndex]}
+              alt={`Image ${currentImageIndex + 1}`}
+              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+              style={{ maxWidth: '95vw', maxHeight: '85vh' }}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23333"/><text x="50%" y="50%" text-anchor="middle" fill="white" font-size="20">Image not found</text></svg>';
+              }}
+            />
+
+            {/* Previous button - positioned on left side */}
+            {currentImages.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  previousImage();
+                }}
+                className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md transition-all flex items-center justify-center group shadow-2xl border border-white/10"
+                aria-label="Previous image"
+                title="Previous (←)"
+              >
+                <i className="fas fa-chevron-left text-white text-2xl group-hover:scale-110 transition-transform" />
+              </button>
+            )}
+
+            {/* Next button - positioned on right side */}
+            {currentImages.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextImage();
+                }}
+                className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md transition-all flex items-center justify-center group shadow-2xl border border-white/10"
+                aria-label="Next image"
+                title="Next (→)"
+              >
+                <i className="fas fa-chevron-right text-white text-2xl group-hover:scale-110 transition-transform" />
+              </button>
+            )}
+          </div>
+
+          {/* Keyboard navigation hint at bottom */}
+          {currentImages.length > 1 && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md text-white/70 text-xs font-medium border border-white/10">
+              ← → Arrow keys to navigate
+            </div>
+          )}
+        </div>
+      )}
+
     </div>
   );
 }
