@@ -7,6 +7,7 @@ import Notifications from "./side bar/notifications";
 import Communities from "./side bar/communities";
 import Premium from "./side bar/premium";
 import Payments from "./side bar/payments";
+import UserProfile from "./UserProfile";
 import { getAllPosts, createPost, updatePost, deletePost as deletePostAPI, toggleLike as toggleLikeAPI, toggleShare as toggleShareAPI } from "../../services/api";
 
 const Switcher8 = ({ isChecked, onChange }) => {
@@ -87,6 +88,7 @@ export default function PostPage({ onNavigate = () => {} }) {
   const [currentView, setCurrentView] = useState("home");
   const [openMenuId, setOpenMenuId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [viewingUserId, setViewingUserId] = useState(null);
   const menuRef = useRef(null);
 
   // Load current user
@@ -427,6 +429,16 @@ export default function PostPage({ onNavigate = () => {} }) {
           <Payments onBack={() => setCurrentView("home")} />
         )}
         
+        {currentView === "userProfile" && viewingUserId && (
+          <UserProfile 
+            userId={viewingUserId} 
+            onBack={() => {
+              setCurrentView("home");
+              setViewingUserId(null);
+            }} 
+          />
+        )}
+        
         {/* Home view - Default post feed */}
         {currentView === "home" && (
           <>
@@ -570,26 +582,40 @@ export default function PostPage({ onNavigate = () => {} }) {
                     brightOn ? 'bg-[#0F172A] hover:bg-[#1E293B]' : 'bg-gray-900/30 hover:bg-gray-900/40'
                   }`}>
                     <div className="flex items-start gap-3 sm:gap-4">
-                      {p.profile_picture ? (
-                        <img
-                          src={p.profile_picture}
-                          alt={p.full_name}
-                          className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover shadow-md ring-2 ring-primary-teal/20"
-                        />
-                      ) : (
-                        <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary-teal to-blue-500 flex items-center justify-center font-bold text-white text-sm sm:text-base shadow-md ring-2 ring-primary-teal/20">
-                          {avatarLetter}
-                        </div>
-                      )}
+                      <button
+                        onClick={() => {
+                          setViewingUserId(p.posted_by);
+                          setCurrentView("userProfile");
+                        }}
+                        className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        {p.profile_picture ? (
+                          <img
+                            src={p.profile_picture}
+                            alt={p.full_name}
+                            className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover shadow-md ring-2 ring-primary-teal/20"
+                          />
+                        ) : (
+                          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary-teal to-blue-500 flex items-center justify-center font-bold text-white text-sm sm:text-base shadow-md ring-2 ring-primary-teal/20">
+                            {avatarLetter}
+                          </div>
+                        )}
+                      </button>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 sm:gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1 sm:gap-2 leading-tight flex-wrap">
-                              <span className={`font-bold text-[15px] sm:text-[17px] transition-colors duration-300 ${
-                                brightOn ? 'text-white' : 'text-blue-400'
-                              }`}>
+                              <button
+                                onClick={() => {
+                                  setViewingUserId(p.posted_by);
+                                  setCurrentView("userProfile");
+                                }}
+                                className={`font-bold text-[15px] sm:text-[17px] transition-colors duration-300 hover:underline cursor-pointer ${
+                                  brightOn ? 'text-white hover:text-primary-teal' : 'text-blue-400 hover:text-primary-teal'
+                                }`}
+                              >
                                 {p.full_name || "Unknown"}
-                              </span>
+                              </button>
                               <span className={`text-xs sm:text-sm truncate transition-colors duration-300 ${
                                 brightOn ? 'text-[#008B8B]' : 'text-text-muted'
                               }`}>

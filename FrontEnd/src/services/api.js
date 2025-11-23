@@ -83,3 +83,6 @@ export const toggleLike = (postId) => API.post(`/posts/${postId}/like`);
 export const toggleShare = (postId) => API.post(`/posts/${postId}/share`);
 export const addComment = (postId, data) => API.post(`/posts/${postId}/comment`, data);
 export const getComments = (postId) => API.get(`/posts/${postId}/comments`);
+
+// User API
+export const getUserById = (userId) => API.get(`/users/${userId}`);
