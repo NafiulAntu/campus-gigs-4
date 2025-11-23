@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Campus Gigs - Full Stack Application",
   "scripts": {
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "backend": "cd BackEnd && npm start",
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" \"npm run backend\" \"npm run frontend\"",
     "frontend": "cd FrontEnd && npm run dev",
+    "backend": "cd BackEnd && npm start",
     "install:all": "cd BackEnd && npm install && cd ../FrontEnd && npm install"
   },
   "keywords": [

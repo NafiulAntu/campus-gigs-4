@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path,
@@ -30,7 +30,7 @@ export default defineConfig({
         },
       },
     },
-    port: 3004,
+    port: 3000,
     strictPort: false,
     // Enable HMR (Hot Module Replacement)
     hmr: {
