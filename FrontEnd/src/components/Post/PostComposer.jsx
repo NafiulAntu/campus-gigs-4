@@ -20,7 +20,6 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
   function handleFiles(e) {
     const list = Array.from(e.target.files || []);
     const mapped = list.map((f) => {
-      console.log('📎 File selected:', f.name, 'Type:', f.type, 'Size:', f.size);
       return {
         file: f,
         name: f.name,
@@ -95,16 +94,13 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
       
       // Upload new files if any
       if (newFiles.length > 0) {
-        console.log('📤 Uploading', newFiles.length, 'new files...');
         const formData = new FormData();
         newFiles.forEach(f => {
           formData.append('files', f.file);
-          console.log('Adding file:', f.file.name, f.file.type);
         });
         
         const uploadResponse = await uploadFiles(formData);
         const newUrls = uploadResponse.data.files || [];
-        console.log('✅ Upload successful, URLs:', newUrls);
         mediaUrls = [...existingMediaUrls, ...newUrls];
       } else {
         mediaUrls = existingMediaUrls;
@@ -114,8 +110,6 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
         text: text.trim(),
         media_urls: mediaUrls,
       };
-      
-      console.log('📝 Submitting post:', postData);
 
       if (editingPost) {
         // Edit mode

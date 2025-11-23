@@ -41,41 +41,6 @@ const Switcher8 = ({ isChecked, onChange }) => {
   );
 };
 
-const initialPosts = [
-  {
-    id: 1,
-    text: "We completed the initial prototype. Files uploaded in attachments.",
-    files: [],
-    author: { name: "Project Bot", avatar: null, verified: true },
-    replies: 3,
-    reposts: 1,
-    likes: 9,
-    views: 980,
-    liked: false,
-    reposted: false,
-    accepted: false,
-    rejected: false,
-    reacted: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-  },
-  {
-    id: 2,
-    text: "Uploaded dataset for analysis. Check the team folder.",
-    files: [],
-    author: { name: "Researcher", avatar: null, verified: false },
-    replies: 12,
-    reposts: 7,
-    likes: 54,
-    views: 2100,
-    liked: false,
-    reposted: false,
-    accepted: false,
-    rejected: false,
-    reacted: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-];
-
 export default function PostPage({ onNavigate = () => {} }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -139,28 +104,13 @@ export default function PostPage({ onNavigate = () => {} }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  const followingPeople = [
-    { name: "Ayesha", handle: "@ayesha" },
-    { name: "Imran", handle: "@imran" },
-    { name: "Neha", handle: "@neha" },
-  ];
-  const followerPeople = [
-    { name: "Rahul", handle: "@rahul" },
-    { name: "Saba", handle: "@saba" },
-    { name: "Tanvir", handle: "@tanvir" },
-  ];
-
-  // No external navbar toggle; search can still be opened via Explore or local top button
 
   async function handleNewPost(postData) {
     try {
-      console.log('📤 Creating post with data:', postData);
       const response = await createPost({
         content: postData.text || '',
         media_urls: postData.media_urls || []
       });
-      
-      console.log('✅ Post created:', response.data);
       
       // Add new post to the top of the list
       if (response.data && response.data.post) {
@@ -189,34 +139,6 @@ export default function PostPage({ onNavigate = () => {} }) {
       console.error('Error updating post:', error);
       alert('Failed to update post. Please try again.');
     }
-  }
-
-  function handleNewPostOld(post) {
-    const p = {
-      id: post.id || Date.now(),
-      text: post.text || "",
-      files: post.files || [],
-      author: post.author || { name: "You", avatar: null, verified: false },
-      replies: 0,
-      reposts: 0,
-      likes: 0,
-      views: 0,
-      liked: false,
-      reposted: false,
-      accepted: false,
-      rejected: false,
-      createdAt: post.createdAt || new Date().toISOString(),
-    };
-    setPosts((prev) => [p, ...prev]);
-  }
-
-  function handleEditPost(updatedPost) {
-    if (updatedPost) {
-      setPosts((prev) =>
-        prev.map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p))
-      );
-    }
-    setEditingPost(null);
   }
 
   // Explore-like search behavior
@@ -646,18 +568,6 @@ export default function PostPage({ onNavigate = () => {} }) {
             ) : filteredPosts.map((p, index) => {
               const avatarLetter = p.full_name ? p.full_name[0].toUpperCase() : "U";
               const isCurrentUserPost = currentUser && p.posted_by === currentUser.id;
-              
-              // Debug logging (only for first post to avoid spam)
-              if (index === 0) {
-                console.log('🔍 Post debug:', {
-                  postId: p.id,
-                  posted_by: p.posted_by,
-                  currentUserId: currentUser?.id,
-                  isCurrentUserPost,
-                  hasMedia: p.media_urls?.length > 0,
-                  mediaUrls: p.media_urls
-                });
-              }
               
               return (
                 <div
@@ -1137,46 +1047,13 @@ export default function PostPage({ onNavigate = () => {} }) {
                 ))}
               </div>
               <div className="space-y-1.5">
-                {(peopleTab === "active"
-                  ? [...followingPeople, ...followerPeople]
-                  : peopleTab === "following"
-                  ? followingPeople
-                  : followerPeople
-                ).map((p) => (
-                  <div
-                    key={p.handle}
-                    className={`flex items-center gap-2 px-2 py-1 transition-colors ${
-                      brightOn ? 'hover:bg-[#94a3b8]/20' : 'hover:bg-white/5'
-                    }`}
-                  >
-                    <div className="relative h-8 w-8 rounded-full bg-primary/20 text-white flex items-center justify-center text-xs font-semibold">
-                      {p.name[0]}
-                      {peopleTab === "active" && <span className="pulse-dot" />}
-                    </div>
-                    <div className="flex-1 leading-tight">
-                      <div className="text-sm text-white flex items-center gap-2 font-bold">
-                        {p.name}
-                        {peopleTab === "active" && (
-                          <span className="text-[10px] text-emerald-400 font-semibold">
-                            • Active
-                          </span>
-                        )}
-                      </div>
-                      <div className={`text-xs font-medium transition-colors duration-300 ${
-                        brightOn ? 'text-gray-400' : 'text-text-muted'
-                      }`}>{p.handle}</div>
-                    </div>
-                    {peopleTab === "followers" ? (
-                      <button className="text-xs rounded-full px-2 py-1 btn-accent">
-                        Follow
-                      </button>
-                    ) : (
-                      <button className="text-xs rounded-full px-2 py-1 bg-white/10 hover:bg-white/20 text-white">
-                        View
-                      </button>
-                    )}
-                  </div>
-                ))}
+                <div className={`flex flex-col items-center justify-center py-8 px-4 text-center ${
+                  brightOn ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  <i className="fa-solid fa-user-group text-3xl mb-2 opacity-50" />
+                  <p className="text-sm font-medium">No users yet</p>
+                  <p className="text-xs mt-1 opacity-70">Check back later for active users</p>
+                </div>
               </div>
             </div>
 
