@@ -1,0 +1,21 @@
+{
+  "name": "campus-gigs",
+  "version": "1.0.0",
+  "description": "Campus Gigs - Full Stack Application",
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd BackEnd && npm start",
+    "frontend": "cd FrontEnd && npm run dev",
+    "install:all": "cd BackEnd && npm install && cd ../FrontEnd && npm install"
+  },
+  "keywords": [
+    "campus",
+    "gigs",
+    "fullstack"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
