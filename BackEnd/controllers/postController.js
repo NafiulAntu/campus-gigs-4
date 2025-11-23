@@ -1,4 +1,5 @@
 const Post = require('../models/Post');
+const { deleteFromFirebase, isFirebaseEnabled } = require('../config/firebase');
 
 // Create a new post
 exports.createPost = async (req, res) => {
@@ -125,10 +126,36 @@ exports.deletePost = async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
 
+    // Get post before deletion to access media URLs
+    const postToDelete = await Post.getById(postId);
+    
+    if (!postToDelete) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Check if user owns the post
+    if (postToDelete.user_id !== userId) {
+      return res.status(403).json({ error: 'Unauthorized to delete this post' });
+    }
+
+    // Delete from database
     const post = await Post.delete(postId, userId);
 
     if (!post) {
-      return res.status(404).json({ error: 'Post not found or unauthorized' });
+      return res.status(404).json({ error: 'Failed to delete post' });
+    }
+
+    // Delete media files from Firebase Storage (if enabled)
+    if (isFirebaseEnabled() && postToDelete.media_urls && postToDelete.media_urls.length > 0) {
+      console.log('🗑️ Deleting media files from Firebase Storage...');
+      for (const url of postToDelete.media_urls) {
+        try {
+          await deleteFromFirebase(url);
+        } catch (deleteError) {
+          console.error('Failed to delete media file:', deleteError.message);
+          // Continue with post deletion even if media deletion fails
+        }
+      }
     }
 
     res.status(200).json({ 

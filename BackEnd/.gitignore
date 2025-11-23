@@ -4,3 +4,7 @@ node_modules/
 .DS_Store
 uploads/*
 !uploads/.gitkeep
+
+# Firebase credentials
+*-firebase-adminsdk-*.json
+firebase-service-account.json
