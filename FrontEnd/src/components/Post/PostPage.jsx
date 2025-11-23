@@ -762,7 +762,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                                 if (['pdf'].includes(fileExt)) {
                                   fileIcon = '📄';
                                   fileColor = 'bg-red-500/20 text-red-400';
-                                } else if (['doc', 'docx'].includes(fileExt)) {
+                                } else if (['doc', 'docx', 'odt', 'rtf'].includes(fileExt)) {
                                   fileIcon = '📝';
                                   fileColor = 'bg-blue-500/20 text-blue-400';
                                 } else if (['zip', 'rar', '7z'].includes(fileExt)) {

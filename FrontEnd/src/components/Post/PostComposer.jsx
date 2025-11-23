@@ -19,16 +19,19 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
 
   function handleFiles(e) {
     const list = Array.from(e.target.files || []);
-    const mapped = list.map((f) => ({
-      file: f,
-      name: f.name,
-      size: f.size,
-      type: f.type,
-      preview:
-        f.type && (f.type.startsWith("image/") || f.type.startsWith("video/"))
-          ? URL.createObjectURL(f)
-          : null,
-    }));
+    const mapped = list.map((f) => {
+      console.log('📎 File selected:', f.name, 'Type:', f.type, 'Size:', f.size);
+      return {
+        file: f,
+        name: f.name,
+        size: f.size,
+        type: f.type,
+        preview:
+          f.type && (f.type.startsWith("image/") || f.type.startsWith("video/"))
+            ? URL.createObjectURL(f)
+            : null,
+      };
+    });
     setFiles((prev) => [...prev, ...mapped]);
   }
 
@@ -208,7 +211,7 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
               type="file"
               onChange={handleFiles}
               className="hidden"
-              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,text/*,application/*"
+              accept=".pdf,.doc,.docx,.txt,.odt,.rtf,.ppt,.pptx,.xls,.xlsx,.csv,.zip,.rar"
               multiple
             />
             <svg
@@ -262,51 +265,79 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
       </div>
 
       {files.length > 0 && (
-        <div className="mt-1.5 md:mt-2 grid grid-cols-2 sm:grid-cols-3 gap-1">
-          {files.map((f, idx) => (
-            <div
-              key={idx}
-              className="relative bg-input p-1.5 rounded-xl overflow-hidden"
-            >
-              {f.preview ? (
-                f.type?.startsWith("image/") ? (
-                  <img
-                    src={f.preview}
-                    alt={f.name}
-                    className="object-cover w-full h-24 rounded"
-                  />
-                ) : f.type?.startsWith("video/") ? (
-                  <video
-                    src={f.preview}
-                    className="object-cover w-full h-24 rounded"
-                    controls
-                    muted
-                  />
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-primary/10 rounded flex items-center justify-center text-sm">
-                      📄
-                    </div>
-                    <div className="truncate text-sm">{f.name}</div>
-                  </div>
-                )
-              ) : (
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 bg-primary/10 rounded flex items-center justify-center text-sm">
-                    📄
-                  </div>
-                  <div className="truncate text-sm">{f.name}</div>
-                </div>
-              )}
-              <button
-                onClick={() => removeFile(idx)}
-                className="absolute top-1 right-1 bg-black/40 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                aria-label={`Remove ${f.name}`}
+        <div className="mt-1.5 md:mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {files.map((f, idx) => {
+            const fileExt = f.name.split('.').pop().toLowerCase();
+            let fileIcon = '📎';
+            let fileColor = 'bg-primary-teal/10 text-primary-teal';
+            
+            if (['pdf'].includes(fileExt)) {
+              fileIcon = '📄';
+              fileColor = 'bg-red-500/20 text-red-400';
+            } else if (['doc', 'docx', 'odt', 'rtf'].includes(fileExt)) {
+              fileIcon = '📝';
+              fileColor = 'bg-blue-500/20 text-blue-400';
+            } else if (['xls', 'xlsx', 'csv'].includes(fileExt)) {
+              fileIcon = '📊';
+              fileColor = 'bg-green-500/20 text-green-400';
+            } else if (['ppt', 'pptx'].includes(fileExt)) {
+              fileIcon = '📽️';
+              fileColor = 'bg-orange-500/20 text-orange-400';
+            } else if (['zip', 'rar', '7z'].includes(fileExt)) {
+              fileIcon = '📦';
+              fileColor = 'bg-yellow-500/20 text-yellow-400';
+            } else if (['txt'].includes(fileExt)) {
+              fileIcon = '📃';
+              fileColor = 'bg-gray-500/20 text-gray-400';
+            }
+
+            return (
+              <div
+                key={idx}
+                className={`relative rounded-xl overflow-hidden border transition-all ${
+                  brightOn ? 'bg-[#1E293B] border-white/20' : 'bg-gray-800/30 border-primary-teal/20'
+                }`}
               >
-                ×
-              </button>
-            </div>
-          ))}
+                {f.preview ? (
+                  f.type?.startsWith("image/") ? (
+                    <img
+                      src={f.preview}
+                      alt={f.name}
+                      className="object-cover w-full h-24 rounded"
+                    />
+                  ) : f.type?.startsWith("video/") ? (
+                    <video
+                      src={f.preview}
+                      className="object-cover w-full h-24 rounded"
+                      controls
+                      muted
+                    />
+                  ) : null
+                ) : (
+                  <div className="flex items-center gap-2 p-3">
+                    <div className={`flex-shrink-0 h-10 w-10 rounded-lg flex items-center justify-center text-xl ${fileColor}`}>
+                      {fileIcon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-xs font-semibold truncate ${brightOn ? 'text-white' : 'text-white'}`}>
+                        {f.name}
+                      </div>
+                      <div className={`text-[10px] mt-0.5 ${brightOn ? 'text-gray-400' : 'text-primary-teal'}`}>
+                        {fileExt.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <button
+                  onClick={() => removeFile(idx)}
+                  className="absolute top-1.5 right-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full w-6 h-6 flex items-center justify-center transition-all hover:scale-110"
+                  aria-label={`Remove ${f.name}`}
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
