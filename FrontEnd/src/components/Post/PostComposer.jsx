@@ -251,7 +251,7 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
               onClick={cancelEdit}
               className="px-5 sm:px-6 md:px-7 py-2 sm:py-2 bg-gray-700/50 hover:bg-red-600/50 text-red rounded-full font-bold text-[14px] sm:text-[16px] shadow-md transition-all"
             >
-              Nix
+              Cancel
             </button>
           )}
           <button

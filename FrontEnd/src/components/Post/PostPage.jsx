@@ -629,23 +629,11 @@ export default function PostPage({ onNavigate = () => {} }) {
                                 {isCurrentUserPost && (
                                   <>
                                     <button
-                                      onClick={() => {
-                                        setEditingPost(p);
-                                        setOpenMenuId(null);
-                                      }}
-                                      className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 ${
-                                        brightOn ? 'text-white hover:bg-[#2D3B4E]' : 'text-white hover:bg-white/10'
-                                      }`}
-                                    >
-                                      <i className="fi fi-br-edit text-lg"></i>
-                                      <span className="font-semibold">Edit Post</span>
-                                    </button>
-                                    <button
                                       onClick={() => deletePost(p.id)}
-                                      className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 border-t ${
+                                      className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 ${
                                         brightOn 
-                                          ? 'text-rose-400 hover:bg-rose-500/10 border-white/10' 
-                                          : 'text-rose-400 hover:bg-rose-500/10 border-white/10'
+                                          ? 'text-rose-400 hover:bg-rose-500/10' 
+                                          : 'text-rose-400 hover:bg-rose-500/10'
                                       }`}
                                     >
                                       <i className="fi fi-br-trash text-lg"></i>
@@ -929,7 +917,19 @@ export default function PostPage({ onNavigate = () => {} }) {
                             {/* Edit button - only for user's own posts */}
                             {isCurrentUserPost && (
                               <button
-                                onClick={() => setEditingPost(p)}
+                                onClick={() => {
+                                  setEditingPost(p);
+                                  // Scroll to post composer
+                                  const composer = document.getElementById('post-composer');
+                                  if (composer) {
+                                    composer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    // Focus on textarea after a short delay
+                                    setTimeout(() => {
+                                      const textarea = composer.querySelector('textarea');
+                                      if (textarea) textarea.focus();
+                                    }, 300);
+                                  }
+                                }}
                                 className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all transition-colors duration-300 ${
                                   brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
                                 } hover:bg-[#89CFF0]/10`}
