@@ -4,7 +4,7 @@ import {
   getTeacherProfile, 
   getStudentProfile, 
   getEmployeeProfile 
-} from "../../services/api";
+} from "../../../services/api";
 
 export default function UserProfile({ userId, onBack }) {
   const [user, setUser] = useState(null);
