@@ -635,40 +635,40 @@ export default function PostPage({ onNavigate = () => {} }) {
                             </div>
                           </div>
                           <div className="relative" ref={openMenuId === p.id ? menuRef : null}>
-                            <button
-                              onClick={() => setOpenMenuId(openMenuId === p.id ? null : p.id)}
-                              className={`shrink-0 rounded-full p-2 transition-all duration-300 ${
-                                openMenuId === p.id 
-                                  ? 'bg-primary-teal/20 text-primary-teal' 
-                                  : brightOn ? 'text-[#008B8B] hover:text-[#00CED1] hover:bg-[#1E293B]' : 'text-text-muted hover:text-white hover:bg-white/5'
-                              }`}
-                              aria-label="More options"
-                            >
-                              <i className="fa-solid fa-ellipsis" />
-                            </button>
-                            
-                            {/* Dropdown Menu */}
-                            {openMenuId === p.id && (
-                              <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl overflow-hidden z-50 border transition-colors duration-300 ${
-                                brightOn ? 'bg-[#1E293B] border-white/20' : 'bg-gray-900 border-white/10'
-                              }`}>
-                                {isCurrentUserPost && (
-                                  <>
-                                    <button
-                                      onClick={() => deletePost(p.id)}
-                                      className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 ${
-                                        brightOn 
-                                          ? 'text-rose-400 hover:bg-rose-500/10' 
-                                          : 'text-rose-400 hover:bg-rose-500/10'
-                                      }`}
-                                    >
-                                      <i className="fi fi-br-trash text-lg"></i>
-                                      <span className="font-semibold">Delete Post</span>
-                                    </button>
-                                  </>
-                                )}
-                                {!isCurrentUserPost && (
-                                  <>
+                            {/* Delete button for own posts - X.com style */}
+                            {isCurrentUserPost ? (
+                              <button
+                                onClick={() => deletePost(p.id)}
+                                className={`group shrink-0 rounded-full p-2 transition-all duration-200 ${
+                                  brightOn 
+                                    ? 'hover:bg-red-500/10' 
+                                    : 'hover:bg-red-500/10'
+                                }`}
+                                aria-label="Delete post"
+                                title="Delete post"
+                              >
+                                <i className="fa-solid fa-trash text-sm text-gray-500 group-hover:text-red-500 transition-colors duration-200" />
+                              </button>
+                            ) : (
+                              /* Three dot menu for other users' posts */
+                              <>
+                                <button
+                                  onClick={() => setOpenMenuId(openMenuId === p.id ? null : p.id)}
+                                  className={`shrink-0 rounded-full p-2 transition-all duration-300 ${
+                                    openMenuId === p.id 
+                                      ? 'bg-primary-teal/20 text-primary-teal' 
+                                      : brightOn ? 'text-[#008B8B] hover:text-[#00CED1] hover:bg-[#1E293B]' : 'text-text-muted hover:text-white hover:bg-white/5'
+                                  }`}
+                                  aria-label="More options"
+                                >
+                                  <i className="fa-solid fa-ellipsis" />
+                                </button>
+                                
+                                {/* Dropdown Menu */}
+                                {openMenuId === p.id && (
+                                  <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl overflow-hidden z-50 border transition-colors duration-300 ${
+                                    brightOn ? 'bg-[#1E293B] border-white/20' : 'bg-gray-900 border-white/10'
+                                  }`}>
                                     <button
                                       className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 ${
                                         brightOn ? 'text-white hover:bg-[#2D3B4E]' : 'text-white hover:bg-white/10'
@@ -687,9 +687,9 @@ export default function PostPage({ onNavigate = () => {} }) {
                                       <i className="fi fi-br-flag text-lg"></i>
                                       <span className="font-semibold">Report Post</span>
                                     </button>
-                                  </>
+                                  </div>
                                 )}
-                              </div>
+                              </>
                             )}
                           </div>
                         </div>

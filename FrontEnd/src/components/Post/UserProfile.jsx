@@ -1,17 +1,57 @@
 import React, { useState, useEffect } from "react";
-import { getUserById } from "../../services/api";
+import { 
+  getUserById, 
+  getTeacherProfile, 
+  getStudentProfile, 
+  getEmployeeProfile 
+} from "../../services/api";
 
 export default function UserProfile({ userId, onBack }) {
   const [user, setUser] = useState(null);
+  const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         setLoading(true);
         const response = await getUserById(userId);
-        setUser(response.data);
+        console.log('User profile response:', response);
+        // Handle both response.data and response.data.data structures
+        const userData = response.data?.data || response.data;
+        setUser(userData);
+        
+        // Check if viewing own profile
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        setIsOwnProfile(currentUser.id === parseInt(userId));
+        
+        // Fetch profession-specific profile data
+        if (userData.username && userData.profession) {
+          try {
+            let profileResponse;
+            const profession = userData.profession.toLowerCase();
+            
+            if (profession === 'teacher') {
+              profileResponse = await getTeacherProfile(userData.username);
+            } else if (profession === 'student') {
+              profileResponse = await getStudentProfile(userData.username);
+            } else if (profession === 'employee') {
+              profileResponse = await getEmployeeProfile(userData.username);
+            }
+            
+            if (profileResponse?.data) {
+              const profData = profileResponse.data?.data || profileResponse.data;
+              console.log('Profile data:', profData);
+              setProfileData(profData);
+            }
+          } catch (profErr) {
+            console.log('No profession profile found:', profErr);
+            // Not an error - user might not have completed their profile
+          }
+        }
+        
         setError("");
       } catch (err) {
         console.error("Error fetching user profile:", err);
@@ -76,17 +116,25 @@ export default function UserProfile({ userId, onBack }) {
 
       {/* Profile Content */}
       <div className="max-w-3xl mx-auto">
-        {/* Cover Image Placeholder */}
-        <div className="w-full h-48 bg-gradient-to-r from-primary-teal to-blue-500"></div>
+        {/* Cover Image */}
+        <div className="w-full h-48 bg-gradient-to-r from-primary-teal to-blue-500 relative overflow-hidden">
+          {profileData?.cover_pic_url ? (
+            <img
+              src={profileData.cover_pic_url}
+              alt="Cover"
+              className="w-full h-full object-cover"
+            />
+          ) : null}
+        </div>
 
         {/* Profile Info */}
         <div className="px-6 pb-6">
           {/* Profile Picture */}
           <div className="relative -mt-16 mb-4">
-            {user.profile_picture ? (
+            {(profileData?.profile_pic_url || user.profile_picture) ? (
               <img
-                src={user.profile_picture}
-                alt={user.full_name}
+                src={profileData?.profile_pic_url || user.profile_picture}
+                alt={profileData?.full_name || user.full_name}
                 className="w-32 h-32 rounded-full border-4 border-black object-cover shadow-xl"
               />
             ) : (
@@ -99,21 +147,21 @@ export default function UserProfile({ userId, onBack }) {
           {/* User Details */}
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-white mb-1">
-              {user.full_name || "Unknown User"}
+              {profileData?.full_name || user.full_name || "Unknown User"}
             </h2>
-            <p className="text-blue-400 mb-3">@{user.username}</p>
+            <p className="text-blue-400 mb-3">@{profileData?.username || user.username}</p>
             
-            {user.email && (
+            {(profileData?.email || user.email) && (
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <i className="fas fa-envelope"></i>
-                <span>{user.email}</span>
+                <span>{profileData?.email || user.email}</span>
               </div>
             )}
             
-            {user.phone && (
+            {(profileData?.phone || user.phone) && (
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <i className="fas fa-phone"></i>
-                <span>{user.phone}</span>
+                <span>{profileData?.phone || user.phone}</span>
               </div>
             )}
 
@@ -121,6 +169,27 @@ export default function UserProfile({ userId, onBack }) {
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <i className="fas fa-briefcase"></i>
                 <span className="capitalize">{user.profession}</span>
+              </div>
+            )}
+
+            {profileData?.location && (
+              <div className="flex items-center gap-2 text-gray-400 mb-2">
+                <i className="fas fa-map-marker-alt"></i>
+                <span>{profileData.location}</span>
+              </div>
+            )}
+
+            {profileData?.website_url && (
+              <div className="flex items-center gap-2 text-gray-400 mb-2">
+                <i className="fas fa-globe"></i>
+                <a 
+                  href={profileData.website_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary-teal hover:underline"
+                >
+                  {profileData.website_url}
+                </a>
               </div>
             )}
           </div>
@@ -142,23 +211,140 @@ export default function UserProfile({ userId, onBack }) {
           </div>
 
           {/* Bio/Description */}
-          {user.bio && (
+          {(profileData?.bio || user.bio) && (
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-white mb-2">About</h3>
-              <p className="text-gray-300 leading-relaxed">{user.bio}</p>
+              <p className="text-gray-300 leading-relaxed">{profileData?.bio || user.bio}</p>
+            </div>
+          )}
+
+          {/* Interests */}
+          {profileData?.interests && profileData.interests.length > 0 && (
+            <div className="mb-6 pb-6 border-b border-white/10">
+              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <i className="fas fa-heart text-primary-teal"></i>
+                Interests
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {profileData.interests.map((interest, index) => (
+                  <span 
+                    key={index}
+                    className="px-3 py-1.5 bg-primary-teal/10 text-primary-teal rounded-lg text-sm border border-primary-teal/30 hover:bg-primary-teal/20 transition-colors"
+                  >
+                    {interest}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Skills */}
+          {profileData?.skills && profileData.skills.length > 0 && (
+            <div className="mb-6 pb-6 border-b border-white/10">
+              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <i className="fas fa-code text-blue-400"></i>
+                Skills
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {profileData.skills.map((skill, index) => (
+                  <span 
+                    key={index}
+                    className="px-3 py-1.5 bg-blue-500/10 text-blue-400 rounded-lg text-sm border border-blue-500/30 hover:bg-blue-500/20 transition-colors"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Education */}
+          {profileData?.education && profileData.education.length > 0 && (
+            <div className="mb-6 pb-6 border-b border-white/10">
+              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <i className="fas fa-graduation-cap text-green-400"></i>
+                Education
+              </h3>
+              <div className="space-y-3">
+                {profileData.education.map((edu, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                    <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-school text-green-400"></i>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-white text-sm">{edu.degree || edu.institution}</div>
+                      {edu.institution && edu.degree && (
+                        <div className="text-gray-400 text-xs mt-0.5">{edu.institution}</div>
+                      )}
+                      {edu.year && (
+                        <div className="text-gray-500 text-xs mt-0.5">{edu.year}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Certificates */}
+          {profileData?.certificates && profileData.certificates.length > 0 && (
+            <div className="mb-6 pb-6 border-b border-white/10">
+              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <i className="fas fa-certificate text-yellow-400"></i>
+                Certificates
+              </h3>
+              <div className="space-y-3">
+                {profileData.certificates.map((cert, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                    <div className="w-10 h-10 rounded-lg bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-award text-yellow-400"></i>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-white text-sm">{cert.title || cert.name}</div>
+                      {cert.issuer && (
+                        <div className="text-gray-400 text-xs mt-0.5">{cert.issuer}</div>
+                      )}
+                      {cert.date && (
+                        <div className="text-gray-500 text-xs mt-0.5">{cert.date}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Action Buttons */}
           <div className="flex gap-3">
-            <button className="flex-1 px-6 py-3 bg-primary-teal hover:bg-primary-blue text-white rounded-full font-semibold transition-all transform hover:scale-105">
-              <i className="fas fa-user-plus mr-2"></i>
-              Follow
-            </button>
-            <button className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-full font-semibold transition-all transform hover:scale-105">
-              <i className="fas fa-envelope mr-2"></i>
-              Message
-            </button>
+            {isOwnProfile ? (
+              <>
+                <button 
+                  onClick={onBack}
+                  className="flex-1 px-6 py-3 bg-primary-teal hover:bg-primary-blue text-white rounded-full font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  <i className="fas fa-edit mr-2"></i>
+                  Edit Profile
+                </button>
+                <button 
+                  className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-full font-semibold transition-all transform hover:scale-110 shadow-lg hover:shadow-red-500/50 overflow-hidden"
+                  title="Delete Account"
+                >
+                  <span className="absolute inset-0 w-full h-full bg-white opacity-0 group-hover:opacity-20 transition-opacity"></span>
+                  <i className="fas fa-trash relative z-10 transition-transform group-hover:rotate-12"></i>
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="flex-1 px-6 py-3 bg-primary-teal hover:bg-primary-blue text-white rounded-full font-semibold transition-all transform hover:scale-105">
+                  <i className="fas fa-user-plus mr-2"></i>
+                  Follow
+                </button>
+                <button className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-full font-semibold transition-all transform hover:scale-105">
+                  <i className="fas fa-envelope mr-2"></i>
+                  Message
+                </button>
+              </>
+            )}
           </div>
 
           {/* Recent Posts Section Placeholder */}
