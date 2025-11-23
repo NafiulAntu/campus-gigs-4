@@ -89,6 +89,8 @@ export default function PostPage({ onNavigate = () => {} }) {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [viewingUserId, setViewingUserId] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState(null);
   const menuRef = useRef(null);
 
   // Load current user
@@ -325,32 +327,42 @@ export default function PostPage({ onNavigate = () => {} }) {
     );
   }
 
-  async function deletePost(id) {
-    const confirmed = window.confirm('🗑️ Delete this post?\n\nThis action cannot be undone.');
+  function openDeleteModal(id) {
+    setPostToDelete(id);
+    setDeleteModalOpen(true);
+    setOpenMenuId(null);
+  }
+
+  async function confirmDelete() {
+    if (!postToDelete) return;
     
-    if (confirmed) {
-      try {
-        await deletePostAPI(id);
-        setPosts((prev) => prev.filter((p) => p.id !== id));
-        setOpenMenuId(null);
-        
-        // Show success feedback
-        const message = document.createElement('div');
-        message.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in';
-        message.innerHTML = '✓ Post deleted successfully';
-        document.body.appendChild(message);
-        setTimeout(() => message.remove(), 3000);
-      } catch (error) {
-        console.error('Error deleting post:', error);
-        
-        // Show error feedback
-        const message = document.createElement('div');
-        message.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in';
-        message.innerHTML = '✗ Failed to delete post. Please try again.';
-        document.body.appendChild(message);
-        setTimeout(() => message.remove(), 3000);
-      }
+    try {
+      await deletePostAPI(postToDelete);
+      setPosts((prev) => prev.filter((p) => p.id !== postToDelete));
+      setDeleteModalOpen(false);
+      setPostToDelete(null);
+      
+      // Show success feedback
+      const message = document.createElement('div');
+      message.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in';
+      message.innerHTML = '✓ Post deleted successfully';
+      document.body.appendChild(message);
+      setTimeout(() => message.remove(), 3000);
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      
+      // Show error feedback
+      const message = document.createElement('div');
+      message.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in';
+      message.innerHTML = '✗ Failed to delete post. Please try again.';
+      document.body.appendChild(message);
+      setTimeout(() => message.remove(), 3000);
     }
+  }
+
+  function cancelDelete() {
+    setDeleteModalOpen(false);
+    setPostToDelete(null);
   }
 
   // Close menu when clicking outside
@@ -638,7 +650,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                             {/* Delete button for own posts - X.com style */}
                             {isCurrentUserPost ? (
                               <button
-                                onClick={() => deletePost(p.id)}
+                                onClick={() => openDeleteModal(p.id)}
                                 className={`group shrink-0 rounded-full p-2 transition-all duration-200 ${
                                   brightOn 
                                     ? 'hover:bg-red-500/10' 
@@ -1137,6 +1149,58 @@ export default function PostPage({ onNavigate = () => {} }) {
       </aside>
       )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={cancelDelete}
+        >
+          <div 
+            className={`relative w-[90%] max-w-sm rounded-2xl shadow-2xl transition-all duration-200 ${
+              brightOn ? 'bg-slate-800' : 'bg-[#1a1a1a]'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-6 pt-6 pb-4">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <i className="fa-solid fa-trash text-red-500 text-lg" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-white mb-1">
+                    Delete post?
+                  </h3>
+                  <p className={`text-sm ${brightOn ? 'text-gray-400' : 'text-gray-500'}`}>
+                    This can't be undone and it will be removed from your profile, the timeline of any accounts that follow you, and from search results.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="px-6 pb-6 flex flex-col gap-3">
+              <button
+                onClick={confirmDelete}
+                className="w-full py-3 px-4 rounded-full font-bold text-white bg-red-500 hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-[#1a1a1a]"
+              >
+                Delete
+              </button>
+              <button
+                onClick={cancelDelete}
+                className={`w-full py-3 px-4 rounded-full font-bold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  brightOn 
+                    ? 'text-white bg-slate-700 hover:bg-slate-600 focus:ring-slate-500 focus:ring-offset-slate-800' 
+                    : 'text-white bg-[#2a2a2a] hover:bg-[#3a3a3a] focus:ring-gray-600 focus:ring-offset-[#1a1a1a]'
+                }`}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
