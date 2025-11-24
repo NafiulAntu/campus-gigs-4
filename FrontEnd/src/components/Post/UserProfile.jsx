@@ -12,6 +12,7 @@ export default function UserProfile({ userId, onBack }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -158,10 +159,17 @@ export default function UserProfile({ userId, onBack }) {
               </div>
             )}
             
-            {profileData?.phone && profileData.phone !== 'null' && (
+            {profileData?.phone && profileData.phone !== 'null' && profileData.phone !== '' && (
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <i className="fas fa-phone"></i>
                 <span>{profileData.phone}</span>
+              </div>
+            )}
+
+            {profileData?.gender && profileData.gender !== 'null' && profileData.gender !== '' && (
+              <div className="flex items-center gap-2 text-gray-400 mb-2">
+                <i className="fas fa-venus-mars"></i>
+                <span>{profileData.gender}</span>
               </div>
             )}
 
@@ -210,6 +218,26 @@ export default function UserProfile({ userId, onBack }) {
             </div>
           </div>
 
+          {/* Tabs */}
+          <div className="flex gap-2 mb-6 border-b border-white/10">
+            {["profile", "account", "privacy"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 font-semibold capitalize transition-colors ${
+                  activeTab === tab
+                    ? "text-primary-teal border-b-2 border-primary-teal"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {/* Profile Tab Content */}
+          {activeTab === "profile" && (
+            <>
           {/* Bio/Description */}
           {(profileData?.bio || user.bio) && (
             <div className="mb-6">
@@ -239,14 +267,14 @@ export default function UserProfile({ userId, onBack }) {
           )}
 
           {/* Skills */}
-          {profileData?.skills && profileData.skills.length > 0 && (
+          {profileData?.professionalSkills && profileData.professionalSkills.length > 0 && (
             <div className="mb-6 pb-6 border-b border-white/10">
               <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
                 <i className="fas fa-code text-blue-400"></i>
-                Skills
+                Professional Skills
               </h3>
               <div className="flex flex-wrap gap-2">
-                {profileData.skills.map((skill, index) => (
+                {profileData.professionalSkills.map((skill, index) => (
                   <span 
                     key={index}
                     className="px-3 py-1.5 bg-blue-500/10 text-blue-400 rounded-lg text-sm border border-blue-500/30 hover:bg-blue-500/20 transition-colors"
@@ -314,8 +342,93 @@ export default function UserProfile({ userId, onBack }) {
             </div>
           )}
 
+            </>
+          )}
+
+          {/* Account Tab Content */}
+          {activeTab === "account" && (
+            <div className="space-y-4">
+              <div className="bg-white/[0.04] rounded-xl p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <i className="fas fa-user-circle text-primary-teal"></i>
+                  Account Information
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Email Address</p>
+                    <p className="text-white">{profileData?.user?.email || user.email || 'Not provided'}</p>
+                  </div>
+                  {profileData?.phone && profileData.phone !== '' && (
+                    <div>
+                      <p className="text-sm text-gray-400 mb-1">Phone Number</p>
+                      <p className="text-white">{profileData.phone}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Username</p>
+                    <p className="text-white">@{profileData?.username || user.username || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Member Since</p>
+                    <p className="text-white">{user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Unknown'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Privacy Tab Content */}
+          {activeTab === "privacy" && (
+            <div className="space-y-4">
+              <div className="bg-white/[0.04] rounded-xl p-6">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <i className="fas fa-shield-alt text-primary-teal"></i>
+                  Privacy Settings
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between py-3 border-b border-white/10">
+                    <div>
+                      <p className="text-white font-medium">Public Profile</p>
+                      <p className="text-sm text-gray-400">Profile is visible to everyone</p>
+                    </div>
+                    <div className="text-primary-teal">
+                      <i className="fas fa-check-circle text-xl"></i>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-3 border-b border-white/10">
+                    <div>
+                      <p className="text-white font-medium">Show Email</p>
+                      <p className="text-sm text-gray-400">Email is visible on profile</p>
+                    </div>
+                    <div className="text-gray-400">
+                      <i className="fas fa-times-circle text-xl"></i>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-3 border-b border-white/10">
+                    <div>
+                      <p className="text-white font-medium">Allow Messages</p>
+                      <p className="text-sm text-gray-400">Others can send you messages</p>
+                    </div>
+                    <div className="text-primary-teal">
+                      <i className="fas fa-check-circle text-xl"></i>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="text-white font-medium">Show Online Status</p>
+                      <p className="text-sm text-gray-400">Show when you're active</p>
+                    </div>
+                    <div className="text-gray-400">
+                      <i className="fas fa-times-circle text-xl"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 mt-6">
             {isOwnProfile ? (
               <>
                 <button 
@@ -347,14 +460,16 @@ export default function UserProfile({ userId, onBack }) {
             )}
           </div>
 
-          {/* Recent Posts Section Placeholder */}
-          <div className="mt-8">
-            <h3 className="text-xl font-bold text-white mb-4">Recent Posts</h3>
-            <div className="text-center py-12 bg-gray-900/30 rounded-xl border border-[#045F5F]">
-              <i className="fas fa-sticky-note text-4xl text-gray-600 mb-3"></i>
-              <p className="text-gray-400">No posts yet</p>
+          {/* Recent Posts Section - Only show on profile tab */}
+          {activeTab === "profile" && (
+            <div className="mt-8">
+              <h3 className="text-xl font-bold text-white mb-4">Recent Posts</h3>
+              <div className="text-center py-12 bg-gray-900/30 rounded-xl border border-[#045F5F]">
+                <i className="fas fa-sticky-note text-4xl text-gray-600 mb-3"></i>
+                <p className="text-gray-400">No posts yet</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
