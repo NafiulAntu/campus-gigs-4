@@ -3,13 +3,15 @@ const User = require('../models/User');
 const pool = require('../config/db');
 
 // Helper function to sanitize null values
+// Converts null or 'null' string to empty string for better frontend handling
 const sanitizeNullValues = (obj) => {
   if (!obj) return obj;
   const sanitized = {};
   for (const [key, value] of Object.entries(obj)) {
     if (value === null || value === 'null') {
-      sanitized[key] = undefined;
-    } else if (typeof value === 'object' && !Array.isArray(value)) {
+      // Convert null to empty string for string fields, undefined for others
+      sanitized[key] = '';
+    } else if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
       sanitized[key] = sanitizeNullValues(value);
     } else {
       sanitized[key] = value;
@@ -51,15 +53,15 @@ exports.createOrUpdateStudent = async (req, res) => {
         
         const studentData = {
             userId,
-            fullName: req.body.fullName || null,
+            fullName: req.body.fullName !== undefined ? req.body.fullName : null,
             username: req.body.username.trim().toLowerCase(),
-            phone: req.body.phone || null,
-            coverPicUrl: req.body.coverPicUrl || null,
+            phone: req.body.phone !== undefined && req.body.phone !== '' ? req.body.phone : null,
+            coverPicUrl: req.body.coverPicUrl !== undefined && req.body.coverPicUrl !== '' ? req.body.coverPicUrl : null,
             profession: req.body.profession || 'Student',
-            gender: req.body.gender || null,
-            bio: req.body.bio || null,
-            location: req.body.location || null,
-            websiteUrl: req.body.websiteUrl || null,
+            gender: req.body.gender !== undefined && req.body.gender !== '' ? req.body.gender : null,
+            bio: req.body.bio !== undefined && req.body.bio !== '' ? req.body.bio : null,
+            location: req.body.location !== undefined && req.body.location !== '' ? req.body.location : null,
+            websiteUrl: req.body.websiteUrl !== undefined && req.body.websiteUrl !== '' ? req.body.websiteUrl : null,
             interests: Array.isArray(req.body.interests) ? req.body.interests : [],
             education: Array.isArray(req.body.education) ? req.body.education : [],
             professionalSkills: Array.isArray(req.body.professionalSkills) ? req.body.professionalSkills : [],

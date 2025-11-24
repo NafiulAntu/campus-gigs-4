@@ -1,13 +1,15 @@
 const User = require('../models/User');
 
 // Helper function to sanitize null values
+// Converts null or 'null' string to empty string for better frontend handling
 const sanitizeNullValues = (obj) => {
   if (!obj) return obj;
   const sanitized = {};
   for (const [key, value] of Object.entries(obj)) {
     if (value === null || value === 'null') {
-      sanitized[key] = undefined;
-    } else if (typeof value === 'object' && !Array.isArray(value)) {
+      // Convert null to empty string for string fields, undefined for others
+      sanitized[key] = '';
+    } else if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
       sanitized[key] = sanitizeNullValues(value);
     } else {
       sanitized[key] = value;

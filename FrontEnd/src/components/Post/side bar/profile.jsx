@@ -124,18 +124,17 @@ export default function Profile({ onBack }) {
         console.log('🔍 Profile pic from backend:', profile.profilePicUrl);
         
         setProfileData(prev => {
-          // Only update fields that have actual values from backend
-          // Preserve prev values for fields that are null/undefined/empty
+          // Update with backend data, keeping backend values even if empty string
           const newData = {
             fullName: profile.fullName || profile.user?.full_name || prev.fullName,
             username: profile.username || prev.username,
             email: profile.user?.email || prev.email,
-            phone: profile.phone !== null && profile.phone !== undefined ? profile.phone : prev.phone,
-            bio: profile.bio !== null && profile.bio !== undefined ? profile.bio : prev.bio,
-            location: profile.location !== null && profile.location !== undefined ? profile.location : prev.location,
-            websiteUrl: profile.websiteUrl !== null && profile.websiteUrl !== undefined ? profile.websiteUrl : prev.websiteUrl,
-            gender: profile.gender !== null && profile.gender !== undefined ? profile.gender : prev.gender,
-            coverPicUrl: profile.coverPicUrl || prev.coverPicUrl,
+            phone: profile.phone !== undefined ? profile.phone : prev.phone,
+            bio: profile.bio !== undefined ? profile.bio : prev.bio,
+            location: profile.location !== undefined ? profile.location : prev.location,
+            websiteUrl: profile.websiteUrl !== undefined ? profile.websiteUrl : prev.websiteUrl,
+            gender: profile.gender !== undefined ? profile.gender : prev.gender,
+            coverPicUrl: profile.coverPicUrl !== undefined ? profile.coverPicUrl : prev.coverPicUrl,
             profilePicUrl: profile.profilePicUrl || profile.user?.profile_picture || prev.profilePicUrl,
           };
           console.log('🔍 Updated profileData state:', newData);
