@@ -14,6 +14,11 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
+    // Validate Gmail address
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      return res.status(400).json({ message: 'Only valid Gmail addresses are allowed for registration' });
+    }
+
     if (password !== confirm_password) {
       return res.status(400).json({ message: 'Passwords do not match' });
     }
@@ -74,6 +79,11 @@ exports.signin = async (req, res) => {
     // Validation
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    // Validate Gmail address
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      return res.status(400).json({ message: 'Only valid Gmail addresses are allowed' });
     }
 
     // Find user

@@ -40,24 +40,22 @@ export default function Signin() {
     e.preventDefault();
     setError('');
     setSuccess('');
+    
+    // Validate Gmail address
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      setError('Only valid Gmail addresses (@gmail.com) are allowed');
+      return;
+    }
+    
     setLoading(true);
     
     try {
-      // Sign in with Firebase
-      const firebaseUser = await signInWithEmail(email, password);
-      
-      // Get Firebase token
-      const token = await getCurrentToken();
-      
-      // Sync with backend
-      const backendUser = await syncUserWithBackend(token, {
-        email: firebaseUser.email,
-        full_name: firebaseUser.displayName || firebaseUser.email.split('@')[0]
-      });
+      // Sign in with Firebase (this already syncs with backend)
+      const result = await signInWithEmail(email, password);
       
       // Store token and user info
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(backendUser));
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('user', JSON.stringify(result.backendUser));
       
       setSuccess('Login successful! Redirecting...');
       
@@ -80,29 +78,21 @@ export default function Signin() {
     try {
       let firebaseUser;
       
+      let result;
+      
       if (platform === "Gmail") {
-        firebaseUser = await signInWithGoogle();
+        result = await signInWithGoogle();
       } else if (platform === "GitHub") {
-        firebaseUser = await signInWithGitHub();
+        result = await signInWithGitHub();
       } else {
         setError(`${platform} sign-in coming soon!`);
         setLoading(false);
         return;
       }
       
-      // Get Firebase token
-      const token = await getCurrentToken();
-      
-      // Sync with backend
-      const backendUser = await syncUserWithBackend(token, {
-        email: firebaseUser.email,
-        full_name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-        profile_picture: firebaseUser.photoURL
-      });
-      
       // Store token and user info
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(backendUser));
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('user', JSON.stringify(result.backendUser));
       
       setSuccess('Login successful! Redirecting...');
       

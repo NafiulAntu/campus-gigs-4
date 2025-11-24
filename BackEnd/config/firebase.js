@@ -95,4 +95,5 @@ module.exports = {
   uploadToFirebase,
   deleteFromFirebase,
   isFirebaseEnabled: () => !!bucket,
+  admin, // Export admin instance for token verification
 };

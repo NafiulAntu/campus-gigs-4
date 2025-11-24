@@ -107,22 +107,42 @@ class User {
 
   // Create or update user from Firebase auth
   static async upsertFirebaseUser({ firebase_uid, email, full_name, profile_picture, profession, username }) {
-    const query = `
-      INSERT INTO users (firebase_uid, email, full_name, profile_picture, profession, username, provider, terms_agreed)
-      VALUES ($1, $2, $3, $4, $5, $6, 'firebase', true)
-      ON CONFLICT (firebase_uid) 
-      DO UPDATE SET 
-        email = COALESCE(EXCLUDED.email, users.email),
-        full_name = COALESCE(EXCLUDED.full_name, users.full_name),
-        profile_picture = COALESCE(EXCLUDED.profile_picture, users.profile_picture),
-        profession = COALESCE(EXCLUDED.profession, users.profession),
-        username = COALESCE(EXCLUDED.username, users.username),
-        updated_at = CURRENT_TIMESTAMP
-      RETURNING id, firebase_uid, email, full_name, profile_picture, profession, username, provider, created_at
-    `;
-    const values = [firebase_uid, email, full_name, profile_picture, profession, username];
-    const result = await pool.query(query, values);
-    return result.rows[0];
+    try {
+      const query = `
+        INSERT INTO users (firebase_uid, email, full_name, profile_picture, profession, username, provider, terms_agreed, password)
+        VALUES ($1, $2, $3, $4, $5, $6, 'firebase', true, NULL)
+        ON CONFLICT (firebase_uid) 
+        DO UPDATE SET 
+          email = COALESCE(EXCLUDED.email, users.email),
+          full_name = COALESCE(EXCLUDED.full_name, users.full_name),
+          profile_picture = COALESCE(EXCLUDED.profile_picture, users.profile_picture),
+          profession = COALESCE(EXCLUDED.profession, users.profession),
+          username = COALESCE(EXCLUDED.username, users.username),
+          updated_at = CURRENT_TIMESTAMP
+        RETURNING id, firebase_uid, email, full_name, profile_picture, profession, username, provider, created_at
+      `;
+      const values = [firebase_uid, email, full_name, profile_picture, profession, username];
+      const result = await pool.query(query, values);
+      return result.rows[0];
+    } catch (error) {
+      // If email already exists, try to find and update that user
+      if (error.code === '23505' && error.constraint === 'users_email_key') {
+        console.log('Email already exists, linking Firebase UID to existing user...');
+        const updateQuery = `
+          UPDATE users 
+          SET firebase_uid = $1, 
+              provider = 'firebase',
+              full_name = COALESCE($3, full_name),
+              profile_picture = COALESCE($4, profile_picture),
+              updated_at = CURRENT_TIMESTAMP
+          WHERE email = $2
+          RETURNING id, firebase_uid, email, full_name, profile_picture, profession, username, provider, created_at
+        `;
+        const result = await pool.query(updateQuery, [firebase_uid, email, full_name, profile_picture]);
+        return result.rows[0];
+      }
+      throw error;
+    }
   }
 
   // Link Firebase UID to existing user (for migration)

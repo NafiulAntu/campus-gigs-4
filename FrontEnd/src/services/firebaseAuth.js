@@ -45,7 +45,8 @@ export const signInWithEmail = async (email, password) => {
     };
   } catch (error) {
     console.error('Sign in error:', error);
-    throw new Error(getErrorMessage(error.code));
+    console.error('Error details:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || getErrorMessage(error.code) || error.message);
   }
 };
 
@@ -78,7 +79,8 @@ export const signUpWithEmail = async (email, password, username, profession) => 
     };
   } catch (error) {
     console.error('Sign up error:', error);
-    throw new Error(getErrorMessage(error.code));
+    console.error('Error details:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || getErrorMessage(error.code) || error.message);
   }
 };
 
@@ -106,7 +108,8 @@ export const signInWithGoogle = async () => {
     };
   } catch (error) {
     console.error('Google sign in error:', error);
-    throw new Error(getErrorMessage(error.code));
+    console.error('Error details:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || getErrorMessage(error.code) || error.message);
   }
 };
 
@@ -134,7 +137,8 @@ export const signInWithGitHub = async () => {
     };
   } catch (error) {
     console.error('GitHub sign in error:', error);
-    throw new Error(getErrorMessage(error.code));
+    console.error('Error details:', error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || getErrorMessage(error.code) || error.message);
   }
 };
 

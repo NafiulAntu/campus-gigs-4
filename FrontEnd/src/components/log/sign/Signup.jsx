@@ -49,6 +49,12 @@ export default function Signup() {
     setError('');
     setSuccess('');
     
+    // Validate Gmail address
+    if (!formData.email.toLowerCase().endsWith('@gmail.com')) {
+      setError('Only valid Gmail addresses (@gmail.com) are allowed for registration');
+      return;
+    }
+    
     if (formData.password !== formData.confirm_password) {
       setError('Passwords do not match');
       return;
@@ -60,25 +66,16 @@ export default function Signup() {
     
     setLoading(true);
     try {
-      // Create Firebase account
-      const firebaseUser = await signUpWithEmail(
+      // Create Firebase account (this already syncs with backend)
+      const result = await signUpWithEmail(
         formData.email, 
         formData.password,
         formData.full_name
       );
       
-      // Get Firebase token
-      const token = await getCurrentToken();
-      
-      // Sync with backend
-      const backendUser = await syncUserWithBackend(token, {
-        email: firebaseUser.email,
-        full_name: formData.full_name
-      });
-      
       // Store token and user info
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(backendUser));
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('user', JSON.stringify(result.backendUser));
       
       setSuccess('Account created! Redirecting...');
       
@@ -99,31 +96,21 @@ export default function Signup() {
     setLoading(true);
     
     try {
-      let firebaseUser;
+      let result;
       
       if (platform === "Gmail") {
-        firebaseUser = await signInWithGoogle();
+        result = await signInWithGoogle();
       } else if (platform === "GitHub") {
-        firebaseUser = await signInWithGitHub();
+        result = await signInWithGitHub();
       } else {
         setError(`${platform} sign-up coming soon!`);
         setLoading(false);
         return;
       }
       
-      // Get Firebase token
-      const token = await getCurrentToken();
-      
-      // Sync with backend
-      const backendUser = await syncUserWithBackend(token, {
-        email: firebaseUser.email,
-        full_name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
-        profile_picture: firebaseUser.photoURL
-      });
-      
       // Store token and user info
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(backendUser));
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('user', JSON.stringify(result.backendUser));
       
       setSuccess('Account created! Redirecting...');
       
