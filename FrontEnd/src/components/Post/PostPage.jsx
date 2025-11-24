@@ -582,8 +582,13 @@ export default function PostPage({ onNavigate = () => {} }) {
                     <div className="flex items-start gap-3 sm:gap-4">
                       <button
                         onClick={() => {
-                          setViewingUserId(p.posted_by);
-                          setCurrentView("userProfile");
+                          // If it's the current user's post, go to profile page
+                          if (p.posted_by === currentUser?.id) {
+                            setCurrentView("profile");
+                          } else {
+                            setViewingUserId(p.posted_by);
+                            setCurrentView("userProfile");
+                          }
                         }}
                         className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                       >
@@ -605,8 +610,13 @@ export default function PostPage({ onNavigate = () => {} }) {
                             <div className="flex items-center gap-1 sm:gap-2 leading-tight flex-wrap">
                               <button
                                 onClick={() => {
-                                  setViewingUserId(p.posted_by);
-                                  setCurrentView("userProfile");
+                                  // If it's the current user's post, go to profile page
+                                  if (p.posted_by === currentUser?.id) {
+                                    setCurrentView("profile");
+                                  } else {
+                                    setViewingUserId(p.posted_by);
+                                    setCurrentView("userProfile");
+                                  }
                                 }}
                                 className={`font-bold text-[15px] sm:text-[17px] transition-colors duration-300 hover:underline cursor-pointer ${
                                   brightOn ? 'text-white hover:text-primary-teal' : 'text-blue-400 hover:text-primary-teal'
