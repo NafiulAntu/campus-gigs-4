@@ -8,8 +8,17 @@ const fs = require('fs');
 
 // Fallback: Local storage if Firebase fails
 const uploadsDir = path.join(__dirname, '..', 'uploads', 'posts');
+const profileUploadsDir = path.join(__dirname, '..', 'uploads', 'profiles');
+const coverUploadsDir = path.join(__dirname, '..', 'uploads', 'covers');
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(profileUploadsDir)) {
+  fs.mkdirSync(profileUploadsDir, { recursive: true });
+}
+if (!fs.existsSync(coverUploadsDir)) {
+  fs.mkdirSync(coverUploadsDir, { recursive: true });
 }
 
 // Configure multer to store files in memory for Firebase upload
@@ -116,14 +125,30 @@ router.post('/', protect, (req, res) => {
         // Fallback to local storage
         console.log('💾 Using local storage (Firebase not configured)');
         
+        // Determine upload type from request body
+        const uploadType = req.body.type || 'post'; // 'post', 'profile', or 'cover'
+        
         for (const file of req.files) {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-          const filename = 'post-' + uniqueSuffix + path.extname(file.originalname);
-          const filepath = path.join(uploadsDir, filename);
+          let filename, filepath, urlPath;
+          
+          if (uploadType === 'profile') {
+            filename = 'profile-' + uniqueSuffix + path.extname(file.originalname);
+            filepath = path.join(profileUploadsDir, filename);
+            urlPath = `http://localhost:5000/uploads/profiles/${filename}`;
+          } else if (uploadType === 'cover') {
+            filename = 'cover-' + uniqueSuffix + path.extname(file.originalname);
+            filepath = path.join(coverUploadsDir, filename);
+            urlPath = `http://localhost:5000/uploads/covers/${filename}`;
+          } else {
+            filename = 'post-' + uniqueSuffix + path.extname(file.originalname);
+            filepath = path.join(uploadsDir, filename);
+            urlPath = `http://localhost:5000/uploads/posts/${filename}`;
+          }
           
           fs.writeFileSync(filepath, file.buffer);
-          fileUrls.push(`http://localhost:5000/uploads/posts/${filename}`);
-          console.log(`  ✅ ${file.originalname} → Local`);
+          fileUrls.push(urlPath);
+          console.log(`  ✅ ${file.originalname} → Local (${uploadType})`);
         }
       }
 

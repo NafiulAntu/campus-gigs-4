@@ -84,16 +84,17 @@ class User {
   }
 
   // Update user metadata (profession, username)
-  static async updateMetadata(id, { profession, username }) {
+  static async updateMetadata(id, { profession, username, profile_picture }) {
     const query = `
       UPDATE users 
       SET profession = COALESCE($1, profession),
           username = COALESCE($2, username),
+          profile_picture = COALESCE($3, profile_picture),
           updated_at = CURRENT_TIMESTAMP
-      WHERE id = $3
+      WHERE id = $4
       RETURNING id, full_name, email, profession, username, profile_picture
     `;
-    const values = [profession, username, id];
+    const values = [profession, username, profile_picture, id];
     const result = await pool.query(query, values);
     return result.rows[0];
   }

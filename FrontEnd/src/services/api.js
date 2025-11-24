@@ -1,14 +1,34 @@
 import axios from 'axios';
+import { auth } from '../config/firebase';
 
 const API = axios.create({
   baseURL: '/api',
 });
 
-// Auto-add JWT token to headers for protected routes
-API.interceptors.request.use((req) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    req.headers.Authorization = `Bearer ${token}`;
+// Auto-add Firebase token to headers for protected routes (with auto-refresh)
+API.interceptors.request.use(async (req) => {
+  try {
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      // Get fresh token (Firebase automatically refreshes if expired)
+      const freshToken = await currentUser.getIdToken(true);
+      req.headers.Authorization = `Bearer ${freshToken}`;
+      // Update localStorage with fresh token
+      localStorage.setItem('token', freshToken);
+    } else {
+      // Fallback to stored token if no current user
+      const token = localStorage.getItem('token');
+      if (token) {
+        req.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    // Fallback to stored token
+    const token = localStorage.getItem('token');
+    if (token) {
+      req.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return req;
 });

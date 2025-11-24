@@ -122,7 +122,22 @@ exports.getMyProfile = async (req, res) => {
             });
         }
         
-        res.status(200).json({ success: true, data: student });
+        // Get user details for profile picture
+        const { pool } = require('../config/db');
+        const userResult = await pool.query(
+            'SELECT id, full_name, email, profile_picture FROM users WHERE id = $1',
+            [userId]
+        );
+        const user = userResult.rows[0];
+        
+        res.status(200).json({ 
+            success: true, 
+            data: {
+                ...student.toJSON(),
+                profilePicUrl: user?.profile_picture || null,
+                user: user || null
+            }
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

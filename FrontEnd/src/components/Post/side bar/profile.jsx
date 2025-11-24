@@ -6,7 +6,8 @@ import {
   getMyTeacherProfile,
   getMyStudentProfile,
   getMyEmployeeProfile,
-  deleteAccount
+  deleteAccount,
+  uploadFiles
 } from "../../../services/api";
 import { useNavigate } from 'react-router-dom';
 
@@ -82,6 +83,8 @@ export default function Profile({ onBack }) {
     const userData = localStorage.getItem('user');
     if (userData) {
       const parsedUser = JSON.parse(userData);
+      console.log('🔍 Profile Page - Loaded user from localStorage:', parsedUser);
+      console.log('🔍 Profile picture from localStorage:', parsedUser.profile_picture);
       setUser(parsedUser);
       setProfileData(prev => ({
         ...prev,
@@ -117,15 +120,15 @@ export default function Profile({ onBack }) {
         setProfileData(prev => ({
           ...prev,
           fullName: profile.fullName || profile.user?.full_name || prev.fullName,
-          username: profile.username || "",
+          username: profile.username || prev.username,
           email: profile.user?.email || prev.email,
-          phone: profile.phone || "",
-          bio: profile.bio || "",
-          location: profile.location || "",
-          websiteUrl: profile.websiteUrl || "",
-          gender: profile.gender || "",
-          coverPicUrl: profile.coverPicUrl || "",
-          profilePicUrl: profile.profilePicUrl || profile.user?.profile_picture || "",
+          phone: profile.phone || prev.phone,
+          bio: profile.bio || prev.bio,
+          location: profile.location || prev.location,
+          websiteUrl: profile.websiteUrl || prev.websiteUrl,
+          gender: profile.gender || prev.gender,
+          coverPicUrl: profile.coverPicUrl || prev.coverPicUrl,
+          profilePicUrl: profile.profilePicUrl || profile.user?.profile_picture || prev.profilePicUrl,
         }));
         setInterests(profile.interests || []);
         setEducation(profile.education || []);
@@ -310,41 +313,92 @@ export default function Profile({ onBack }) {
   };
 
   // Handle cover photo upload
-  const handleCoverPhotoUpload = () => {
+  const handleCoverPhotoUpload = async () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          handleInputChange('coverPicUrl', event.target.result);
-          setSuccess('Cover photo updated! Remember to save changes.');
-          setTimeout(() => setSuccess(''), 3000);
-        };
-        reader.readAsDataURL(file);
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          setError('Image size must be less than 5MB');
+          setTimeout(() => setError(''), 3000);
+          return;
+        }
+
+        try {
+          setLoading(true);
+          
+          // Upload to server
+          const formData = new FormData();
+          formData.append('files', file);
+          formData.append('type', 'cover');
+          
+          const response = await uploadFiles(formData);
+          
+          if (response.data.files && response.data.files.length > 0) {
+            const uploadedUrl = response.data.files[0];
+            handleInputChange('coverPicUrl', uploadedUrl);
+            setSuccess('Cover photo uploaded! Remember to save changes.');
+            setTimeout(() => setSuccess(''), 3000);
+          }
+        } catch (err) {
+          console.error('Cover photo upload error:', err);
+          setError('Failed to upload cover photo. Please try again.');
+          setTimeout(() => setError(''), 3000);
+        } finally {
+          setLoading(false);
+        }
       }
     };
     input.click();
   };
 
   // Handle profile picture upload
-  const handleProfilePicUpload = () => {
+  const handleProfilePicUpload = async () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          // Store in profileData state like cover photo
-          handleInputChange('profilePicUrl', event.target.result);
-          setSuccess('Profile picture updated! Remember to save changes.');
-          setTimeout(() => setSuccess(''), 3000);
-        };
-        reader.readAsDataURL(file);
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          setError('Image size must be less than 5MB');
+          setTimeout(() => setError(''), 3000);
+          return;
+        }
+
+        try {
+          setLoading(true);
+          
+          // Upload to server
+          const formData = new FormData();
+          formData.append('files', file);
+          formData.append('type', 'profile');
+          
+          const response = await uploadFiles(formData);
+          
+          if (response.data.files && response.data.files.length > 0) {
+            const uploadedUrl = response.data.files[0];
+            handleInputChange('profilePicUrl', uploadedUrl);
+            
+            // Also update localStorage immediately so it shows in other components
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            currentUser.profile_picture = uploadedUrl;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            
+            setSuccess('Profile picture uploaded! Remember to save changes.');
+            setTimeout(() => setSuccess(''), 3000);
+          }
+        } catch (err) {
+          console.error('Profile picture upload error:', err);
+          setError('Failed to upload profile picture. Please try again.');
+          setTimeout(() => setError(''), 3000);
+        } finally {
+          setLoading(false);
+        }
       }
     };
     input.click();

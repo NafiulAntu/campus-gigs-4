@@ -327,7 +327,7 @@ exports.firebaseSync = async (req, res) => {
     // User is already verified by authMiddleware (req.user is set)
     // The middleware has verified the Firebase token and extracted the user
     
-    const { username, profession } = req.body;
+    const { username, profession, profile_picture, photoURL } = req.body;
     
     // req.user should already be populated by the middleware
     if (!req.user) {
@@ -337,11 +337,15 @@ exports.firebaseSync = async (req, res) => {
       });
     }
 
+    // Use photoURL if profile_picture not provided (for Firebase compatibility)
+    const finalProfilePicture = profile_picture || photoURL;
+
     // Update user metadata if provided
-    if (username || profession) {
+    if (username || profession || finalProfilePicture) {
       const updatedUser = await User.updateMetadata(req.user.id, {
         username,
-        profession
+        profession,
+        profile_picture: finalProfilePicture
       });
 
       return res.status(200).json({

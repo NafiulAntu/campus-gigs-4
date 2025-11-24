@@ -119,6 +119,7 @@ exports.getTeacherByUsername = async (req, res) => {
             success: true, 
             data: {
                 ...teacher.toJSON(),
+                profilePicUrl: user?.profile_picture || null,
                 user: user || null
             }
         });
@@ -200,6 +201,7 @@ exports.getMyProfile = async (req, res) => {
             success: true, 
             data: {
                 ...teacher.toJSON(),
+                profilePicUrl: user?.profile_picture || null,
                 user: user || null
             }
         });

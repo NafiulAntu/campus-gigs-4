@@ -198,12 +198,13 @@ export const resetPassword = async (email) => {
 };
 
 /**
- * Get current user's ID token
+ * Get current user's ID token (refreshes automatically if expired)
  */
 export const getCurrentToken = async () => {
   const user = auth.currentUser;
   if (user) {
-    return await user.getIdToken();
+    // Force refresh if token is about to expire (within 5 minutes)
+    return await user.getIdToken(true);
   }
   return null;
 };

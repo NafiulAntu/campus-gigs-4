@@ -91,6 +91,8 @@ export default function Signin() {
       }
       
       // Store token and user info
+      console.log('🔍 Google Sign-In - backendUser:', result.backendUser);
+      console.log('🔍 Profile picture URL:', result.backendUser?.profile_picture);
       localStorage.setItem('token', result.token);
       localStorage.setItem('user', JSON.stringify(result.backendUser));
       
