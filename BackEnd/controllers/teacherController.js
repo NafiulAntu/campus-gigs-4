@@ -2,6 +2,22 @@ const Teacher = require('../models/Teacher');
 const User = require('../models/User');
 const pool = require('../config/db');
 
+// Helper function to sanitize null values
+const sanitizeNullValues = (obj) => {
+  if (!obj) return obj;
+  const sanitized = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === null || value === 'null') {
+      sanitized[key] = undefined;
+    } else if (typeof value === 'object' && !Array.isArray(value)) {
+      sanitized[key] = sanitizeNullValues(value);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+};
+
 // Create or update teacher profile (linked to authenticated user)
 exports.createOrUpdateTeacher = async (req, res) => {
     try {
@@ -76,13 +92,15 @@ exports.createOrUpdateTeacher = async (req, res) => {
         );
         const user = userResult.rows[0];
 
+        const responseData = sanitizeNullValues({
+            ...teacher.toJSON(),
+            user: user || null
+        });
+
         res.status(isNew ? 201 : 200).json({ 
             success: true, 
             message: isNew ? 'Teacher profile created successfully' : 'Teacher profile updated successfully',
-            data: {
-                ...teacher.toJSON(),
-                user: user || null
-            }
+            data: responseData
         });
     } catch (error) {
         console.error('Teacher profile error:', error);
@@ -115,13 +133,15 @@ exports.getTeacherByUsername = async (req, res) => {
         );
         const user = userResult.rows[0];
         
+        const responseData = sanitizeNullValues({
+            ...teacher.toJSON(),
+            profilePicUrl: user?.profile_picture || null,
+            user: user || null
+        });
+
         res.status(200).json({ 
             success: true, 
-            data: {
-                ...teacher.toJSON(),
-                profilePicUrl: user?.profile_picture || null,
-                user: user || null
-            }
+            data: responseData
         });
     } catch (error) {
         console.error('Get teacher error:', error);
@@ -155,10 +175,10 @@ exports.getAllTeachers = async (req, res) => {
                     'SELECT id, full_name, email, profile_picture FROM users WHERE id = $1',
                     [teacher.userId]
                 );
-                return {
+                return sanitizeNullValues({
                     ...teacher.toJSON(),
                     user: userResult.rows[0] || null
-                };
+                });
             })
         );
         
@@ -203,13 +223,15 @@ exports.getMyProfile = async (req, res) => {
             profilePicUrl: user?.profile_picture
         });
         
+        const responseData = sanitizeNullValues({
+            ...teacherData,
+            profilePicUrl: user?.profile_picture || null,
+            user: user || null
+        });
+
         res.status(200).json({ 
             success: true, 
-            data: {
-                ...teacherData,
-                profilePicUrl: user?.profile_picture || null,
-                user: user || null
-            }
+            data: responseData
         });
     } catch (error) {
         console.error('Get my profile error:', error);

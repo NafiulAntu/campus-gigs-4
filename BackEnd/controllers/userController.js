@@ -1,5 +1,21 @@
 const User = require('../models/User');
 
+// Helper function to sanitize null values
+const sanitizeNullValues = (obj) => {
+  if (!obj) return obj;
+  const sanitized = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === null || value === 'null') {
+      sanitized[key] = undefined;
+    } else if (typeof value === 'object' && !Array.isArray(value)) {
+      sanitized[key] = sanitizeNullValues(value);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+};
+
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
@@ -34,10 +50,11 @@ exports.getUserById = async (req, res) => {
     
     // Remove password from response
     const { password, ...userWithoutPassword } = user;
+    const sanitizedUser = sanitizeNullValues(userWithoutPassword);
     
     res.json({
       success: true,
-      data: userWithoutPassword
+      data: sanitizedUser
     });
   } catch (error) {
     console.error('Get user by ID error:', error);

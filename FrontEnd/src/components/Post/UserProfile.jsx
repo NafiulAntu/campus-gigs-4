@@ -158,7 +158,7 @@ export default function UserProfile({ userId, onBack }) {
               </div>
             )}
             
-            {profileData?.phone && (
+            {profileData?.phone && profileData.phone !== 'null' && (
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <i className="fas fa-phone"></i>
                 <span>{profileData.phone}</span>
@@ -172,7 +172,7 @@ export default function UserProfile({ userId, onBack }) {
               </div>
             )}
 
-            {profileData?.location && (
+            {profileData?.location && profileData.location !== 'null' && (
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <i className="fas fa-map-marker-alt"></i>
                 <span>{profileData.location}</span>

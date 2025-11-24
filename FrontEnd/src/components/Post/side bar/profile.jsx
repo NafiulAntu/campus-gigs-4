@@ -770,27 +770,27 @@ export default function Profile({ onBack }) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                     <div>
                       <p className="text-sm text-text-muted mb-1">Full Name</p>
-                      <p className="text-white font-medium">{profileData.fullName || '—'}</p>
+                      <p className="text-white font-medium">{profileData.fullName && profileData.fullName !== 'null' ? profileData.fullName : 'Not specified'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-text-muted mb-1">Username</p>
-                      <p className="text-white font-medium">@{profileData.username || '—'}</p>
+                      <p className="text-white font-medium">@{profileData.username && profileData.username !== 'null' ? profileData.username : 'not_set'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-text-muted mb-1">Profession</p>
-                      <p className="text-white font-medium capitalize">{selectedProfession || '—'}</p>
+                      <p className="text-white font-medium capitalize">{selectedProfession && selectedProfession !== 'null' ? selectedProfession : 'Not specified'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-text-muted mb-1">Gender</p>
-                      <p className="text-white font-medium">{profileData.gender || '—'}</p>
+                      <p className="text-white font-medium">{profileData.gender && profileData.gender !== 'null' ? profileData.gender : 'Not specified'}</p>
                     </div>
-                    {profileData.location && (
+                    {profileData.location && profileData.location !== 'null' && (
                       <div>
                         <p className="text-sm text-text-muted mb-1">Location</p>
                         <p className="text-white font-medium">{profileData.location}</p>
                       </div>
                     )}
-                    {profileData.websiteUrl && (
+                    {profileData.websiteUrl && profileData.websiteUrl !== 'null' && (
                       <div>
                         <p className="text-sm text-text-muted mb-1">Website</p>
                         <a href={profileData.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary-teal hover:text-blue-400 font-medium break-all">
@@ -799,7 +799,7 @@ export default function Profile({ onBack }) {
                       </div>
                     )}
                   </div>
-                  {profileData.bio && (
+                  {profileData.bio && profileData.bio !== 'null' && (
                     <div className="pt-2 border-t border-white/5">
                       <p className="text-sm text-text-muted mb-2">Bio</p>
                       <p className="text-white leading-relaxed">{profileData.bio}</p>

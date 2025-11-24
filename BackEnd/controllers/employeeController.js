@@ -2,6 +2,22 @@ const Employee = require('../models/Employee');
 const User = require('../models/User');
 const pool = require('../config/db');
 
+// Helper function to sanitize null values
+const sanitizeNullValues = (obj) => {
+  if (!obj) return obj;
+  const sanitized = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === null || value === 'null') {
+      sanitized[key] = undefined;
+    } else if (typeof value === 'object' && !Array.isArray(value)) {
+      sanitized[key] = sanitizeNullValues(value);
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+};
+
 // Create or update employee profile
 exports.createOrUpdateEmployee = async (req, res) => {
     try {
@@ -84,13 +100,15 @@ exports.createOrUpdateEmployee = async (req, res) => {
         );
         const user = userResult.rows[0];
 
+        const responseData = sanitizeNullValues({
+            ...employee.toJSON(),
+            user: user || null
+        });
+
         res.status(isNew ? 201 : 200).json({ 
             success: true,
             message: isNew ? 'Employee profile created successfully' : 'Employee profile updated successfully',
-            data: {
-                ...employee.toJSON(),
-                user: user || null
-            }
+            data: responseData
         });
     } catch (error) {
         console.error('Employee profile error:', error);
@@ -111,7 +129,8 @@ exports.getEmployeeByUsername = async (req, res) => {
         if (!employee) {
             return res.status(404).json({ error: 'Employee not found' });
         }
-        res.status(200).json({ success: true, data: employee });
+        const responseData = sanitizeNullValues(employee.toJSON());
+        res.status(200).json({ success: true, data: responseData });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -143,13 +162,15 @@ exports.getMyProfile = async (req, res) => {
             profilePicUrl: user?.profile_picture
         });
         
+        const responseData = sanitizeNullValues({
+            ...employeeData,
+            profilePicUrl: user?.profile_picture || null,
+            user: user || null
+        });
+
         res.status(200).json({ 
             success: true, 
-            data: {
-                ...employeeData,
-                profilePicUrl: user?.profile_picture || null,
-                user: user || null
-            }
+            data: responseData
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
