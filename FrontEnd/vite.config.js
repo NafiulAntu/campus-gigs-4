@@ -11,6 +11,8 @@ export default defineConfig({
   ],
   // Server configuration for smoother development, includes proxy
   server: {
+    port: 3000,
+    strictPort: true,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
@@ -30,8 +32,6 @@ export default defineConfig({
         },
       },
     },
-    port: 3000,
-    strictPort: false,
     // Enable HMR (Hot Module Replacement)
     hmr: {
       overlay: true,

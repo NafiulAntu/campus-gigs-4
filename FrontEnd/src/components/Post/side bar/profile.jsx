@@ -85,6 +85,7 @@ export default function Profile({ onBack }) {
       const parsedUser = JSON.parse(userData);
       console.log('🔍 Profile Page - Loaded user from localStorage:', parsedUser);
       console.log('🔍 Profile picture from localStorage:', parsedUser.profile_picture);
+      console.log('🔍 Cover picture from localStorage:', parsedUser.cover_picture);
       setUser(parsedUser);
       setProfileData(prev => ({
         ...prev,
@@ -92,6 +93,7 @@ export default function Profile({ onBack }) {
         email: parsedUser.email || "",
         username: parsedUser.username || "",
         profilePicUrl: parsedUser.profile_picture || "", // Load profile picture from localStorage
+        coverPicUrl: parsedUser.cover_picture || "", // Load cover picture from localStorage
       }));
       
       // Auto-load profession if user has one saved
@@ -122,26 +124,27 @@ export default function Profile({ onBack }) {
         console.log('🔍 Profile pic from backend:', profile.profilePicUrl);
         
         setProfileData(prev => {
+          // Only update fields that have actual values from backend
+          // Preserve prev values for fields that are null/undefined/empty
           const newData = {
-            ...prev,
             fullName: profile.fullName || profile.user?.full_name || prev.fullName,
             username: profile.username || prev.username,
             email: profile.user?.email || prev.email,
-            phone: profile.phone || prev.phone,
-            bio: profile.bio || prev.bio,
-            location: profile.location || prev.location,
-            websiteUrl: profile.websiteUrl || prev.websiteUrl,
-            gender: profile.gender || prev.gender,
+            phone: profile.phone !== null && profile.phone !== undefined ? profile.phone : prev.phone,
+            bio: profile.bio !== null && profile.bio !== undefined ? profile.bio : prev.bio,
+            location: profile.location !== null && profile.location !== undefined ? profile.location : prev.location,
+            websiteUrl: profile.websiteUrl !== null && profile.websiteUrl !== undefined ? profile.websiteUrl : prev.websiteUrl,
+            gender: profile.gender !== null && profile.gender !== undefined ? profile.gender : prev.gender,
             coverPicUrl: profile.coverPicUrl || prev.coverPicUrl,
             profilePicUrl: profile.profilePicUrl || profile.user?.profile_picture || prev.profilePicUrl,
           };
           console.log('🔍 Updated profileData state:', newData);
           return newData;
         });
-        setInterests(profile.interests || []);
-        setEducation(profile.education || []);
-        setSkills(profile.professionalSkills || []);
-        setCertificates(profile.certificates || []);
+        setInterests(profile.interests?.length > 0 ? profile.interests : []);
+        setEducation(profile.education?.length > 0 ? profile.education : []);
+        setSkills(profile.professionalSkills?.length > 0 ? profile.professionalSkills : []);
+        setCertificates(profile.certificates?.length > 0 ? profile.certificates : []);
       }
     } catch (err) {
       if (err.response?.status !== 404) {
@@ -224,15 +227,24 @@ export default function Profile({ onBack }) {
         
         // Update localStorage with user data from backend response (includes saved profile_picture)
         const savedUserData = response.data.data?.user;
+        const savedProfileData = response.data.data;
         const updatedUser = {
           ...currentUser,
           full_name: savedUserData?.full_name || profileData.fullName,
           username: savedUserData?.username || profileData.username,
           profession: savedUserData?.profession || (selectedProfession.charAt(0).toUpperCase() + selectedProfession.slice(1)),
-          profile_picture: savedUserData?.profile_picture || currentUser.profile_picture, // Use profile picture from backend response
+          profile_picture: savedUserData?.profile_picture || currentUser.profile_picture,
+          cover_picture: savedProfileData?.coverPicUrl || profileData.coverPicUrl, // Store cover picture
         };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setUser(updatedUser);
+        
+        // Update profileData state with saved values to ensure they persist
+        setProfileData(prev => ({
+          ...prev,
+          coverPicUrl: savedProfileData?.coverPicUrl || prev.coverPicUrl,
+          profilePicUrl: savedUserData?.profile_picture || prev.profilePicUrl,
+        }));
         
         // Dispatch custom event to notify other components (like Sidebar) that user data updated
         window.dispatchEvent(new Event('userUpdated'));

@@ -131,7 +131,6 @@ exports.getMyProfile = async (req, res) => {
         }
         
         // Get user details for profile picture
-        const { pool } = require('../config/db');
         const userResult = await pool.query(
             'SELECT id, full_name, email, profile_picture FROM users WHERE id = $1',
             [userId]

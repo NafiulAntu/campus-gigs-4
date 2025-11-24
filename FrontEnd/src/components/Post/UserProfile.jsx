@@ -118,9 +118,9 @@ export default function UserProfile({ userId, onBack }) {
       <div className="max-w-3xl mx-auto">
         {/* Cover Image */}
         <div className="w-full h-48 bg-gradient-to-r from-primary-teal to-blue-500 relative overflow-hidden">
-          {profileData?.cover_pic_url ? (
+          {profileData?.coverPicUrl ? (
             <img
-              src={profileData.cover_pic_url}
+              src={profileData.coverPicUrl}
               alt="Cover"
               className="w-full h-full object-cover"
             />
@@ -131,10 +131,10 @@ export default function UserProfile({ userId, onBack }) {
         <div className="px-6 pb-6">
           {/* Profile Picture */}
           <div className="relative -mt-16 mb-4">
-            {(profileData?.profile_pic_url || user.profile_picture) ? (
+            {(profileData?.profilePicUrl || user.profile_picture) ? (
               <img
-                src={profileData?.profile_pic_url || user.profile_picture}
-                alt={profileData?.full_name || user.full_name}
+                src={profileData?.profilePicUrl || user.profile_picture}
+                alt={profileData?.fullName || user.full_name}
                 className="w-32 h-32 rounded-full border-4 border-black object-cover shadow-xl"
               />
             ) : (
@@ -147,21 +147,21 @@ export default function UserProfile({ userId, onBack }) {
           {/* User Details */}
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-white mb-1">
-              {profileData?.full_name || user.full_name || "Unknown User"}
+              {profileData?.fullName || user.full_name || "Unknown User"}
             </h2>
             <p className="text-blue-400 mb-3">@{profileData?.username || user.username}</p>
             
-            {(profileData?.email || user.email) && (
+            {(profileData?.user?.email || user.email) && (
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <i className="fas fa-envelope"></i>
-                <span>{profileData?.email || user.email}</span>
+                <span>{profileData?.user?.email || user.email}</span>
               </div>
             )}
             
-            {(profileData?.phone || user.phone) && (
+            {profileData?.phone && (
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <i className="fas fa-phone"></i>
-                <span>{profileData?.phone || user.phone}</span>
+                <span>{profileData.phone}</span>
               </div>
             )}
 
@@ -179,16 +179,16 @@ export default function UserProfile({ userId, onBack }) {
               </div>
             )}
 
-            {profileData?.website_url && (
+            {profileData?.websiteUrl && (
               <div className="flex items-center gap-2 text-gray-400 mb-2">
                 <i className="fas fa-globe"></i>
                 <a 
-                  href={profileData.website_url} 
+                  href={profileData.websiteUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary-teal hover:underline"
                 >
-                  {profileData.website_url}
+                  {profileData.websiteUrl}
                 </a>
               </div>
             )}
