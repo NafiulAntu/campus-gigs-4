@@ -19,6 +19,12 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ message: 'Only valid Gmail addresses are allowed for registration' });
     }
 
+    // Validate email format
+    const emailRegex = /^[a-zA-Z0-9._-]+@gmail\.com$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Invalid Gmail address format' });
+    }
+
     if (password !== confirm_password) {
       return res.status(400).json({ message: 'Passwords do not match' });
     }

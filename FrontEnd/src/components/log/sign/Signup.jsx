@@ -66,6 +66,8 @@ export default function Signup() {
     
     setLoading(true);
     try {
+      setSuccess('Creating account...');
+      
       // Create Firebase account (this already syncs with backend)
       const result = await signUpWithEmail(
         formData.email, 
@@ -77,12 +79,12 @@ export default function Signup() {
       localStorage.setItem('token', result.token);
       localStorage.setItem('user', JSON.stringify(result.backendUser));
       
-      setSuccess('Account created! Redirecting...');
+      setSuccess('Account created! Verification email sent to your Gmail. Check your inbox and redirecting...');
       
-      // Redirect to post page after 1.5 seconds
+      // Redirect to post page after 2.5 seconds to give time to read the message
       setTimeout(() => {
         navigate('/post');
-      }, 1500);
+      }, 2500);
     } catch (err) {
       console.error('Signup error:', err);
       setError(err.message || 'Signup failed. Please try again.');

@@ -7,6 +7,7 @@ import {
   GithubAuthProvider,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updateProfile,
   onAuthStateChanged
 } from 'firebase/auth';
@@ -51,11 +52,39 @@ export const signInWithEmail = async (email, password) => {
 };
 
 /**
+ * Verify email exists by attempting to get sign-in methods
+ */
+const verifyEmailExists = async (email) => {
+  try {
+    // Firebase will return sign-in methods if email exists
+    const { fetchSignInMethodsForEmail } = await import('firebase/auth');
+    const methods = await fetchSignInMethodsForEmail(auth, email);
+    return methods.length > 0;
+  } catch (error) {
+    // If email doesn't exist in Firebase, it's a new account - that's OK
+    return true;
+  }
+};
+
+/**
  * Sign up with Email and Password
  */
 export const signUpWithEmail = async (email, password, username, profession) => {
   try {
+    // Validate email format
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      throw new Error('Only Gmail addresses are allowed');
+    }
+    
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    
+    // Send email verification to confirm email exists
+    try {
+      await sendEmailVerification(userCredential.user);
+      console.log('✅ Verification email sent to:', email);
+    } catch (verifyError) {
+      console.warn('⚠️ Could not send verification email:', verifyError.message);
+    }
     
     // Update profile with username
     await updateProfile(userCredential.user, {
