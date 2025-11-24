@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { signUpWithEmail, signInWithGoogle, getCurrentToken } from '../../../services/firebaseAuth';
+import { signUpWithEmail, signInWithGoogle, signInWithGitHub, getCurrentToken } from '../../../services/firebaseAuth';
 import { syncUserWithBackend } from '../../../services/api';
 import { FaEnvelope, FaLock, FaUser, FaEye, FaEyeSlash, FaCheckCircle } from "react-icons/fa";
 import GmailIcon from "../../../assets/icons/GmailIcon";
@@ -103,6 +103,8 @@ export default function Signup() {
       
       if (platform === "Gmail") {
         firebaseUser = await signInWithGoogle();
+      } else if (platform === "GitHub") {
+        firebaseUser = await signInWithGitHub();
       } else {
         setError(`${platform} sign-up coming soon!`);
         setLoading(false);
