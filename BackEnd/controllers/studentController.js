@@ -27,6 +27,12 @@ exports.createOrUpdateStudent = async (req, res) => {
             });
         }
 
+        console.log('📥 Received student profile data:', {
+            coverPicUrl: req.body.coverPicUrl,
+            profilePicUrl: req.body.profilePicUrl,
+            username: req.body.username
+        });
+        
         const studentData = {
             userId,
             fullName: req.body.fullName || null,
@@ -43,6 +49,8 @@ exports.createOrUpdateStudent = async (req, res) => {
             professionalSkills: Array.isArray(req.body.professionalSkills) ? req.body.professionalSkills : [],
             certificates: Array.isArray(req.body.certificates) ? req.body.certificates : []
         };
+        
+        console.log('💾 Saving student with coverPicUrl:', studentData.coverPicUrl);
 
         let student = await Student.findOne({ where: { userId } });
         let isNew = false;
@@ -130,10 +138,16 @@ exports.getMyProfile = async (req, res) => {
         );
         const user = userResult.rows[0];
         
+        const studentData = student.toJSON();
+        console.log('📤 Student profile data being sent:', {
+            coverPicUrl: studentData.coverPicUrl,
+            profilePicUrl: user?.profile_picture
+        });
+        
         res.status(200).json({ 
             success: true, 
             data: {
-                ...student.toJSON(),
+                ...studentData,
                 profilePicUrl: user?.profile_picture || null,
                 user: user || null
             }

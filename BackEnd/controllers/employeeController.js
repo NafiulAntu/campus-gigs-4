@@ -27,6 +27,12 @@ exports.createOrUpdateEmployee = async (req, res) => {
             });
         }
 
+        console.log('📥 Received employee profile data:', {
+            coverPicUrl: req.body.coverPicUrl,
+            profilePicUrl: req.body.profilePicUrl,
+            username: req.body.username
+        });
+        
         const employeeData = {
             userId,
             fullName: req.body.fullName || null,
@@ -43,6 +49,8 @@ exports.createOrUpdateEmployee = async (req, res) => {
             professionalSkills: Array.isArray(req.body.professionalSkills) ? req.body.professionalSkills : [],
             certificates: Array.isArray(req.body.certificates) ? req.body.certificates : []
         };
+        
+        console.log('💾 Saving employee with coverPicUrl:', employeeData.coverPicUrl);
 
         let employee = await Employee.findOne({ where: { userId } });
         let isNew = false;
@@ -130,10 +138,16 @@ exports.getMyProfile = async (req, res) => {
         );
         const user = userResult.rows[0];
         
+        const employeeData = employee.toJSON();
+        console.log('📤 Employee profile data being sent:', {
+            coverPicUrl: employeeData.coverPicUrl,
+            profilePicUrl: user?.profile_picture
+        });
+        
         res.status(200).json({ 
             success: true, 
             data: {
-                ...employee.toJSON(),
+                ...employeeData,
                 profilePicUrl: user?.profile_picture || null,
                 user: user || null
             }

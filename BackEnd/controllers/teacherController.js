@@ -197,10 +197,16 @@ exports.getMyProfile = async (req, res) => {
         );
         const user = userResult.rows[0];
         
+        const teacherData = teacher.toJSON();
+        console.log('📤 Teacher profile data being sent:', {
+            coverPicUrl: teacherData.coverPicUrl,
+            profilePicUrl: user?.profile_picture
+        });
+        
         res.status(200).json({ 
             success: true, 
             data: {
-                ...teacher.toJSON(),
+                ...teacherData,
                 profilePicUrl: user?.profile_picture || null,
                 user: user || null
             }

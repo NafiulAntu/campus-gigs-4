@@ -117,19 +117,27 @@ export default function Profile({ onBack }) {
 
       if (response?.data?.success && response.data.data) {
         const profile = response.data.data;
-        setProfileData(prev => ({
-          ...prev,
-          fullName: profile.fullName || profile.user?.full_name || prev.fullName,
-          username: profile.username || prev.username,
-          email: profile.user?.email || prev.email,
-          phone: profile.phone || prev.phone,
-          bio: profile.bio || prev.bio,
-          location: profile.location || prev.location,
-          websiteUrl: profile.websiteUrl || prev.websiteUrl,
-          gender: profile.gender || prev.gender,
-          coverPicUrl: profile.coverPicUrl || prev.coverPicUrl,
-          profilePicUrl: profile.profilePicUrl || profile.user?.profile_picture || prev.profilePicUrl,
-        }));
+        console.log('🔍 Loaded profile from backend:', profile);
+        console.log('🔍 Cover pic from backend:', profile.coverPicUrl);
+        console.log('🔍 Profile pic from backend:', profile.profilePicUrl);
+        
+        setProfileData(prev => {
+          const newData = {
+            ...prev,
+            fullName: profile.fullName || profile.user?.full_name || prev.fullName,
+            username: profile.username || prev.username,
+            email: profile.user?.email || prev.email,
+            phone: profile.phone || prev.phone,
+            bio: profile.bio || prev.bio,
+            location: profile.location || prev.location,
+            websiteUrl: profile.websiteUrl || prev.websiteUrl,
+            gender: profile.gender || prev.gender,
+            coverPicUrl: profile.coverPicUrl || prev.coverPicUrl,
+            profilePicUrl: profile.profilePicUrl || profile.user?.profile_picture || prev.profilePicUrl,
+          };
+          console.log('🔍 Updated profileData state:', newData);
+          return newData;
+        });
         setInterests(profile.interests || []);
         setEducation(profile.education || []);
         setSkills(profile.professionalSkills || []);
@@ -192,7 +200,9 @@ export default function Profile({ onBack }) {
         certificates,
       };
 
-      console.log("Saving profile with payload:", payload);
+      console.log("📤 Saving profile with payload:", payload);
+      console.log("📸 Cover pic URL being sent:", profileData.coverPicUrl);
+      console.log("📸 Profile pic URL being sent:", profileData.profilePicUrl);
 
       let response;
       if (selectedProfession === "teacher") {
