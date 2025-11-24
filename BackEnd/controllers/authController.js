@@ -4,7 +4,9 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
-// Signup Controller
+// Signup Controller (Local Authentication with bcrypt)
+// Note: This endpoint is for backend-managed authentication
+// Firebase users use Firebase Authentication and have password = NULL in the database
 exports.signup = async (req, res) => {
   try {
     const { full_name, email, password, confirm_password, terms_agreed } = req.body;

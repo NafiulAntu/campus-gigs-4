@@ -107,6 +107,8 @@ class User {
   }
 
   // Create or update user from Firebase auth
+  // Note: Firebase users have password = NULL because Firebase handles authentication
+  // The password hash is stored securely in Firebase's system, not in our database
   static async upsertFirebaseUser({ firebase_uid, email, full_name, profile_picture, profession, username }) {
     try {
       const query = `
