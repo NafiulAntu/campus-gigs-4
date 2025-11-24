@@ -86,3 +86,16 @@ export const getComments = (postId) => API.get(`/posts/${postId}/comments`);
 
 // User API
 export const getUserById = (userId) => API.get(`/users/${userId}`);
+
+// Firebase Auth Sync
+export const syncUserWithBackend = async (firebaseToken, userData) => {
+  try {
+    const response = await API.post('/auth/firebase-sync', userData, {
+      headers: { Authorization: `Bearer ${firebaseToken}` }
+    });
+    return response.data.user;
+  } catch (error) {
+    console.error('Backend sync error:', error);
+    throw error;
+  }
+};

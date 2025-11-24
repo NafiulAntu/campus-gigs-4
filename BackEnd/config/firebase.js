@@ -1,27 +1,45 @@
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin
-// You'll need to add your Firebase service account key
-// Download it from Firebase Console -> Project Settings -> Service Accounts
-// For now, we'll use environment variables
+// Required for both Authentication and Storage features
+// Service account credentials should be in .env file
 
 let bucket;
+let isStorageEnabled = false;
 
 try {
-  // Initialize Firebase Admin with service account
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-    });
-  }
+  // Check if Firebase credentials are available
+  const hasCredentials = process.env.FIREBASE_PROJECT_ID && 
+                        process.env.FIREBASE_CLIENT_EMAIL && 
+                        process.env.FIREBASE_PRIVATE_KEY;
 
-  bucket = admin.storage().bucket();
-  console.log('✅ Firebase Storage initialized');
+  if (!hasCredentials) {
+    // Initialize with minimal config for Authentication only (using Firebase client SDK)
+    // Admin SDK not required if only using client-side Firebase Auth
+    console.log('⚠️  Firebase Admin credentials not found - Authentication will use client SDK');
+    console.log('⚠️  Firebase Storage disabled - using local storage');
+  } else {
+    // Initialize Firebase Admin with service account
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        }),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+      });
+    }
+
+    // Try to initialize storage bucket if credentials provided
+    if (process.env.FIREBASE_STORAGE_BUCKET) {
+      bucket = admin.storage().bucket();
+      isStorageEnabled = true;
+      console.log('✅ Firebase Admin SDK initialized (Auth + Storage)');
+    } else {
+      console.log('✅ Firebase Admin SDK initialized (Auth only)');
+    }
+  }
 } catch (error) {
   console.error('❌ Firebase initialization error:', error.message);
   console.log('⚠️  Using local storage as fallback');

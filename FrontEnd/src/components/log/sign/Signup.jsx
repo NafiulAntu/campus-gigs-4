@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { signup, oauthGoogle, oauthGithub, oauthLinkedIn } from '../../../services/api';
+import { signUpWithEmail, signInWithGoogle, getCurrentToken } from '../../../services/firebaseAuth';
+import { syncUserWithBackend } from '../../../services/api';
 import { FaEnvelope, FaLock, FaUser, FaEye, FaEyeSlash, FaCheckCircle } from "react-icons/fa";
 import GmailIcon from "../../../assets/icons/GmailIcon";
 import GitHubIcon from "../../../assets/icons/GitHubIcon";
@@ -59,27 +60,81 @@ export default function Signup() {
     
     setLoading(true);
     try {
-      const res = await signup({ ...formData, terms_agreed: true });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      setSuccess('Account created! Redirecting to login...');
+      // Create Firebase account
+      const firebaseUser = await signUpWithEmail(
+        formData.email, 
+        formData.password,
+        formData.full_name
+      );
       
-      // Redirect to login page after 1.5 seconds
+      // Get Firebase token
+      const token = await getCurrentToken();
+      
+      // Sync with backend
+      const backendUser = await syncUserWithBackend(token, {
+        email: firebaseUser.email,
+        full_name: formData.full_name
+      });
+      
+      // Store token and user info
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(backendUser));
+      
+      setSuccess('Account created! Redirecting...');
+      
+      // Redirect to post page after 1.5 seconds
       setTimeout(() => {
-        navigate('/login');
+        navigate('/post');
       }, 1500);
     } catch (err) {
       console.error('Signup error:', err);
-      setError(err.response?.data?.message || 'Signup failed. Please try again.');
+      setError(err.message || 'Signup failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialSignUp = (platform) => {
-    if (platform === "Gmail") oauthGoogle();
-    else if (platform === "GitHub") oauthGithub();
-    else if (platform === "LinkedIn") oauthLinkedIn();
+  const handleSocialSignUp = async (platform) => {
+    setError('');
+    setLoading(true);
+    
+    try {
+      let firebaseUser;
+      
+      if (platform === "Gmail") {
+        firebaseUser = await signInWithGoogle();
+      } else {
+        setError(`${platform} sign-up coming soon!`);
+        setLoading(false);
+        return;
+      }
+      
+      // Get Firebase token
+      const token = await getCurrentToken();
+      
+      // Sync with backend
+      const backendUser = await syncUserWithBackend(token, {
+        email: firebaseUser.email,
+        full_name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+        profile_picture: firebaseUser.photoURL
+      });
+      
+      // Store token and user info
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(backendUser));
+      
+      setSuccess('Account created! Redirecting...');
+      
+      // Redirect to post page
+      setTimeout(() => {
+        navigate('/post');
+      }, 1500);
+    } catch (err) {
+      console.error('Social signup error:', err);
+      setError(err.message || 'Social sign-up failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

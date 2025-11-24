@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { signup, signin, forgotPassword, resetPassword, oauthCallback, deleteAccount } = require('../controllers/authController');
+const { signup, signin, forgotPassword, resetPassword, oauthCallback, deleteAccount, firebaseSync } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const passport = require('../config/passport');
 
@@ -12,6 +12,7 @@ router.post('/reset-password', resetPassword);
 
 // Protected routes
 router.delete('/delete-account', protect, deleteAccount);
+router.post('/firebase-sync', protect, firebaseSync);
 
 // OAuth routes - Google
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

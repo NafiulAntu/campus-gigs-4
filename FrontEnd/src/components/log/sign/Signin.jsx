@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { signin, oauthGoogle, oauthGithub, oauthLinkedIn } from '../../../services/api';
+import { signInWithEmail, signInWithGoogle, getCurrentToken } from '../../../services/firebaseAuth';
+import { syncUserWithBackend } from '../../../services/api';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import GmailIcon from "../../../assets/icons/GmailIcon";
 import GitHubIcon from "../../../assets/icons/GitHubIcon";
@@ -42,9 +43,22 @@ export default function Signin() {
     setLoading(true);
     
     try {
-      const res = await signin({ email, password, rememberMe });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      // Sign in with Firebase
+      const firebaseUser = await signInWithEmail(email, password);
+      
+      // Get Firebase token
+      const token = await getCurrentToken();
+      
+      // Sync with backend
+      const backendUser = await syncUserWithBackend(token, {
+        email: firebaseUser.email,
+        full_name: firebaseUser.displayName || firebaseUser.email.split('@')[0]
+      });
+      
+      // Store token and user info
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(backendUser));
+      
       setSuccess('Login successful! Redirecting...');
       
       // Redirect to post page after 1 second
@@ -53,16 +67,53 @@ export default function Signin() {
       }, 1000);
     } catch (err) {
       console.error('Signin error:', err);
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialSignIn = (platform) => {
-    if (platform === "Gmail") oauthGoogle();
-    else if (platform === "GitHub") oauthGithub();
-    else if (platform === "LinkedIn") oauthLinkedIn();
+  const handleSocialSignIn = async (platform) => {
+    setError('');
+    setLoading(true);
+    
+    try {
+      let firebaseUser;
+      
+      if (platform === "Gmail") {
+        firebaseUser = await signInWithGoogle();
+      } else {
+        setError(`${platform} sign-in coming soon!`);
+        setLoading(false);
+        return;
+      }
+      
+      // Get Firebase token
+      const token = await getCurrentToken();
+      
+      // Sync with backend
+      const backendUser = await syncUserWithBackend(token, {
+        email: firebaseUser.email,
+        full_name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+        profile_picture: firebaseUser.photoURL
+      });
+      
+      // Store token and user info
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(backendUser));
+      
+      setSuccess('Login successful! Redirecting...');
+      
+      // Redirect to post page
+      setTimeout(() => {
+        navigate('/post');
+      }, 1000);
+    } catch (err) {
+      console.error('Social signin error:', err);
+      setError(err.message || 'Social sign-in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

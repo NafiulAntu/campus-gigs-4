@@ -304,3 +304,64 @@ exports.deleteAccount = async (req, res) => {
     });
   }
 };
+
+// Firebase Sync Controller - Sync Firebase authenticated user with PostgreSQL
+exports.firebaseSync = async (req, res) => {
+  try {
+    // User is already verified by authMiddleware (req.user is set)
+    // The middleware has verified the Firebase token and extracted the user
+    
+    const { username, profession } = req.body;
+    
+    // req.user should already be populated by the middleware
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'User not authenticated' 
+      });
+    }
+
+    // Update user metadata if provided
+    if (username || profession) {
+      const updatedUser = await User.updateMetadata(req.user.id, {
+        username,
+        profession
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'User synced successfully',
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          full_name: updatedUser.full_name,
+          username: updatedUser.username,
+          profession: updatedUser.profession,
+          profile_picture: updatedUser.profile_picture
+        }
+      });
+    }
+
+    // Return existing user data
+    res.status(200).json({
+      success: true,
+      message: 'User already synced',
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        full_name: req.user.full_name,
+        username: req.user.username,
+        profession: req.user.profession,
+        profile_picture: req.user.profile_picture
+      }
+    });
+
+  } catch (error) {
+    console.error('Firebase sync error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to sync user data',
+      error: error.message
+    });
+  }
+};

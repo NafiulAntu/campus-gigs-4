@@ -97,6 +97,47 @@ class User {
     const result = await pool.query(query, values);
     return result.rows[0];
   }
+
+  // Find user by Firebase UID
+  static async findByFirebaseUid(firebase_uid) {
+    const query = 'SELECT * FROM users WHERE firebase_uid = $1';
+    const result = await pool.query(query, [firebase_uid]);
+    return result.rows[0];
+  }
+
+  // Create or update user from Firebase auth
+  static async upsertFirebaseUser({ firebase_uid, email, full_name, profile_picture, profession, username }) {
+    const query = `
+      INSERT INTO users (firebase_uid, email, full_name, profile_picture, profession, username, provider, terms_agreed)
+      VALUES ($1, $2, $3, $4, $5, $6, 'firebase', true)
+      ON CONFLICT (firebase_uid) 
+      DO UPDATE SET 
+        email = COALESCE(EXCLUDED.email, users.email),
+        full_name = COALESCE(EXCLUDED.full_name, users.full_name),
+        profile_picture = COALESCE(EXCLUDED.profile_picture, users.profile_picture),
+        profession = COALESCE(EXCLUDED.profession, users.profession),
+        username = COALESCE(EXCLUDED.username, users.username),
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING id, firebase_uid, email, full_name, profile_picture, profession, username, provider, created_at
+    `;
+    const values = [firebase_uid, email, full_name, profile_picture, profession, username];
+    const result = await pool.query(query, values);
+    return result.rows[0];
+  }
+
+  // Link Firebase UID to existing user (for migration)
+  static async linkFirebaseUid(id, firebase_uid) {
+    const query = `
+      UPDATE users 
+      SET firebase_uid = $1, 
+          provider = 'firebase',
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+      RETURNING id, firebase_uid, email, full_name, provider
+    `;
+    const result = await pool.query(query, [firebase_uid, id]);
+    return result.rows[0];
+  }
 }
 
 module.exports = User;
