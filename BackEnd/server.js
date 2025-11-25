@@ -132,7 +132,19 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+
+// Create HTTP server for Socket.io
+const http = require('http');
+const httpServer = http.createServer(app);
+
+// Initialize Socket.io server
+const { createSocketServer } = require('./socketServer');
+const io = createSocketServer(httpServer);
+console.log('✅ Socket.io server initialized');
+
+// Start server
+httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📡 API available at http://localhost:${PORT}/api`);
+  console.log(`🔌 WebSocket server ready for connections`);
 });

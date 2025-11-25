@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
+import ChatWindow from "../../Chat/ChatWindow";
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { db, auth } from '../../../config/firebase';
 
 export default function Messages({ onBack }) {
   const [selectedChat, setSelectedChat] = useState(null);
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState("");
   const [showChatMenu, setShowChatMenu] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -23,65 +28,48 @@ export default function Messages({ onBack }) {
     };
   }, [showChatMenu]);
 
+  // Load conversations from Firestore
+  useEffect(() => {
+    const loadConversations = async () => {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Query conversations where user is a participant
+        const conversationsRef = collection(db, 'conversations');
+        const q = query(
+          conversationsRef,
+          where('participants', 'array-contains', currentUser.uid),
+          orderBy('lastMessageTime', 'desc')
+        );
+
+        const snapshot = await getDocs(q);
+        const loadedConversations = snapshot.docs.map(doc => ({
+          id: doc.id,
+          conversationId: doc.id,
+          ...doc.data()
+        }));
+
+        setConversations(loadedConversations);
+      } catch (error) {
+        console.error('Error loading conversations:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadConversations();
+  }, []);
+
   const handleMenuAction = (action) => {
     if (action === "details") {
       setShowDetails(!showDetails);
     }
     setShowChatMenu(false);
   };
-
-  const conversations = [
-    {
-      id: 1,
-      name: "John Doe",
-      handle: "@johndoe",
-      lastMessage: "Hey! Are you available for the project?",
-      time: "2m",
-      unread: 2,
-      online: true,
-    },
-    {
-      id: 2,
-      name: "Sarah Smith",
-      handle: "@sarahsmith",
-      lastMessage: "Thanks for your help!",
-      time: "1h",
-      unread: 0,
-      online: false,
-    },
-    {
-      id: 3,
-      name: "Mike Johnson",
-      handle: "@mikej",
-      lastMessage: "Can we discuss the requirements?",
-      time: "3h",
-      unread: 1,
-      online: true,
-    },
-  ];
-
-  const messages = selectedChat
-    ? [
-        {
-          id: 1,
-          sender: "them",
-          text: "Hey! Are you available for the project?",
-          time: "10:30 AM",
-        },
-        {
-          id: 2,
-          sender: "me",
-          text: "Yes, I am! What do you need help with?",
-          time: "10:32 AM",
-        },
-        {
-          id: 3,
-          sender: "them",
-          text: "I need someone to help with React development",
-          time: "10:35 AM",
-        },
-      ]
-    : [];
 
   return (
     <div className="min-h-screen bg-black">
@@ -164,183 +152,12 @@ export default function Messages({ onBack }) {
         {/* Chat Area */}
         <div className={`flex-1 flex flex-col ${showDetails ? 'hidden md:flex' : 'flex'}`}>
           {selectedChat ? (
-            <>
-              {/* Chat Header */}
-              <div className="p-4 border-b border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setSelectedChat(null)}
-                    className="md:hidden h-9 w-9 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-white transition-colors"
-                  >
-                    <i className="fi fi-br-arrow-left text-xl"></i>
-                  </button>
-                  <div className="relative">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#89CFF0] to-blue-500 flex items-center justify-center font-bold text-white">
-                      {selectedChat.name[0]}
-                    </div>
-                    {selectedChat.online && (
-                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-black rounded-full"></span>
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-white">
-                      {selectedChat.name}
-                    </h2>
-                    <p className="text-xs text-text-muted">
-                      {selectedChat.online ? "Active now" : "Offline"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="h-9 w-9 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-[#89CFF0] transition-colors">
-                    <i className="fi fi-br-microphone"></i>
-                  </button>
-                  <div className="relative" ref={chatMenuRef}>
-                    <button 
-                      onClick={() => setShowChatMenu(!showChatMenu)}
-                      className="h-9 w-9 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-white transition-colors"
-                    >
-                      <i className="fi fi-br-menu-dots"></i>
-                    </button>
-
-                    {/* Chat Menu Dropdown */}
-                    {showChatMenu && (
-<div className="absolute left-full top-[55px] ml-[-223px] w-60 bg-[#1a1a1a] border border-white/10 shadow-xl z-50">
-                        <button
-                          onClick={() => handleMenuAction("details")}
-                          className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-info text-sm"></i>
-                          <span className="text-sm">View Details</span>
-                        </button>
-                        <button
-                          onClick={() => handleMenuAction("search")}
-                          className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-search text-sm"></i>
-                          <span className="text-sm">Search in Conversation</span>
-                        </button>
-                        <button
-                          onClick={() => handleMenuAction("mute")}
-                          className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-bell-slash text-sm"></i>
-                          <span className="text-sm">Mute Notifications</span>
-                        </button>
-                        <button
-                          onClick={() => handleMenuAction("theme")}
-                          className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-palette text-sm"></i>
-                          <span className="text-sm">Change Theme</span>
-                        </button>
-                        <button
-                          onClick={() => handleMenuAction("nickname")}
-                          className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-edit text-sm"></i>
-                          <span className="text-sm">Edit Nicknames</span>
-                        </button>
-                        <button
-                          onClick={() => handleMenuAction("emoji")}
-                          className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-smile text-sm"></i>
-                          <span className="text-sm">Change Emoji</span>
-                        </button>
-                        <div className="border-t border-white/10"></div>
-                        <button
-                          onClick={() => handleMenuAction("archive")}
-                          className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-archive text-sm"></i>
-                          <span className="text-sm">Archive Chat</span>
-                        </button>
-                        <button
-                          onClick={() => handleMenuAction("block")}
-                          className="w-full px-4 py-2.5 text-left text-rose-400 hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-ban text-sm"></i>
-                          <span className="text-sm">Block User</span>
-                        </button>
-                        <button
-                          onClick={() => handleMenuAction("delete")}
-                          className="w-full px-4 py-2.5 text-left text-rose-400 hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-trash text-sm"></i>
-                          <span className="text-sm">Delete Chat</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${
-                      msg.sender === "me" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[70%] sm:max-w-md px-4 py-2.5 ${
-                        msg.sender === "me"
-                          ? "bg-[#89CFF0] text-black"
-                          : "bg-white/[0.08] text-white"
-                      }`}
-                    >
-                      <p className="text-sm leading-relaxed">{msg.text}</p>
-                      <p
-                        className={`text-xs mt-1 ${
-                          msg.sender === "me"
-                            ? "text-black/60"
-                            : "text-text-muted"
-                        }`}
-                      >
-                        {msg.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Message Input */}
-              <div className="p-4 border-t border-white/10">
-                <div className="flex items-center gap-2">
-                  <button className="h-9 w-9 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-[#89CFF0] transition-colors">
-                    <i className="fi fi-br-plus text-xl"></i>
-                  </button>
-                  <button className="h-9 w-9 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-[#89CFF0] transition-colors">
-                    <i className="fi fi-br-camera text-lg"></i>
-                  </button>
-                  <button className="h-9 w-9 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-[#89CFF0] transition-colors">
-                    <i className="fi fi-br-picture text-lg"></i>
-                  </button>
-                  <input
-                    type="text"
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    placeholder="Message..."
-                    className="flex-1 px-4 py-2 bg-white/[0.04] text-white placeholder:text-text-muted border-0 focus:outline-none focus:bg-white/[0.08]"
-                  />
-                  <button className="h-9 w-9 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-[#89CFF0] transition-colors">
-                    <i className="fi fi-br-smile text-lg"></i>
-                  </button>
-                  {messageText ? (
-                    <button className="h-9 w-9 bg-[#89CFF0] hover:bg-[#7bbfe0] flex items-center justify-center text-black transition-colors">
-                      <i className="fi fi-br-paper-plane text-sm"></i>
-                    </button>
-                  ) : (
-                    <button className="h-9 w-9 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-[#89CFF0] transition-colors">
-                      <i className="fi fi-br-thumbs-up text-lg"></i>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </>
+            <ChatWindow 
+              conversationId={selectedChat.conversationId || selectedChat.id}
+              receiverId={selectedChat.receiverId || selectedChat.otherParticipant}
+              receiverName={selectedChat.name}
+              receiverPhoto={selectedChat.photo}
+            />
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">

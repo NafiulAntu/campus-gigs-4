@@ -1,17 +1,65 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import { 
   getUserById, 
   getTeacherProfile, 
   getStudentProfile, 
   getEmployeeProfile 
 } from "../../services/api";
+import { getOrCreateConversation } from "../../utils/messagingUtils";
+import { auth } from "../../config/firebase";
 
-export default function UserProfile({ userId, onBack }) {
+export default function UserProfile({ userId, onBack, onMessageClick }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [startingChat, setStartingChat] = useState(false);
+
+  const handleSendMessage = async () => {
+    try {
+      setStartingChat(true);
+      const currentUser = auth.currentUser;
+      
+      if (!currentUser) {
+        alert('Please login to send messages');
+        return;
+      }
+
+      // Create or get existing conversation
+      const conversationId = await getOrCreateConversation(
+        currentUser.uid,
+        user.firebase_uid || user.id?.toString(),
+        user.full_name || user.username,
+        profileData?.profilePicUrl || user.profile_picture
+      );
+
+      console.log('✅ Conversation ready:', conversationId);
+
+      // Navigate to messages with conversation selected
+      if (onMessageClick) {
+        onMessageClick(conversationId);
+      } else {
+        // Fallback: navigate to messages page
+        navigate('/messages', { 
+          state: { 
+            conversationId,
+            userId: user.firebase_uid || user.id?.toString(),
+            userName: user.full_name || user.username,
+            userPhoto: profileData?.profilePicUrl || user.profile_picture
+          }
+        });
+      }
+
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      alert('Failed to start conversation. Please try again.');
+    } finally {
+      setStartingChat(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -146,10 +194,35 @@ export default function UserProfile({ userId, onBack }) {
 
           {/* User Details */}
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white mb-1">
-              {profileData?.fullName || user.full_name || "Unknown User"}
-            </h2>
-            <p className="text-blue-400 mb-3">@{profileData?.username || user.username}</p>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">
+                  {profileData?.fullName || user.full_name || "Unknown User"}
+                </h2>
+                <p className="text-blue-400 mb-3">@{profileData?.username || user.username}</p>
+              </div>
+              
+              {/* Message Button - Only show if not own profile */}
+              {!isOwnProfile && (
+                <button
+                  onClick={handleSendMessage}
+                  disabled={startingChat}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary-teal to-blue-500 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {startingChat ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Starting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-paper-plane"></i>
+                      <span>Message</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
             
             {(profileData?.user?.email || user.email) && (
               <div className="flex items-center gap-3 mb-3">
