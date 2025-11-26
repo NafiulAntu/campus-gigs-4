@@ -59,29 +59,16 @@ export async function getOrCreateConversation(
       throw new Error('Cannot create conversation with yourself');
     }
 
-    console.log('getOrCreateConversation called with:', {
-      currentUserId,
-      currentUserName,
-      currentUserPhoto,
-      otherUserId,
-      otherUserName,
-      otherUserPhoto
-    });
-
     // Create consistent conversation ID (sorted user IDs)
     const conversationId = [currentUserId, otherUserId]
       .sort()
       .join('_');
-
-    console.log('Generated conversationId:', conversationId);
 
     // Check if conversation already exists
     const conversationRef = doc(db, 'conversations', conversationId);
     const conversationDoc = await getDoc(conversationRef);
 
     if (!conversationDoc.exists()) {
-      console.log('Creating new conversation...');
-      
       // Create new conversation with both users' information
       await setDoc(conversationRef, {
         conversationId,
@@ -108,10 +95,6 @@ export async function getOrCreateConversation(
           [otherUserId]: 0
         }
       });
-
-      console.log('✅ Created new conversation:', conversationId);
-    } else {
-      console.log('📨 Conversation already exists:', conversationId);
     }
 
     return conversationId;

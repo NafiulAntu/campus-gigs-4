@@ -60,12 +60,6 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       }
 
       const otherUserFirebaseUid = user.firebase_uid;
-      console.log('Creating conversation between:', {
-        currentUser: currentUser.uid,
-        currentUserName,
-        otherUser: otherUserFirebaseUid,
-        otherUserName: user.full_name || user.username
-      });
 
       // Create or get existing conversation with both users' information
       const conversationId = await getOrCreateConversation(
@@ -76,8 +70,6 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
         currentUserName,
         currentUserPhoto
       );
-
-      console.log('✅ Conversation ready:', conversationId);
 
       // Navigate to messages with conversation selected
       const receiverInfo = {
@@ -203,7 +195,6 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       try {
         setLoading(true);
         const response = await getUserById(userId);
-        console.log('User profile response:', response);
         // Handle both response.data and response.data.data structures
         const userData = response.data?.data || response.data;
         setUser(userData);

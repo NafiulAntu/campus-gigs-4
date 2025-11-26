@@ -55,7 +55,6 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
       return;
     }
 
-    console.log('🔍 Loading conversations for user:', currentUser.uid);
     setLoading(true);
 
     try {
@@ -82,8 +81,6 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
       // Real-time listener for conversations
       const unsubscribe = onSnapshot(q, 
         (snapshot) => {
-          console.log('📥 Firestore snapshot received:', snapshot.docs.length, 'conversations');
-          
           const loadedConversations = snapshot.docs.map(doc => {
             const data = doc.data();
             const otherUserId = data.participants?.find(p => p !== currentUser.uid);
@@ -102,17 +99,6 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
                             participantInfo.userPhoto || 
                             participantInfo.profilePicture || 
                             null;
-            
-            console.log('💬 Conversation Debug:', {
-              conversationId: doc.id,
-              currentUserId: currentUser.uid,
-              participants: data.participants,
-              otherUserId: otherUserId,
-              allParticipantInfo: allParticipantInfo,
-              selectedParticipantInfo: participantInfo,
-              extractedName: userName,
-              extractedPhoto: userPhoto
-            });
             
             return {
               id: doc.id,
@@ -138,8 +124,6 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
 
           setConversations(loadedConversations);
           setLoading(false);
-          
-          console.log('✅ Loaded conversations:', loadedConversations.length);
         }, 
         (error) => {
           console.error('❌ Error loading conversations:', error);
@@ -253,8 +237,6 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
         receiverName: user.full_name || user.username,
         receiverPhoto: user.profile_picture
       });
-
-      console.log('✅ Started conversation with:', user.username);
     } catch (error) {
       console.error('Error starting conversation:', error);
       alert('Failed to start conversation. Please try again.');
