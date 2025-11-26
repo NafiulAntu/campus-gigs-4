@@ -59,6 +59,7 @@ export default function PostPage({ onNavigate = () => {} }) {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentImages, setCurrentImages] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
   const menuRef = useRef(null);
 
   // Load current user
@@ -420,7 +421,13 @@ export default function PostPage({ onNavigate = () => {} }) {
         )}
         
         {currentView === "messages" && (
-          <Messages onBack={() => setCurrentView("home")} />
+          <Messages 
+            onBack={() => {
+              setCurrentView("home");
+              setSelectedConversation(null);
+            }}
+            initialConversation={selectedConversation}
+          />
         )}
         
         {currentView === "notifications" && (
@@ -446,7 +453,9 @@ export default function PostPage({ onNavigate = () => {} }) {
               setCurrentView("home");
               setViewingUserId(null);
             }}
-            onMessageClick={(conversationId) => {
+            onMessageClick={(conversationId, receiverInfo) => {
+              console.log('Message clicked, conversation:', conversationId, 'receiver:', receiverInfo);
+              setSelectedConversation(receiverInfo);
               setCurrentView("messages");
               setViewingUserId(null);
             }}

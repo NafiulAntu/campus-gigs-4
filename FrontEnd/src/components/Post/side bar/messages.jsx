@@ -3,7 +3,7 @@ import ChatWindow from "../../Chat/ChatWindow";
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db, auth } from '../../../config/firebase';
 
-export default function Messages({ onBack }) {
+export default function Messages({ onBack, initialConversation = null }) {
   const [selectedChat, setSelectedChat] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,6 +11,19 @@ export default function Messages({ onBack }) {
   const [showChatMenu, setShowChatMenu] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const chatMenuRef = useRef(null);
+
+  // Handle initial conversation from clicking message button on profile
+  useEffect(() => {
+    if (initialConversation) {
+      console.log('Opening conversation:', initialConversation);
+      setSelectedChat({
+        conversationId: initialConversation.conversationId,
+        receiverId: initialConversation.userId,
+        receiverName: initialConversation.userName,
+        receiverPhoto: initialConversation.userPhoto
+      });
+    }
+  }, [initialConversation]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

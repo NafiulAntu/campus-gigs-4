@@ -57,17 +57,19 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       console.log('✅ Conversation ready:', conversationId);
 
       // Navigate to messages with conversation selected
+      const receiverInfo = {
+        conversationId,
+        userId: otherUserFirebaseUid,
+        userName: user.full_name || user.username,
+        userPhoto: profileData?.profilePicUrl || user.profile_picture
+      };
+      
       if (onMessageClick) {
-        onMessageClick(conversationId);
+        onMessageClick(conversationId, receiverInfo);
       } else {
         // Fallback: navigate to messages page
         navigate('/messages', { 
-          state: { 
-            conversationId,
-            userId: otherUserFirebaseUid,
-            userName: user.full_name || user.username,
-            userPhoto: profileData?.profilePicUrl || user.profile_picture
-          }
+          state: receiverInfo
         });
       }
 
