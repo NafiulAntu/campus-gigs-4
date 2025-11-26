@@ -161,6 +161,32 @@ class User {
     const result = await pool.query(query, [firebase_uid, id]);
     return result.rows[0];
   }
+
+  // Search users by username, full name, or email
+  static async search(searchTerm) {
+    const query = `
+      SELECT id, firebase_uid, full_name, username, email, profile_picture, profession, provider, created_at
+      FROM users 
+      WHERE 
+        LOWER(username) LIKE $1 OR 
+        LOWER(full_name) LIKE $1 OR 
+        LOWER(email) LIKE $1
+      ORDER BY 
+        CASE 
+          WHEN LOWER(username) = LOWER($2) THEN 1
+          WHEN LOWER(username) LIKE $3 THEN 2
+          WHEN LOWER(full_name) LIKE $3 THEN 3
+          ELSE 4
+        END,
+        full_name
+      LIMIT 20
+    `;
+    const wildcardSearch = `%${searchTerm}%`;
+    const exactSearch = searchTerm;
+    const startsWithSearch = `${searchTerm}%`;
+    const result = await pool.query(query, [wildcardSearch, exactSearch, startsWithSearch]);
+    return result.rows;
+  }
 }
 
 module.exports = User;

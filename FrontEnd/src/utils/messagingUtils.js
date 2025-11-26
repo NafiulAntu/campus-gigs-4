@@ -37,13 +37,17 @@ export async function testFirestoreConnection() {
  * @param {string} otherUserId - Other user's ID
  * @param {string} otherUserName - Other user's name (for display)
  * @param {string} otherUserPhoto - Other user's photo URL
+ * @param {string} currentUserName - Current user's name (for display)
+ * @param {string} currentUserPhoto - Current user's photo URL
  * @returns {Promise<string>} - Conversation ID
  */
 export async function getOrCreateConversation(
   currentUserId, 
   otherUserId, 
   otherUserName = 'User',
-  otherUserPhoto = null
+  otherUserPhoto = null,
+  currentUserName = 'User',
+  currentUserPhoto = null
 ) {
   try {
     // Validate inputs
@@ -57,6 +61,8 @@ export async function getOrCreateConversation(
 
     console.log('getOrCreateConversation called with:', {
       currentUserId,
+      currentUserName,
+      currentUserPhoto,
       otherUserId,
       otherUserName,
       otherUserPhoto
@@ -76,13 +82,15 @@ export async function getOrCreateConversation(
     if (!conversationDoc.exists()) {
       console.log('Creating new conversation...');
       
-      // Create new conversation
+      // Create new conversation with both users' information
       await setDoc(conversationRef, {
         conversationId,
         participants: [currentUserId, otherUserId],
         participantInfo: {
           [currentUserId]: {
             userId: currentUserId,
+            name: currentUserName,
+            photo: currentUserPhoto,
             lastRead: serverTimestamp()
           },
           [otherUserId]: {

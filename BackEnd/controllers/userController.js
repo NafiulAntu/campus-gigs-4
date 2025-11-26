@@ -181,3 +181,39 @@ exports.deleteUser = async (req, res) => {
     });
   }
 };
+
+// Search users by username, full name, or email
+exports.searchUsers = async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    if (!q || q.trim().length === 0) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+
+    const searchTerm = q.trim().toLowerCase();
+    const users = await User.search(searchTerm);
+    
+    // Remove passwords and sanitize
+    const sanitizedUsers = users.map(user => {
+      const { password, ...userWithoutPassword } = user;
+      return sanitizeNullValues(userWithoutPassword);
+    });
+    
+    res.json({
+      success: true,
+      count: sanitizedUsers.length,
+      data: sanitizedUsers
+    });
+  } catch (error) {
+    console.error('Search users error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error searching users',
+      error: error.message 
+    });
+  }
+};

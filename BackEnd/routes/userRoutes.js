@@ -5,6 +5,7 @@ const { protect } = require('../middleware/authMiddleware');
 
 // Public routes
 router.get('/users', userController.getAllUsers);           // GET /api/users
+router.get('/users/search', protect, userController.searchUsers);    // GET /api/users/search?q=query
 
 // Protected routes (require JWT token)
 router.get('/users/:id', protect, userController.getUserById);       // GET /api/users/:id

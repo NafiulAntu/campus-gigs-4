@@ -29,6 +29,11 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
         return;
       }
 
+      // Get current user's profile data from localStorage
+      const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
+      const currentUserName = currentUserData.full_name || currentUserData.username || currentUser.displayName || 'User';
+      const currentUserPhoto = currentUserData.profile_picture || currentUser.photoURL || null;
+
       // Diagnose messaging capability
       const diagnosis = await diagnoseMessagingIssue(user);
       
@@ -43,15 +48,19 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       const otherUserFirebaseUid = user.firebase_uid;
       console.log('Creating conversation between:', {
         currentUser: currentUser.uid,
-        otherUser: otherUserFirebaseUid
+        currentUserName,
+        otherUser: otherUserFirebaseUid,
+        otherUserName: user.full_name || user.username
       });
 
-      // Create or get existing conversation
+      // Create or get existing conversation with both users' information
       const conversationId = await getOrCreateConversation(
         currentUser.uid,
         otherUserFirebaseUid,
         user.full_name || user.username,
-        profileData?.profilePicUrl || user.profile_picture
+        profileData?.profilePicUrl || user.profile_picture,
+        currentUserName,
+        currentUserPhoto
       );
 
       console.log('✅ Conversation ready:', conversationId);
