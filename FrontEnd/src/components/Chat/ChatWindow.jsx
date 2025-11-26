@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useChat } from '../../hooks/useChat';
 import { auth } from '../../config/firebase';
 import './ChatWindow.css';
@@ -7,7 +7,7 @@ import './ChatWindow.css';
  * ChatWindow Component
  * Main messaging interface with real-time updates
  */
-const ChatWindow = ({ conversationId, receiverId, receiverName = 'User', receiverPhoto, onViewProfile }) => {
+const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', receiverPhoto, onViewProfile }) => {
   const {
     messages,
     loading,
@@ -24,14 +24,32 @@ const ChatWindow = ({ conversationId, receiverId, receiverName = 'User', receive
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const inputRef = useRef(null);
   const currentUserId = auth.currentUser?.uid;
 
+  // Clear input when conversation changes to prevent override
+  useEffect(() => {
+    setMessageInput('');
+  }, [conversationId]);
+
+  // Auto-resize textarea based on content
+  useEffect(() => {
+    const textarea = inputRef.current;
+    if (textarea) {
+      // Reset height to auto to get the correct scrollHeight
+      textarea.style.height = 'auto';
+      // Set height based on scrollHeight
+      const newHeight = Math.min(textarea.scrollHeight, 200);
+      textarea.style.height = newHeight + 'px';
+    }
+  }, [messageInput]);
+
   // Handle viewing receiver's profile
-  const handleViewProfile = () => {
+  const handleViewProfile = useCallback(() => {
     if (onViewProfile && receiverId) {
       onViewProfile(receiverId);
     }
-  };
+  }, [onViewProfile, receiverId]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -53,7 +71,7 @@ const ChatWindow = ({ conversationId, receiverId, receiverName = 'User', receive
   }, [messages, currentUserId, markAsRead]);
 
   // Handle typing indicator
-  const handleTyping = () => {
+  const handleTyping = useCallback(() => {
     startTyping();
 
     // Clear previous timeout
@@ -65,26 +83,35 @@ const ChatWindow = ({ conversationId, receiverId, receiverName = 'User', receive
     typingTimeoutRef.current = setTimeout(() => {
       stopTyping();
     }, 2000);
-  };
+  }, [startTyping, stopTyping]);
 
   // Send message
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = useCallback(async (e) => {
     e.preventDefault();
     
     if (!messageInput.trim() || sending) return;
 
+    const messageToSend = messageInput.trim();
     setSending(true);
     stopTyping(); // Stop typing indicator
 
     try {
-      await sendMessage(messageInput, receiverId);
+      await sendMessage(messageToSend, receiverId);
       setMessageInput('');
     } catch (error) {
       console.error('Failed to send message:', error);
+      // Restore input value on error
+      setMessageInput(messageToSend);
     } finally {
       setSending(false);
     }
-  };
+  }, [messageInput, sending, sendMessage, receiverId, stopTyping]);
+
+  // Handle input change
+  const handleInputChange = useCallback((e) => {
+    setMessageInput(e.target.value);
+    handleTyping();
+  }, [handleTyping]);
 
   // Format timestamp
   const formatTime = (timestamp) => {
@@ -221,16 +248,25 @@ const ChatWindow = ({ conversationId, receiverId, receiverName = 'User', receive
 
       {/* Message Input */}
       <form className="message-input-container" onSubmit={handleSendMessage}>
-        <input
-          type="text"
+        <textarea
+          ref={inputRef}
           value={messageInput}
-          onChange={(e) => {
-            setMessageInput(e.target.value);
-            handleTyping();
+          onChange={handleInputChange}
+          onKeyDown={(e) => {
+            // Send on Enter, new line on Shift+Enter
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleSendMessage(e);
+            }
           }}
           placeholder="Type a message..."
           className="message-input"
           disabled={sending || !isConnected}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
+          rows={1}
         />
         <button 
           type="submit" 
@@ -250,6 +286,8 @@ const ChatWindow = ({ conversationId, receiverId, receiverName = 'User', receive
       </form>
     </div>
   );
-};
+});
+
+ChatWindow.displayName = 'ChatWindow';
 
 export default ChatWindow;

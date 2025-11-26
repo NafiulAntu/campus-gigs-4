@@ -106,6 +106,7 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
               name: userName,
               photo: userPhoto,
               lastMessage: data.lastMessage || 'Start a conversation',
+              lastMessageTime: data.lastMessageTime, // Keep raw timestamp for sorting
               time: data.lastMessageTime?.toDate ? formatTime(data.lastMessageTime.toDate()) : 'Now',
               unread: data.unreadCount?.[currentUser.uid] || 0,
               online: false,

@@ -40,14 +40,16 @@ class Post {
   static async getByUserId(userId, limit = 50, offset = 0) {
     const query = `
       SELECT 
-        p.*,
-        u.full_name,
-        u.username,
-        u.profile_picture,
-        u.email,
+        p.id,
+        p.posted_by,
+        p.content,
+        p.media as media_urls,
+        p.created_at,
         p.likes as likes_count,
         p.replies as comments_count,
-        0 as shares_count
+        u.full_name,
+        u.username,
+        u.profile_picture
       FROM posts p
       JOIN users u ON p.posted_by = u.id
       WHERE p.posted_by = $1

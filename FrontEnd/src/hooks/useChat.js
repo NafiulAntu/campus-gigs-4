@@ -43,11 +43,29 @@ export const useChat = (conversationId) => {
 
     // Real-time listener for messages
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const loadedMessages = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate()
-      }));
+      const loadedMessages = snapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          timestamp: doc.data().timestamp?.toDate()
+        }))
+        .filter((msg, index, self) => {
+          // Remove duplicates based on ID
+          return index === self.findIndex(m => m.id === msg.id);
+        })
+        .filter(msg => {
+          // Filter out invalid/spam messages
+          return msg.content && 
+                 msg.content.trim().length > 0 && 
+                 msg.senderId && 
+                 msg.receiverId;
+        })
+        .sort((a, b) => {
+          // Ensure chronological order
+          const timeA = a.timestamp?.getTime() || 0;
+          const timeB = b.timestamp?.getTime() || 0;
+          return timeA - timeB;
+        });
 
       // Check for new messages and show notification
       const currentUser = auth.currentUser;
@@ -157,11 +175,18 @@ export const useChat = (conversationId) => {
       return null;
     }
 
+    // Validate message content
+    const trimmedContent = content.trim();
+    if (trimmedContent.length === 0 || trimmedContent.length > 5000) {
+      console.warn('Invalid message length');
+      return null;
+    }
+
     try {
       const messageData = {
         conversationId,
         receiverId,
-        content: content.trim(),
+        content: trimmedContent,
         timestamp: new Date().toISOString()
       };
 
@@ -173,7 +198,7 @@ export const useChat = (conversationId) => {
       const docRef = await addDoc(messagesRef, {
         senderId: user.uid,
         receiverId,
-        content: content.trim(),
+        content: trimmedContent,
         timestamp: serverTimestamp(),
         readBy: [user.uid], // Sender has "read" their own message
         conversationId
