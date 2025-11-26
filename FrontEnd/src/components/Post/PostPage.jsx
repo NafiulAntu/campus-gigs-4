@@ -427,6 +427,10 @@ export default function PostPage({ onNavigate = () => {} }) {
               setSelectedConversation(null);
             }}
             initialConversation={selectedConversation}
+            onViewProfile={(userId) => {
+              setViewingUserId(userId);
+              setCurrentView("userProfile");
+            }}
           />
         )}
         

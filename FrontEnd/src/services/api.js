@@ -106,6 +106,7 @@ export const getComments = (postId) => API.get(`/posts/${postId}/comments`);
 
 // User API
 export const getUserById = (userId) => API.get(`/users/${userId}`);
+export const getUserByFirebaseUid = (firebaseUid) => API.get(`/users/firebase/${firebaseUid}`);
 export const searchUsers = (searchQuery) => API.get(`/users/search?q=${encodeURIComponent(searchQuery)}`);
 
 // Firebase Auth Sync

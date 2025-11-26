@@ -5,7 +5,7 @@ import { db, auth } from '../../../config/firebase';
 import { searchUsers } from '../../../services/api';
 import { getOrCreateConversation } from '../../../utils/messagingUtils';
 
-export default function Messages({ onBack, initialConversation = null }) {
+export default function Messages({ onBack, initialConversation = null, onViewProfile }) {
   const [selectedChat, setSelectedChat] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -464,6 +464,11 @@ export default function Messages({ onBack, initialConversation = null }) {
                 receiverId={selectedChat.receiverId || selectedChat.otherParticipant}
                 receiverName={selectedChat.receiverName || selectedChat.name || 'User'}
                 receiverPhoto={selectedChat.receiverPhoto || selectedChat.photo}
+                onViewProfile={(userId) => {
+                  if (onViewProfile) {
+                    onViewProfile(userId);
+                  }
+                }}
               />
             </>
           ) : (

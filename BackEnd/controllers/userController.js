@@ -182,6 +182,37 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
+// Get user by Firebase UID
+exports.getUserByFirebaseUid = async (req, res) => {
+  try {
+    const { firebaseUid } = req.params;
+    const user = await User.findByFirebaseUid(firebaseUid);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+    
+    // Remove password from response
+    const { password, ...userWithoutPassword } = user;
+    const sanitizedUser = sanitizeNullValues(userWithoutPassword);
+    
+    res.json({
+      success: true,
+      data: sanitizedUser
+    });
+  } catch (error) {
+    console.error('Get user by Firebase UID error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching user',
+      error: error.message 
+    });
+  }
+};
+
 // Search users by username, full name, or email
 exports.searchUsers = async (req, res) => {
   try {

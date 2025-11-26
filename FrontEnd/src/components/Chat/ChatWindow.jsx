@@ -7,7 +7,7 @@ import './ChatWindow.css';
  * ChatWindow Component
  * Main messaging interface with real-time updates
  */
-const ChatWindow = ({ conversationId, receiverId, receiverName, receiverPhoto }) => {
+const ChatWindow = ({ conversationId, receiverId, receiverName = 'User', receiverPhoto, onViewProfile }) => {
   const {
     messages,
     loading,
@@ -25,6 +25,13 @@ const ChatWindow = ({ conversationId, receiverId, receiverName, receiverPhoto })
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const currentUserId = auth.currentUser?.uid;
+
+  // Handle viewing receiver's profile
+  const handleViewProfile = () => {
+    if (onViewProfile && receiverId) {
+      onViewProfile(receiverId);
+    }
+  };
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -128,17 +135,31 @@ const ChatWindow = ({ conversationId, receiverId, receiverName, receiverPhoto })
     <div className="chat-window">
       {/* Chat Header */}
       <div className="chat-header">
-        <div className="chat-header-user">
+        <div className="chat-header-user" onClick={handleViewProfile} style={{ cursor: 'pointer' }} title="View profile">
           <div className="user-avatar-container">
-            <img 
-              src={receiverPhoto || '/default-avatar.png'} 
-              alt={receiverName}
-              className="user-avatar"
-            />
+            {receiverPhoto ? (
+              <img 
+                src={receiverPhoto} 
+                alt={receiverName}
+                className="user-avatar"
+              />
+            ) : (
+              <div className="user-avatar" style={{ 
+                background: 'linear-gradient(135deg, #89CFF0 0%, #5FAED1 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#000',
+                fontWeight: 'bold',
+                fontSize: '18px'
+              }}>
+                {receiverName ? receiverName[0].toUpperCase() : 'U'}
+              </div>
+            )}
             {isReceiverOnline && <span className="online-badge"></span>}
           </div>
           <div className="user-info">
-            <h3>{receiverName}</h3>
+            <h3>{receiverName || 'User'}</h3>
             <span className="user-status">
               {isReceiverTyping ? 'typing...' : isReceiverOnline ? 'online' : 'offline'}
             </span>
