@@ -236,8 +236,16 @@ const ChatWindow = ({ conversationId, receiverId, receiverName = 'User', receive
           type="submit" 
           className="send-button"
           disabled={!messageInput.trim() || sending || !isConnected}
+          title="Send message"
         >
-          {sending ? '⏳' : '📤'}
+          {sending ? (
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M22 2L15 22L11 13L2 9L22 2Z" fill="currentColor"/>
+            </svg>
+          )}
         </button>
       </form>
     </div>

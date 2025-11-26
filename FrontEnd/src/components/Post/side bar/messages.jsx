@@ -87,31 +87,45 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
           const loadedConversations = snapshot.docs.map(doc => {
             const data = doc.data();
             const otherUserId = data.participants?.find(p => p !== currentUser.uid);
-            const participantInfo = data.participantInfo?.[otherUserId] || {};
             
-            // Get the user name, with better fallbacks
-            const userName = participantInfo.name || participantInfo.userName || 'User';
+            // Get the participant info for the OTHER user
+            const allParticipantInfo = data.participantInfo || {};
+            const participantInfo = allParticipantInfo[otherUserId] || {};
             
-            console.log('💬 Conversation:', {
-              id: doc.id,
+            // Get the user name with multiple fallback attempts
+            const userName = participantInfo.name || 
+                           participantInfo.userName || 
+                           participantInfo.fullName || 
+                           'User';
+            
+            const userPhoto = participantInfo.photo || 
+                            participantInfo.userPhoto || 
+                            participantInfo.profilePicture || 
+                            null;
+            
+            console.log('💬 Conversation Debug:', {
+              conversationId: doc.id,
+              currentUserId: currentUser.uid,
               participants: data.participants,
-              otherUser: userName,
-              participantInfo: participantInfo,
-              lastMessage: data.lastMessage
+              otherUserId: otherUserId,
+              allParticipantInfo: allParticipantInfo,
+              selectedParticipantInfo: participantInfo,
+              extractedName: userName,
+              extractedPhoto: userPhoto
             });
             
             return {
               id: doc.id,
               conversationId: doc.id,
               name: userName,
-              photo: participantInfo.photo || participantInfo.userPhoto,
+              photo: userPhoto,
               lastMessage: data.lastMessage || 'Start a conversation',
               time: data.lastMessageTime?.toDate ? formatTime(data.lastMessageTime.toDate()) : 'Now',
               unread: data.unreadCount?.[currentUser.uid] || 0,
               online: false,
               receiverId: otherUserId,
               receiverName: userName,
-              receiverPhoto: participantInfo.photo || participantInfo.userPhoto
+              receiverPhoto: userPhoto
             };
           });
 
@@ -466,8 +480,8 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
               <ChatWindow 
                 conversationId={selectedChat.conversationId || selectedChat.id}
                 receiverId={selectedChat.receiverId || selectedChat.otherParticipant}
-                receiverName={selectedChat.receiverName || selectedChat.name || 'User'}
-                receiverPhoto={selectedChat.receiverPhoto || selectedChat.photo}
+                receiverName={selectedChat.name || selectedChat.receiverName || 'User'}
+                receiverPhoto={selectedChat.photo || selectedChat.receiverPhoto}
                 onViewProfile={(userId) => {
                   if (onViewProfile) {
                     onViewProfile(userId);

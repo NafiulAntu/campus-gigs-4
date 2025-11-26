@@ -312,6 +312,14 @@
   cursor: not-allowed;
 }
 
+.send-button svg {
+  transition: transform 0.2s;
+}
+
+.send-button:hover:not(:disabled) svg {
+  transform: translateX(2px) translateY(-2px);
+}
+
 /* Loading State */
 .chat-loading {
   display: flex;
