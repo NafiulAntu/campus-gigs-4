@@ -22,9 +22,11 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
 
   const [messageInput, setMessageInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
+  const menuRef = useRef(null);
   const currentUserId = auth.currentUser?.uid;
 
   // Clear input when conversation changes to prevent override
@@ -32,15 +34,43 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
     setMessageInput('');
   }, [conversationId]);
 
-  // Auto-resize textarea based on content
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuId]);
+
+  // Auto-resize textarea based on content (like Facebook/LinkedIn)
   useEffect(() => {
     const textarea = inputRef.current;
     if (textarea) {
-      // Reset height to auto to get the correct scrollHeight
-      textarea.style.height = 'auto';
-      // Set height based on scrollHeight
-      const newHeight = Math.min(textarea.scrollHeight, 200);
+      // Reset height to get accurate scrollHeight
+      textarea.style.height = '40px';
+      
+      // Calculate new height based on content
+      const scrollHeight = textarea.scrollHeight;
+      const newHeight = Math.min(Math.max(scrollHeight, 40), 200);
+      
+      // Smoothly transition to new height
       textarea.style.height = newHeight + 'px';
+      
+      // Enable scrolling only when max height reached
+      if (scrollHeight > 200) {
+        textarea.style.overflowY = 'auto';
+      } else {
+        textarea.style.overflowY = 'hidden';
+      }
     }
   }, [messageInput]);
 
@@ -107,10 +137,43 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
     }
   }, [messageInput, sending, sendMessage, receiverId, stopTyping]);
 
-  // Handle input change
+  // Delete message
+  const handleDeleteMessage = useCallback(async (messageId) => {
+    if (!window.confirm('Delete this message?')) return;
+
+    try {
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      const { db } = await import('../../config/firebase');
+      
+      const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
+      await deleteDoc(messageRef);
+      
+      setOpenMenuId(null);
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      alert('Failed to delete message');
+    }
+  }, [conversationId]);
+
+  // Handle input change with smooth auto-resize
   const handleInputChange = useCallback((e) => {
-    setMessageInput(e.target.value);
+    const value = e.target.value;
+    setMessageInput(value);
     handleTyping();
+    
+    // Immediate resize for better UX
+    const textarea = e.target;
+    textarea.style.height = '40px';
+    const scrollHeight = textarea.scrollHeight;
+    const newHeight = Math.min(Math.max(scrollHeight, 40), 200);
+    textarea.style.height = newHeight + 'px';
+    
+    // Show scrollbar only when content exceeds max height
+    if (scrollHeight > 200) {
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.overflowY = 'hidden';
+    }
   }, [handleTyping]);
 
   // Format timestamp
@@ -217,9 +280,106 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                 <div 
                   key={message.id} 
                   className={`message ${isOwn ? 'message-own' : 'message-other'}`}
+                  style={{ position: 'relative' }}
                 >
-                  <div className="message-content">
-                    <p>{message.content}</p>
+                  <div className="message-content" style={{ position: 'relative' }}>
+                    {/* Three dots menu button - inside message-content */}
+                    {isOwn && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(openMenuId === message.id ? null : message.id);
+                        }}
+                        className="message-menu-btn"
+                        style={{
+                          position: 'absolute',
+                          top: '4px',
+                          right: '4px',
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          border: 'none',
+                          background: 'rgba(0, 0, 0, 0.2)',
+                          color: '#000',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '16px',
+                          fontWeight: 'bold',
+                          opacity: 0,
+                          transition: 'all 0.2s ease',
+                          zIndex: 10
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)';
+                          e.currentTarget.style.transform = 'scale(1.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.2)';
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                        title="Options"
+                      >
+                        ⋮
+                      </button>
+                    )}
+                    
+                    {/* Dropdown menu */}
+                    {openMenuId === message.id && isOwn && (
+                      <div
+                        ref={menuRef}
+                        className="message-dropdown-menu"
+                        style={{
+                          position: 'absolute',
+                          top: '30px',
+                          right: '4px',
+                          background: '#1a1a1a',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: '12px',
+                          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)',
+                          minWidth: '180px',
+                          zIndex: 1000,
+                          overflow: 'hidden',
+                          animation: 'fadeIn 0.2s ease-out'
+                        }}
+                      >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteMessage(message.id);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '14px 18px',
+                          border: 'none',
+                          background: 'transparent',
+                          color: '#ef4444',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
+                          e.currentTarget.style.paddingLeft = '22px';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.paddingLeft = '18px';
+                        }}
+                      >
+                        <span style={{ fontSize: '18px' }}>🗑️</span>
+                        Delete Message
+                      </button>
+                    </div>
+                    )}
+                    
+                    <p style={{ paddingRight: isOwn ? '30px' : '0' }}>{message.content}</p>
                   </div>
                   <div className="message-meta">
                     <span className="message-time">{formatTime(message.timestamp)}</span>

@@ -88,23 +88,12 @@
   padding: 24px;
   background: #000000;
   position: relative;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
 .messages-container::-webkit-scrollbar {
-  width: 6px;
-}
-
-.messages-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.messages-container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-.messages-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* No Messages State */
@@ -153,6 +142,31 @@
 
 .message-other {
   align-self: flex-start;
+}
+
+/* Message hover effects */
+.message-own:hover .message-menu-btn {
+  opacity: 1 !important;
+}
+
+.message-menu-btn:hover {
+  opacity: 1 !important;
+}
+
+/* Dropdown menu animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.message-dropdown-menu {
+  backdrop-filter: blur(10px);
 }
 
 .message-content {
@@ -275,12 +289,19 @@
   min-height: 40px;
   max-height: 200px;
   line-height: 1.5;
-  transition: all 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
   background: #1a1a1a;
   color: #ffffff;
-  overflow-y: auto;
+  overflow-y: hidden;
+  overflow-x: hidden;
   word-wrap: break-word;
   white-space: pre-wrap;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.message-input::-webkit-scrollbar {
+  display: none;
 }
 
 .message-input::placeholder {
