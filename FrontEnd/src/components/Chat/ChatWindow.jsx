@@ -23,6 +23,8 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
   const [messageInput, setMessageInput] = useState('');
   const [sending, setSending] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedMessages, setSelectedMessages] = useState(new Set());
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
@@ -137,7 +139,57 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
     }
   }, [messageInput, sending, sendMessage, receiverId, stopTyping]);
 
-  // Delete message
+  // Toggle message selection
+  const toggleMessageSelection = useCallback((messageId) => {
+    setSelectedMessages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(messageId)) {
+        newSet.delete(messageId);
+      } else {
+        newSet.add(messageId);
+      }
+      if (newSet.size === 0) {
+        setSelectionMode(false);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Start selection mode
+  const startSelectionMode = useCallback((messageId) => {
+    setSelectionMode(true);
+    setSelectedMessages(new Set([messageId]));
+    setOpenMenuId(null);
+  }, []);
+
+  // Cancel selection
+  const cancelSelection = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedMessages(new Set());
+  }, []);
+
+  // Delete selected messages
+  const deleteSelectedMessages = useCallback(async () => {
+    if (!window.confirm(`Delete ${selectedMessages.size} message(s)?`)) return;
+
+    try {
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      const { db } = await import('../../config/firebase');
+      
+      const deletePromises = Array.from(selectedMessages).map(messageId => {
+        const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
+        return deleteDoc(messageRef);
+      });
+      
+      await Promise.all(deletePromises);
+      cancelSelection();
+    } catch (error) {
+      console.error('Error deleting messages:', error);
+      alert('Failed to delete messages');
+    }
+  }, [selectedMessages, conversationId, cancelSelection]);
+
+  // Delete single message
   const handleDeleteMessage = useCallback(async (messageId) => {
     if (!window.confirm('Delete this message?')) return;
 
@@ -154,6 +206,12 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
       alert('Failed to delete message');
     }
   }, [conversationId]);
+
+  // Forward messages (placeholder)
+  const handleForwardMessages = useCallback(() => {
+    alert('Forward feature coming soon!');
+    cancelSelection();
+  }, [cancelSelection]);
 
   // Handle input change with smooth auto-resize
   const handleInputChange = useCallback((e) => {
@@ -225,43 +283,105 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
     <div className="chat-window">
       {/* Chat Header */}
       <div className="chat-header">
-        <div className="chat-header-user" onClick={handleViewProfile} style={{ cursor: 'pointer' }} title="View profile">
-          <div className="user-avatar-container">
-            {receiverPhoto ? (
-              <img 
-                src={receiverPhoto} 
-                alt={receiverName}
-                className="user-avatar"
-              />
-            ) : (
-              <div className="user-avatar" style={{ 
-                background: 'linear-gradient(135deg, #89CFF0 0%, #5FAED1 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#000',
-                fontWeight: 'bold',
-                fontSize: '18px'
-              }}>
-                {receiverName ? receiverName[0].toUpperCase() : 'U'}
+        {selectionMode ? (
+          // Selection Mode Header (Telegram-style)
+          <>
+            <button 
+              onClick={cancelSelection}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#89CFF0',
+                fontSize: '28px',
+                cursor: 'pointer',
+                padding: '0 16px',
+                lineHeight: 1
+              }}
+            >
+              ×
+            </button>
+            <div style={{ flex: 1, color: '#fff', fontSize: '16px', fontWeight: '600' }}>
+              {selectedMessages.size} selected
+            </div>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingRight: '8px' }}>
+              <button
+                onClick={handleForwardMessages}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#89CFF0',
+                  fontSize: '22px',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Forward"
+              >
+                ➤
+              </button>
+              <button
+                onClick={deleteSelectedMessages}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#ef4444',
+                  fontSize: '22px',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Delete"
+              >
+                🗑️
+              </button>
+            </div>
+          </>
+        ) : (
+          // Normal Header
+          <>
+            <div className="chat-header-user" onClick={handleViewProfile} style={{ cursor: 'pointer' }} title="View profile">
+              <div className="user-avatar-container">
+                {receiverPhoto ? (
+                  <img 
+                    src={receiverPhoto} 
+                    alt={receiverName}
+                    className="user-avatar"
+                  />
+                ) : (
+                  <div className="user-avatar" style={{ 
+                    background: 'linear-gradient(135deg, #89CFF0 0%, #5FAED1 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#000',
+                    fontWeight: 'bold',
+                    fontSize: '18px'
+                  }}>
+                    {receiverName ? receiverName[0].toUpperCase() : 'U'}
+                  </div>
+                )}
+                {isReceiverOnline && <span className="online-badge"></span>}
               </div>
-            )}
-            {isReceiverOnline && <span className="online-badge"></span>}
-          </div>
-          <div className="user-info">
-            <h3>{receiverName || 'User'}</h3>
-            <span className="user-status">
-              {isReceiverTyping ? 'typing...' : isReceiverOnline ? 'online' : 'offline'}
-            </span>
-          </div>
-        </div>
-        <div className="connection-status">
-          {isConnected ? (
-            <span className="status-connected">🟢 Connected</span>
-          ) : (
-            <span className="status-disconnected">🔴 Disconnected</span>
-          )}
-        </div>
+              <div className="user-info">
+                <h3>{receiverName || 'User'}</h3>
+                <span className="user-status">
+                  {isReceiverTyping ? 'typing...' : isReceiverOnline ? 'online' : 'offline'}
+                </span>
+              </div>
+            </div>
+            <div className="connection-status">
+              {isConnected ? (
+                <span className="status-connected">🟢 Connected</span>
+              ) : (
+                <span className="status-disconnected">🔴 Disconnected</span>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Messages List */}
@@ -275,16 +395,50 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
             {messages.map((message) => {
               const isOwn = message.senderId === currentUserId;
               const isRead = message.readBy?.includes(receiverId);
+              const isSelected = selectedMessages.has(message.id);
 
               return (
                 <div 
                   key={message.id} 
                   className={`message ${isOwn ? 'message-own' : 'message-other'}`}
-                  style={{ position: 'relative' }}
+                  style={{ position: 'relative', cursor: selectionMode ? 'pointer' : 'default' }}
+                  onClick={() => selectionMode && toggleMessageSelection(message.id)}
+                  onContextMenu={(e) => {
+                    if (selectionMode) return;
+                    e.preventDefault();
+                    setOpenMenuId(openMenuId === message.id ? null : message.id);
+                  }}
                 >
-                  <div className="message-content" style={{ position: 'relative' }}>
-                    {/* Three dots menu button - inside message-content */}
-                    {isOwn && (
+                  {/* Selection Checkbox */}
+                  {selectionMode && (
+                    <div style={{
+                      position: 'absolute',
+                      left: isOwn ? 'auto' : '-35px',
+                      right: isOwn ? '-35px' : 'auto',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      border: `2px solid ${isSelected ? '#89CFF0' : 'rgba(255, 255, 255, 0.3)'}`,
+                      background: isSelected ? '#89CFF0' : 'transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}>
+                      {isSelected && <span style={{ color: '#000', fontWeight: 'bold', fontSize: '14px' }}>✓</span>}
+                    </div>
+                  )}
+
+                  <div className="message-content" style={{ 
+                    position: 'relative',
+                    background: isSelected ? (isOwn ? 'linear-gradient(135deg, #6ab8e0 0%, #4a8eb1 100%)' : 'rgba(255, 255, 255, 0.05)') : undefined,
+                    transition: 'all 0.2s ease'
+                  }}>
+                    {/* Three dots menu button */}
+                    {!selectionMode && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -295,29 +449,27 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                           position: 'absolute',
                           top: '4px',
                           right: '4px',
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '50%',
+                          width: '22px',
+                          height: '22px',
+                          borderRadius: '4px',
                           border: 'none',
-                          background: 'rgba(0, 0, 0, 0.2)',
-                          color: '#000',
+                          background: 'rgba(0, 0, 0, 0.15)',
+                          color: isOwn ? '#000' : '#fff',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '16px',
+                          fontSize: '14px',
                           fontWeight: 'bold',
                           opacity: 0,
-                          transition: 'all 0.2s ease',
+                          transition: 'all 0.15s ease',
                           zIndex: 10
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.3)';
-                          e.currentTarget.style.transform = 'scale(1.1)';
+                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.25)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.2)';
-                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.15)';
                         }}
                         title="Options"
                       >
@@ -325,58 +477,113 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                       </button>
                     )}
                     
-                    {/* Dropdown menu */}
-                    {openMenuId === message.id && isOwn && (
+                    {/* Telegram-style Dropdown menu */}
+                    {openMenuId === message.id && !selectionMode && (
                       <div
                         ref={menuRef}
-                        className="message-dropdown-menu"
+                        className="message-dropdown-menu telegram-menu"
                         style={{
                           position: 'absolute',
-                          top: '30px',
-                          right: '4px',
-                          background: '#1a1a1a',
-                          border: '1px solid rgba(255, 255, 255, 0.15)',
-                          borderRadius: '12px',
-                          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)',
-                          minWidth: '180px',
+                          top: '100%',
+                          right: '0',
+                          marginTop: '4px',
+                          background: '#2b2b2b',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+                          minWidth: '160px',
                           zIndex: 1000,
                           overflow: 'hidden',
-                          animation: 'fadeIn 0.2s ease-out'
+                          animation: 'fadeIn 0.15s ease-out'
                         }}
                       >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteMessage(message.id);
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '14px 18px',
-                          border: 'none',
-                          background: 'transparent',
-                          color: '#ef4444',
-                          textAlign: 'left',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)';
-                          e.currentTarget.style.paddingLeft = '22px';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.paddingLeft = '18px';
-                        }}
-                      >
-                        <span style={{ fontSize: '18px' }}>🗑️</span>
-                        Delete Message
-                      </button>
-                    </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startSelectionMode(message.id);
+                          }}
+                          className="telegram-menu-item"
+                          style={{
+                            width: '100%',
+                            padding: '12px 16px',
+                            border: 'none',
+                            background: 'transparent',
+                            color: '#fff',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '400',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            transition: 'background 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <span style={{ fontSize: '16px' }}>☑️</span>
+                          Select
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            alert('Forward feature coming soon!');
+                            setOpenMenuId(null);
+                          }}
+                          className="telegram-menu-item"
+                          style={{
+                            width: '100%',
+                            padding: '12px 16px',
+                            border: 'none',
+                            background: 'transparent',
+                            color: '#fff',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '400',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            transition: 'background 0.15s ease'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                        >
+                          <span style={{ fontSize: '16px' }}>➤</span>
+                          Forward
+                        </button>
+                        {isOwn && (
+                          <>
+                            <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteMessage(message.id);
+                              }}
+                              className="telegram-menu-item"
+                              style={{
+                                width: '100%',
+                                padding: '12px 16px',
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#ef4444',
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                fontWeight: '400',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                transition: 'background 0.15s ease'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                            >
+                              <span style={{ fontSize: '16px' }}>🗑️</span>
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </div>
                     )}
                     
                     <p style={{ paddingRight: isOwn ? '30px' : '0' }}>{message.content}</p>
