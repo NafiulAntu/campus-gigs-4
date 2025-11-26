@@ -124,59 +124,61 @@ export default function Messages({ onBack, initialConversation = null }) {
         {/* Conversations List */}
         <div className={`${showDetails ? 'hidden' : 'w-full'} md:w-80 lg:w-96 border-r border-white/10 flex flex-col ${selectedChat && !showDetails ? 'hidden md:flex' : 'flex'}`}>
           {/* Header */}
-          <div className="p-4 border-b border-white/10">
-            <div className="flex items-center gap-3 mb-4">
+          <div className="p-6 border-b border-white/10">
+            <div className="flex items-center gap-3 mb-5">
               <button
                 onClick={onBack}
-                className="h-9 w-9 hover:bg-white/10 flex items-center justify-center transition-colors"
+                className="h-10 w-10 hover:bg-white/5 rounded-lg flex items-center justify-center transition-all"
               >
                 <i className="fi fi-br-arrow-left text-white text-xl"></i>
               </button>
-              <h1 className="text-2xl font-bold text-white">Messages</h1>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Messages</h1>
             </div>
             {/* Search */}
-            <div className="flex items-center gap-2 bg-white/[0.04] px-4 py-3">
-              <i className="fi fi-br-search text-text-muted"></i>
+            <div className="flex items-center gap-3 bg-[#1a1a1a] px-4 py-3 rounded-[22px] border border-white/[0.15] transition-all hover:border-white/[0.25] focus-within:border-[#89CFF0] focus-within:bg-[#0f0f0f]">
+              <i className="fi fi-br-search text-[#64748b]"></i>
               <input
                 type="text"
-                placeholder="Search messages"
-                className="flex-1 bg-transparent outline-none text-white placeholder:text-text-muted border-0 focus:outline-none"
+                placeholder="Search conversations"
+                className="flex-1 bg-transparent outline-none text-white placeholder:text-[#64748b] border-0"
               />
             </div>
           </div>
 
           {/* Conversation List */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto p-3">
             {conversations.map((conv) => (
               <div
                 key={conv.id}
                 onClick={() => setSelectedChat(conv)}
-                className={`p-4 border-b border-white/10 cursor-pointer transition-colors hover:bg-white/[0.04] ${
-                  selectedChat?.id === conv.id ? "bg-white/[0.06]" : ""
+                className={`p-4 mb-2 rounded-xl cursor-pointer transition-all ${
+                  selectedChat?.id === conv.id 
+                    ? "bg-[#89CFF0]/[0.12] border border-[#89CFF0]/[0.35] shadow-lg shadow-[#89CFF0]/[0.15]" 
+                    : "bg-white/[0.02] border border-transparent hover:bg-white/[0.05]"
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div className="relative">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-r from-[#89CFF0] to-blue-500 flex items-center justify-center font-bold text-white">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#89CFF0] to-[#5FAED1] flex items-center justify-center font-bold text-black shadow-md">
                       {conv.name[0]}
                     </div>
                     {conv.online && (
-                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-black rounded-full"></span>
+                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-[#22c55e] border-2 border-black rounded-full"></span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-white truncate">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h3 className="font-semibold text-white truncate tracking-tight">
                         {conv.name}
                       </h3>
-                      <span className="text-xs text-text-muted">{conv.time}</span>
+                      <span className="text-xs text-[#64748b] font-medium">{conv.time}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-sm text-text-muted truncate">
+                      <p className="text-[13.5px] text-[#94a3b8] truncate">
                         {conv.lastMessage}
                       </p>
                       {conv.unread > 0 && (
-                        <span className="ml-2 h-5 w-5 bg-[#89CFF0] rounded-full flex items-center justify-center text-xs font-bold text-black">
+                        <span className="ml-2 h-5 px-2 min-w-[20px] bg-[#89CFF0] rounded-full flex items-center justify-center text-xs font-bold text-black shadow-md shadow-[#89CFF0]/30">
                           {conv.unread}
                         </span>
                       )}
@@ -189,7 +191,7 @@ export default function Messages({ onBack, initialConversation = null }) {
 
           {/* New Message Button */}
           <div className="p-4 border-t border-white/10">
-            <button className="w-full bg-[#89CFF0] text-black py-3 font-semibold hover:bg-[#7bbfe0] transition-colors flex items-center justify-center gap-2">
+            <button className="w-full bg-gradient-to-r from-[#89CFF0] to-[#5FAED1] text-black py-3.5 rounded-xl font-bold hover:shadow-lg hover:shadow-[#89CFF0]/25 transition-all flex items-center justify-center gap-2">
               <i className="fi fi-br-edit"></i>
               New Message
             </button>
@@ -210,13 +212,13 @@ export default function Messages({ onBack, initialConversation = null }) {
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <div className="h-20 w-20 mx-auto mb-4 rounded-full bg-white/[0.04] flex items-center justify-center">
-                  <i className="fi fi-br-envelope text-4xl text-text-muted"></i>
+                <div className="h-24 w-24 mx-auto mb-5 rounded-full bg-gradient-to-br from-[#89CFF0]/10 to-[#5FAED1]/10 flex items-center justify-center border border-white/[0.1]">
+                  <i className="fi fi-br-envelope text-5xl text-[#89CFF0]"></i>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
                   Select a message
                 </h3>
-                <p className="text-text-muted">
+                <p className="text-[#94a3b8] text-[15px]">
                   Choose from your existing conversations or start a new one
                 </p>
               </div>
