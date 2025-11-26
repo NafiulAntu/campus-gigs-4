@@ -41,41 +41,75 @@ export default function Messages({ onBack, initialConversation = null }) {
     };
   }, [showChatMenu]);
 
-  // Load conversations from Firestore
+  // Load conversations from Firestore with real-time updates
   useEffect(() => {
-    const loadConversations = async () => {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        setLoading(false);
-        return;
-      }
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        // Query conversations where user is a participant
-        const conversationsRef = collection(db, 'conversations');
-        const q = query(
-          conversationsRef,
-          where('participants', 'array-contains', currentUser.uid),
-          orderBy('lastMessageTime', 'desc')
-        );
+    setLoading(true);
 
-        const snapshot = await getDocs(q);
-        const loadedConversations = snapshot.docs.map(doc => ({
-          id: doc.id,
-          conversationId: doc.id,
-          ...doc.data()
-        }));
+    try {
+      // Query conversations where user is a participant
+      const conversationsRef = collection(db, 'conversations');
+      const q = query(
+        conversationsRef,
+        where('participants', 'array-contains', currentUser.uid),
+        orderBy('lastMessageTime', 'desc')
+      );
+
+      // Real-time listener for conversations
+      const { onSnapshot } = require('firebase/firestore');
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const loadedConversations = snapshot.docs.map(doc => {
+          const data = doc.data();
+          const otherUserId = data.participants?.find(p => p !== currentUser.uid);
+          const participantInfo = data.participantInfo?.[otherUserId] || {};
+          
+          return {
+            id: doc.id,
+            conversationId: doc.id,
+            name: participantInfo.name || 'Unknown User',
+            photo: participantInfo.photo,
+            lastMessage: data.lastMessage || 'No messages yet',
+            time: data.lastMessageTime?.toDate ? formatTime(data.lastMessageTime.toDate()) : '',
+            unread: data.unreadCount?.[currentUser.uid] || 0,
+            online: false, // TODO: Add presence tracking
+            receiverId: otherUserId,
+            ...data
+          };
+        });
 
         setConversations(loadedConversations);
-      } catch (error) {
-        console.error('Error loading conversations:', error);
-      } finally {
         setLoading(false);
-      }
-    };
+        
+        console.log('📱 Loaded conversations:', loadedConversations.length);
+      }, (error) => {
+        console.error('Error loading conversations:', error);
+        setLoading(false);
+      });
 
-    loadConversations();
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Error setting up conversations listener:', error);
+      setLoading(false);
+    }
   }, []);
+
+  // Format timestamp for conversation list
+  const formatTime = (date) => {
+    if (!date) return '';
+    const now = new Date();
+    const diff = now - date;
+    
+    if (diff < 60000) return 'Just now';
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
+    if (diff < 604800000) return `${Math.floor(diff / 86400000)}d`;
+    return date.toLocaleDateString();
+  };
 
   const handleMenuAction = (action) => {
     if (action === "details") {
@@ -165,12 +199,14 @@ export default function Messages({ onBack, initialConversation = null }) {
         {/* Chat Area */}
         <div className={`flex-1 flex flex-col ${showDetails ? 'hidden md:flex' : 'flex'}`}>
           {selectedChat ? (
-            <ChatWindow 
-              conversationId={selectedChat.conversationId || selectedChat.id}
-              receiverId={selectedChat.receiverId || selectedChat.otherParticipant}
-              receiverName={selectedChat.name}
-              receiverPhoto={selectedChat.photo}
-            />
+            <>
+              <ChatWindow 
+                conversationId={selectedChat.conversationId || selectedChat.id}
+                receiverId={selectedChat.receiverId || selectedChat.otherParticipant}
+                receiverName={selectedChat.receiverName || selectedChat.name || 'User'}
+                receiverPhoto={selectedChat.receiverPhoto || selectedChat.photo}
+              />
+            </>
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">

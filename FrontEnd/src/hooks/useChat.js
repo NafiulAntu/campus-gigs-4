@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   collection, 
   query, 
@@ -10,10 +10,12 @@ import {
   updateDoc,
   doc,
   getDocs,
-  limit
+  limit,
+  increment
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import { useSocket } from './useSocket';
+import { showMessageNotification, playNotificationSound } from '../utils/notifications';
 
 /**
  * Custom hook for chat functionality
@@ -25,6 +27,7 @@ export const useChat = (conversationId) => {
   const [loading, setLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState(new Set());
   const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const previousMessageCount = useRef(0);
 
   // Load messages from Firestore
   useEffect(() => {
@@ -45,6 +48,20 @@ export const useChat = (conversationId) => {
         ...doc.data(),
         timestamp: doc.data().timestamp?.toDate()
       }));
+
+      // Check for new messages and show notification
+      const currentUser = auth.currentUser;
+      if (currentUser && loadedMessages.length > previousMessageCount.current) {
+        const newMessages = loadedMessages.slice(previousMessageCount.current);
+        newMessages.forEach(msg => {
+          if (msg.senderId !== currentUser.uid) {
+            // Show notification for messages from others
+            showMessageNotification('New Message', msg.content, conversationId);
+            playNotificationSound();
+          }
+        });
+      }
+      previousMessageCount.current = loadedMessages.length;
 
       setMessages(loadedMessages);
       setLoading(false);
@@ -162,6 +179,14 @@ export const useChat = (conversationId) => {
         conversationId
       });
 
+      // Update conversation metadata for conversation list
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        lastMessage: content.trim(),
+        lastMessageTime: serverTimestamp(),
+        [`unreadCount.${receiverId}`]: increment(1)
+      });
+
       console.log('✅ Message sent:', docRef.id);
       return docRef.id;
 
@@ -208,6 +233,13 @@ export const useChat = (conversationId) => {
       });
 
       await Promise.all(updatePromises);
+      
+      // Reset unread count in conversation
+      const conversationRef = doc(db, 'conversations', conversationId);
+      await updateDoc(conversationRef, {
+        [`unreadCount.${user.uid}`]: 0
+      });
+      
       console.log('✅ Messages marked as read:', messageIds);
 
     } catch (error) {

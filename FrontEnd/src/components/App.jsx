@@ -5,6 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { Box, CircularProgress } from "@mui/material";
 import { handleAuthCallback } from '../services/api.js';
 import '../config/firestoreInit.js'; // Initialize Firestore connection check
+import { requestNotificationPermission } from '../utils/notifications';
 
 // Lazy load components for better performance
 const Hero = lazy(() => import("./Interface/Hero.jsx"));
@@ -77,6 +78,15 @@ function CallbackHandler() {
 
 export default function App() {
   const location = useLocation();
+  
+  // Request notification permission on app load
+  useEffect(() => {
+    requestNotificationPermission().then(granted => {
+      if (granted) {
+        console.log('✅ Notification permission granted');
+      }
+    });
+  }, []);
   const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/reset-password", "/terms", "/privacy"];
   const shouldHideFooter = hideFooterOn.includes(
     location.pathname.toLowerCase()
