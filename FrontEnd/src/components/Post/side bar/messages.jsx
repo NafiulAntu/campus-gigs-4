@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ChatWindow from "../../Chat/ChatWindow";
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../../../config/firebase';
 import { searchUsers } from '../../../services/api';
 import { getOrCreateConversation } from '../../../utils/messagingUtils';
@@ -80,7 +80,6 @@ export default function Messages({ onBack, initialConversation = null }) {
       }
 
       // Real-time listener for conversations
-      const { onSnapshot } = require('firebase/firestore');
       const unsubscribe = onSnapshot(q, 
         (snapshot) => {
           console.log('📥 Firestore snapshot received:', snapshot.docs.length, 'conversations');
