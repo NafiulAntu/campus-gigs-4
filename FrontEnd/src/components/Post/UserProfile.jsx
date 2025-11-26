@@ -666,60 +666,100 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
 
           {/* Recent Posts Section */}
           <div className="mt-8">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <i className="fas fa-newspaper text-primary-teal"></i>
-              Recent Posts
-            </h3>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#045F5F] to-[#89CFF0] flex items-center justify-center">
+                  <i className="fas fa-newspaper text-white text-lg"></i>
+                </div>
+                Recent Posts
+              </h3>
+              {userPosts.length > 0 && (
+                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-[#045F5F]/20 to-[#89CFF0]/20 border border-[#045F5F]/30 text-sm text-gray-300">
+                  {userPosts.length} {userPosts.length === 1 ? 'post' : 'posts'}
+                </span>
+              )}
+            </div>
             
             {postsLoading ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-teal mx-auto mb-4"></div>
-                <p className="text-gray-400">Loading posts...</p>
+              <div className="text-center py-16">
+                <div className="relative inline-block">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-800"></div>
+                  <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-[#045F5F] absolute inset-0"></div>
+                </div>
+                <p className="text-gray-400 mt-4 font-medium">Loading posts...</p>
               </div>
             ) : userPosts.length === 0 ? (
-              <div className="text-center py-12 bg-gray-900/30 rounded-xl border border-[#045F5F]">
-                <i className="fas fa-file-alt text-4xl text-gray-600 mb-3"></i>
-                <p className="text-gray-400">No posts yet</p>
+              <div className="text-center py-16 bg-gradient-to-br from-gray-900/40 via-gray-900/20 to-gray-900/40 rounded-2xl border border-[#045F5F]/30 backdrop-blur-sm">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#045F5F]/20 to-[#89CFF0]/20 flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-file-alt text-4xl text-gray-500"></i>
+                </div>
+                <p className="text-gray-400 text-lg font-medium">No posts yet</p>
+                <p className="text-gray-500 text-sm mt-2">Posts will appear here once shared</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {userPosts.map((post) => {
                   const avatarLetter = post.full_name ? post.full_name[0].toUpperCase() : "U";
                   
                   return (
                     <div
                       key={post.id}
-                      className="bg-gray-900/50 border border-[#045F5F] rounded-xl p-6 hover:bg-gray-900/70 transition-all"
+                      onClick={() => navigate(`/posts/${post.id}`)}
+                      className="group relative bg-gradient-to-br from-gray-900/60 via-gray-900/40 to-gray-900/60 border border-[#045F5F]/40 rounded-2xl p-6 hover:border-[#89CFF0]/60 hover:shadow-xl hover:shadow-[#045F5F]/10 transition-all duration-300 backdrop-blur-sm cursor-pointer"
                     >
+                      {/* Decorative gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#045F5F]/5 via-transparent to-[#89CFF0]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                      
                       {/* Post Header */}
-                      <div className="flex items-start gap-3 mb-4">
+                      <div className="relative flex items-start gap-4 mb-5">
                         {post.profile_picture ? (
                           <img
                             src={post.profile_picture}
                             alt={post.full_name}
-                            className="w-12 h-12 rounded-full object-cover ring-2 ring-primary-teal/20"
+                            className="w-14 h-14 rounded-xl object-cover ring-2 ring-[#045F5F]/30 group-hover:ring-[#89CFF0]/50 transition-all duration-300 shadow-lg"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-teal to-blue-500 flex items-center justify-center text-white font-bold text-lg ring-2 ring-primary-teal/20">
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#045F5F] to-[#89CFF0] flex items-center justify-center text-white font-bold text-xl ring-2 ring-[#045F5F]/30 group-hover:ring-[#89CFF0]/50 transition-all duration-300 shadow-lg">
                             {avatarLetter}
                           </div>
                         )}
-                        <div className="flex-1">
-                          <h4 className="text-white font-semibold text-base">{post.full_name || "Unknown User"}</h4>
-                          <p className="text-gray-400 text-sm">@{post.username || "user"}</p>
-                          <p className="text-gray-500 text-xs mt-1">{formatTimeAgo(post.created_at)}</p>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-white font-bold text-lg mb-0.5 group-hover:text-[#89CFF0] transition-colors duration-200">{post.full_name || "Unknown User"}</h4>
+                          <p className="text-gray-400 text-sm font-medium">@{post.username || "user"}</p>
+                          <div className="flex items-center flex-wrap gap-3 mt-2.5">
+                            <div className="flex items-center gap-1.5 text-gray-500 text-xs">
+                              <i className="far fa-clock"></i>
+                              <span>{formatTimeAgo(post.created_at)}</span>
+                            </div>
+                            {post.media_urls && post.media_urls.length > 0 && (
+                              <div className="flex items-center gap-1.5 text-gray-500 text-xs">
+                                <i className="far fa-image"></i>
+                                <span>{post.media_urls.filter(url => url.match(/\.(jpg|jpeg|png|gif|webp)$/i)).length} {post.media_urls.filter(url => url.match(/\.(jpg|jpeg|png|gif|webp)$/i)).length === 1 ? 'photo' : 'photos'}</span>
+                              </div>
+                            )}
+                            {post.media_urls && post.media_urls.some(url => !url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) && (
+                              <div className="flex items-center gap-1.5 text-gray-500 text-xs">
+                                <i className="far fa-file"></i>
+                                <span>{post.media_urls.filter(url => !url.match(/\.(jpg|jpeg|png|gif|webp)$/i)).length} {post.media_urls.filter(url => !url.match(/\.(jpg|jpeg|png|gif|webp)$/i)).length === 1 ? 'file' : 'files'}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1.5 text-gray-500 text-xs">
+                              <i className="far fa-comment-dots"></i>
+                              <span>{post.content ? post.content.length : 0} characters</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
                       {/* Post Content */}
-                      <div className="text-white text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                      <div className="relative text-gray-100 text-[15.5px] leading-relaxed whitespace-pre-wrap break-words mb-4">
                         {post.content}
                       </div>
 
                       {/* Post Media */}
                       {post.media_urls && post.media_urls.length > 0 && (
                         <div
-                          className={`mt-3 grid ${
+                          className={`relative grid ${
                             post.media_urls.length === 1
                               ? "grid-cols-1"
                               : post.media_urls.length === 2
@@ -727,7 +767,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                               : post.media_urls.length === 3
                               ? "grid-cols-3"
                               : "grid-cols-2"
-                          } gap-2`}
+                          } gap-3`}
                         >
                           {post.media_urls.slice(0, 4).map((url, i) => {
                             if (!url) return null;
@@ -736,12 +776,12 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                             const isImage = url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                             
                             if (isImage) {
-                              const imgHeight = count === 1 ? "h-64" : "h-40";
+                              const imgHeight = count === 1 ? "h-72" : "h-48";
                               
                               return (
                                 <div
                                   key={i}
-                                  className={`rounded-lg overflow-hidden border border-primary-teal/10 relative group cursor-pointer ${
+                                  className={`group/img rounded-xl overflow-hidden border-2 border-[#045F5F]/20 relative hover:border-[#89CFF0]/50 cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
                                     count > 4 && i === 3 ? 'relative' : ''
                                   }`}
                                   onClick={() => openImageViewer(post.media_urls.filter(u => u.match(/\.(jpg|jpeg|png|gif|webp)$/i)), i)}
@@ -749,19 +789,27 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                                   <img
                                     src={url}
                                     alt=""
-                                    className={`object-cover w-full ${imgHeight} transition-all duration-200 ${
-                                      count > 4 && i === 3 ? 'brightness-50' : 'group-hover:brightness-90'
+                                    className={`object-cover w-full ${imgHeight} transition-all duration-300 ${
+                                      count > 4 && i === 3 ? 'brightness-50' : 'group-hover/img:brightness-110 group-hover/img:scale-105'
                                     }`}
                                     onError={(e) => {
                                       e.target.onerror = null;
                                       e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="50%" y="50%" text-anchor="middle" fill="gray">Image</text></svg>';
                                     }}
                                   />
+                                  {/* Overlay on hover */}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-300"></div>
+                                  
                                   {count > 4 && i === 3 && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                                      <span className="text-white text-3xl font-bold">+{count - 4}</span>
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                                      <span className="text-white text-4xl font-bold">+{count - 4}</span>
                                     </div>
                                   )}
+                                  
+                                  {/* Zoom icon on hover */}
+                                  <div className="absolute top-3 right-3 w-10 h-10 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-all duration-300 transform scale-75 group-hover/img:scale-100">
+                                    <i className="fas fa-search-plus text-white text-sm"></i>
+                                  </div>
                                 </div>
                               );
                             } else {
@@ -769,17 +817,25 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                               const fileName = url.split('/').pop();
                               const fileExt = fileName.split('.').pop().toLowerCase();
                               let fileIcon = '📎';
-                              let fileColor = 'bg-primary-teal/10 text-primary-teal';
+                              let fileColor = 'bg-gray-700/50 text-gray-300';
+                              let borderColor = 'border-gray-600/30';
                               
                               if (['pdf'].includes(fileExt)) {
                                 fileIcon = '📄';
                                 fileColor = 'bg-red-500/20 text-red-400';
+                                borderColor = 'border-red-500/30';
                               } else if (['doc', 'docx'].includes(fileExt)) {
                                 fileIcon = '📝';
                                 fileColor = 'bg-blue-500/20 text-blue-400';
+                                borderColor = 'border-blue-500/30';
                               } else if (['xls', 'xlsx'].includes(fileExt)) {
                                 fileIcon = '📊';
                                 fileColor = 'bg-green-500/20 text-green-400';
+                                borderColor = 'border-green-500/30';
+                              } else if (['zip', 'rar'].includes(fileExt)) {
+                                fileIcon = '📦';
+                                fileColor = 'bg-yellow-500/20 text-yellow-400';
+                                borderColor = 'border-yellow-500/30';
                               }
                               
                               return (
@@ -788,16 +844,21 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                                   href={url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-2 p-3 rounded-lg border border-primary-teal/10 bg-gray-800/20 hover:bg-gray-800/40 transition-all group col-span-full"
+                                  className={`group/file flex items-center gap-3 p-4 rounded-xl border-2 ${borderColor} bg-gray-800/30 hover:bg-gray-800/50 hover:border-[#89CFF0]/50 transition-all duration-300 col-span-full hover:scale-[1.01]`}
                                 >
-                                  <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${fileColor}`}>
+                                  <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${fileColor} transition-transform duration-300 group-hover/file:scale-110`}>
                                     {fileIcon}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="text-xs font-semibold text-white truncate">{fileName}</div>
-                                    <div className="text-[10px] text-gray-400 mt-0.5">{fileExt.toUpperCase()} • Click to open</div>
+                                    <div className="text-sm font-bold text-white truncate group-hover/file:text-[#89CFF0] transition-colors">{fileName}</div>
+                                    <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
+                                      <span className="px-2 py-0.5 bg-gray-700/50 rounded">{fileExt.toUpperCase()}</span>
+                                      <span>Click to open</span>
+                                    </div>
                                   </div>
-                                  <i className="fas fa-external-link-alt text-xs text-gray-400 group-hover:text-primary-teal transition-colors" />
+                                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[#045F5F]/20 group-hover/file:bg-[#89CFF0]/30 flex items-center justify-center transition-all duration-300">
+                                    <i className="fas fa-external-link-alt text-sm text-gray-400 group-hover/file:text-[#89CFF0] transition-colors" />
+                                  </div>
                                 </a>
                               );
                             }
