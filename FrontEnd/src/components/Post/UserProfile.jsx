@@ -6,7 +6,8 @@ import {
   getStudentProfile, 
   getEmployeeProfile 
 } from "../../services/api";
-import { getOrCreateConversation } from "../../utils/messagingUtils";
+import { getOrCreateConversation, testFirestoreConnection } from "../../utils/messagingUtils";
+import { diagnoseMessagingIssue } from "../../utils/accountLinking";
 import { auth } from "../../config/firebase";
 
 export default function UserProfile({ userId, onBack, onMessageClick }) {
@@ -28,10 +29,27 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
         return;
       }
 
+      // Diagnose messaging capability
+      const diagnosis = await diagnoseMessagingIssue(user);
+      
+      if (!diagnosis.canSendMessages) {
+        console.error('Cannot send message. Issues:', diagnosis.issues);
+        const issueMsg = diagnosis.issues.join('\n');
+        const solutionMsg = diagnosis.solutions.join('\n');
+        alert(`Cannot send message:\n\n${issueMsg}\n\nSolution:\n${solutionMsg}`);
+        return;
+      }
+
+      const otherUserFirebaseUid = user.firebase_uid;
+      console.log('Creating conversation between:', {
+        currentUser: currentUser.uid,
+        otherUser: otherUserFirebaseUid
+      });
+
       // Create or get existing conversation
       const conversationId = await getOrCreateConversation(
         currentUser.uid,
-        user.firebase_uid || user.id?.toString(),
+        otherUserFirebaseUid,
         user.full_name || user.username,
         profileData?.profilePicUrl || user.profile_picture
       );
@@ -46,7 +64,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
         navigate('/messages', { 
           state: { 
             conversationId,
-            userId: user.firebase_uid || user.id?.toString(),
+            userId: otherUserFirebaseUid,
             userName: user.full_name || user.username,
             userPhoto: profileData?.profilePicUrl || user.profile_picture
           }
@@ -55,7 +73,16 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
 
     } catch (error) {
       console.error('Error starting conversation:', error);
-      alert('Failed to start conversation. Please try again.');
+      console.error('Error details:', error.message, error.stack);
+      
+      // More specific error messages with solutions
+      if (error.code === 'permission-denied') {
+        alert('⛔ Firestore Permission Denied\n\nThis means Firestore security rules are blocking the operation.\n\nTo fix:\n1. Go to Firebase Console\n2. Navigate to Firestore Database\n3. Go to Rules tab\n4. Update rules to allow authenticated users to create conversations\n\nSee MESSAGING_DEBUG.md for the correct security rules.');
+      } else if (error.code === 'unavailable') {
+        alert('🔴 Firestore Database Unavailable\n\nPossible causes:\n1. Firestore is not enabled in Firebase Console\n2. Internet connection issue\n3. Firebase quota exceeded\n\nTo fix:\n1. Go to Firebase Console\n2. Navigate to Firestore Database\n3. Click "Create database" if not already created\n4. Choose production mode and select a location\n\nCheck browser console for more details.');
+      } else {
+        alert(`❌ Failed to start conversation\n\n${error.message}\n\nCheck browser console (F12) for more details.`);
+      }
     } finally {
       setStartingChat(false);
     }

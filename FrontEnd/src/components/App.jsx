@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { Box, CircularProgress } from "@mui/material";
 import { handleAuthCallback } from '../services/api.js';
+import '../config/firestoreInit.js'; // Initialize Firestore connection check
 
 // Lazy load components for better performance
 const Hero = lazy(() => import("./Interface/Hero.jsx"));

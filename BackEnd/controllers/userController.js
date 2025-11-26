@@ -50,7 +50,7 @@ exports.getUserById = async (req, res) => {
       });
     }
     
-    // Remove password from response
+    // Remove password from response but keep firebase_uid for messaging
     const { password, ...userWithoutPassword } = user;
     const sanitizedUser = sanitizeNullValues(userWithoutPassword);
     

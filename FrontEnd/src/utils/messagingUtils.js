@@ -15,6 +15,23 @@ import { db } from '../config/firebase';
  */
 
 /**
+ * Test Firestore connection
+ */
+export async function testFirestoreConnection() {
+  try {
+    const testRef = doc(db, '_test_', 'connection');
+    await getDoc(testRef);
+    console.log('✅ Firestore connection test passed');
+    return true;
+  } catch (error) {
+    console.error('❌ Firestore connection test failed:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    return false;
+  }
+}
+
+/**
  * Get or create a conversation between two users
  * @param {string} currentUserId - Current user's ID
  * @param {string} otherUserId - Other user's ID
@@ -29,16 +46,36 @@ export async function getOrCreateConversation(
   otherUserPhoto = null
 ) {
   try {
+    // Validate inputs
+    if (!currentUserId || !otherUserId) {
+      throw new Error('Both user IDs are required to create a conversation');
+    }
+
+    if (currentUserId === otherUserId) {
+      throw new Error('Cannot create conversation with yourself');
+    }
+
+    console.log('getOrCreateConversation called with:', {
+      currentUserId,
+      otherUserId,
+      otherUserName,
+      otherUserPhoto
+    });
+
     // Create consistent conversation ID (sorted user IDs)
     const conversationId = [currentUserId, otherUserId]
       .sort()
       .join('_');
+
+    console.log('Generated conversationId:', conversationId);
 
     // Check if conversation already exists
     const conversationRef = doc(db, 'conversations', conversationId);
     const conversationDoc = await getDoc(conversationRef);
 
     if (!conversationDoc.exists()) {
+      console.log('Creating new conversation...');
+      
       // Create new conversation
       await setDoc(conversationRef, {
         conversationId,
@@ -72,7 +109,22 @@ export async function getOrCreateConversation(
     return conversationId;
 
   } catch (error) {
-    console.error('Error creating conversation:', error);
+    console.error('Error in getOrCreateConversation:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    console.error('Full error object:', error);
+    
+    // Provide more specific error information
+    if (error.code === 'permission-denied') {
+      const permissionError = new Error('Firestore permission denied. Please ensure:\n1. Firestore security rules allow conversation creation\n2. User is authenticated with Firebase');
+      permissionError.code = 'permission-denied';
+      throw permissionError;
+    } else if (error.code === 'unavailable') {
+      const unavailableError = new Error('Firestore database is unavailable. This could mean:\n1. Firestore is not enabled in Firebase Console\n2. Internet connection issue\n3. Firebase project configuration issue');
+      unavailableError.code = 'unavailable';
+      throw unavailableError;
+    }
+    
     throw error;
   }
 }

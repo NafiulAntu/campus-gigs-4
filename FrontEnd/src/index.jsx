@@ -10,6 +10,13 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
+// Load messaging test utility in development mode
+if (process.env.NODE_ENV === 'development') {
+  import('./utils/messagingTest.js').catch(err => 
+    console.warn('Failed to load messaging test utility:', err)
+  );
+}
+
 const root = createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>

@@ -445,7 +445,11 @@ export default function PostPage({ onNavigate = () => {} }) {
             onBack={() => {
               setCurrentView("home");
               setViewingUserId(null);
-            }} 
+            }}
+            onMessageClick={(conversationId) => {
+              setCurrentView("messages");
+              setViewingUserId(null);
+            }}
           />
         )}
         
