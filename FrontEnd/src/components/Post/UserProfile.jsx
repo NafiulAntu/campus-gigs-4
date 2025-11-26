@@ -136,7 +136,9 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
     try {
       setPostsLoading(true);
       const response = await getUserPosts(userId);
-      setUserPosts(response.data.posts || []);
+      // Backend returns { posts: [...] } directly
+      const posts = response.data.posts || response.data || [];
+      setUserPosts(posts);
     } catch (error) {
       console.error('Error fetching user posts:', error);
       setUserPosts([]);
@@ -704,8 +706,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                   return (
                     <div
                       key={post.id}
-                      onClick={() => navigate(`/posts/${post.id}`)}
-                      className="group relative bg-gradient-to-br from-gray-900/60 via-gray-900/40 to-gray-900/60 border border-[#045F5F]/40 rounded-2xl p-6 hover:border-[#89CFF0]/60 hover:shadow-xl hover:shadow-[#045F5F]/10 transition-all duration-300 backdrop-blur-sm cursor-pointer"
+                      className="group relative bg-gradient-to-br from-gray-900/60 via-gray-900/40 to-gray-900/60 border border-[#045F5F]/40 rounded-2xl p-6 hover:border-[#89CFF0]/60 hover:shadow-xl hover:shadow-[#045F5F]/10 transition-all duration-300 backdrop-blur-sm"
                     >
                       {/* Decorative gradient overlay */}
                       <div className="absolute inset-0 bg-gradient-to-br from-[#045F5F]/5 via-transparent to-[#89CFF0]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
@@ -784,7 +785,10 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                                   className={`group/img rounded-xl overflow-hidden border-2 border-[#045F5F]/20 relative hover:border-[#89CFF0]/50 cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
                                     count > 4 && i === 3 ? 'relative' : ''
                                   }`}
-                                  onClick={() => openImageViewer(post.media_urls.filter(u => u.match(/\.(jpg|jpeg|png|gif|webp)$/i)), i)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openImageViewer(post.media_urls.filter(u => u.match(/\.(jpg|jpeg|png|gif|webp)$/i)), i);
+                                  }}
                                 >
                                   <img
                                     src={url}
@@ -844,6 +848,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                                   href={url}
                                   target="_blank"
                                   rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
                                   className={`group/file flex items-center gap-3 p-4 rounded-xl border-2 ${borderColor} bg-gray-800/30 hover:bg-gray-800/50 hover:border-[#89CFF0]/50 transition-all duration-300 col-span-full hover:scale-[1.01]`}
                                 >
                                   <div className={`flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${fileColor} transition-transform duration-300 group-hover/file:scale-110`}>
