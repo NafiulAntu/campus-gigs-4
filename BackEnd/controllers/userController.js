@@ -248,3 +248,185 @@ exports.searchUsers = async (req, res) => {
     });
   }
 };
+
+// Follow a user
+exports.followUser = async (req, res) => {
+  try {
+    const followingId = parseInt(req.params.id);
+    const followerId = req.user.id; // From auth middleware
+
+    // Check if user exists
+    const userToFollow = await User.findById(followingId);
+    if (!userToFollow) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Can't follow yourself
+    if (followerId === followingId) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot follow yourself'
+      });
+    }
+
+    // Check if already following
+    const alreadyFollowing = await User.isFollowing(followerId, followingId);
+    if (alreadyFollowing) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are already following this user'
+      });
+    }
+
+    await User.followUser(followerId, followingId);
+
+    res.json({
+      success: true,
+      message: 'Successfully followed user'
+    });
+  } catch (error) {
+    console.error('Follow user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error following user',
+      error: error.message
+    });
+  }
+};
+
+// Unfollow a user
+exports.unfollowUser = async (req, res) => {
+  try {
+    const followingId = parseInt(req.params.id);
+    const followerId = req.user.id;
+
+    // Check if following
+    const isFollowing = await User.isFollowing(followerId, followingId);
+    if (!isFollowing) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are not following this user'
+      });
+    }
+
+    await User.unfollowUser(followerId, followingId);
+
+    res.json({
+      success: true,
+      message: 'Successfully unfollowed user'
+    });
+  } catch (error) {
+    console.error('Unfollow user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error unfollowing user',
+      error: error.message
+    });
+  }
+};
+
+// Check if following a user
+exports.checkFollowStatus = async (req, res) => {
+  try {
+    const targetUserId = parseInt(req.params.id);
+    const currentUserId = req.user.id;
+
+    const isFollowing = await User.isFollowing(currentUserId, targetUserId);
+
+    res.json({
+      success: true,
+      isFollowing
+    });
+  } catch (error) {
+    console.error('Check follow status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error checking follow status',
+      error: error.message
+    });
+  }
+};
+
+// Get user's followers
+exports.getFollowers = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
+
+    const followers = await User.getFollowers(userId, limit, offset);
+    
+    // Remove passwords
+    const sanitizedFollowers = followers.map(user => {
+      const { password, ...userWithoutPassword } = user;
+      return sanitizeNullValues(userWithoutPassword);
+    });
+
+    res.json({
+      success: true,
+      count: sanitizedFollowers.length,
+      data: sanitizedFollowers
+    });
+  } catch (error) {
+    console.error('Get followers error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching followers',
+      error: error.message
+    });
+  }
+};
+
+// Get user's following
+exports.getFollowing = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
+
+    const following = await User.getFollowing(userId, limit, offset);
+    
+    // Remove passwords
+    const sanitizedFollowing = following.map(user => {
+      const { password, ...userWithoutPassword } = user;
+      return sanitizeNullValues(userWithoutPassword);
+    });
+
+    res.json({
+      success: true,
+      count: sanitizedFollowing.length,
+      data: sanitizedFollowing
+    });
+  } catch (error) {
+    console.error('Get following error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching following',
+      error: error.message
+    });
+  }
+};
+
+// Get follow counts
+exports.getFollowCounts = async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+
+    const counts = await User.getFollowCounts(userId);
+
+    res.json({
+      success: true,
+      data: counts
+    });
+  } catch (error) {
+    console.error('Get follow counts error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching follow counts',
+      error: error.message
+    });
+  }
+};

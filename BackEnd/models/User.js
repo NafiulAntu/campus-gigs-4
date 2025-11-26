@@ -187,6 +187,82 @@ class User {
     const result = await pool.query(query, [wildcardSearch, exactSearch, startsWithSearch]);
     return result.rows;
   }
+
+  // Follow a user
+  static async followUser(followerId, followingId) {
+    const query = `
+      INSERT INTO followers (follower_id, following_id)
+      VALUES ($1, $2)
+      ON CONFLICT (follower_id, following_id) DO NOTHING
+      RETURNING *
+    `;
+    const result = await pool.query(query, [followerId, followingId]);
+    return result.rows[0];
+  }
+
+  // Unfollow a user
+  static async unfollowUser(followerId, followingId) {
+    const query = `
+      DELETE FROM followers 
+      WHERE follower_id = $1 AND following_id = $2
+      RETURNING *
+    `;
+    const result = await pool.query(query, [followerId, followingId]);
+    return result.rows[0];
+  }
+
+  // Check if user is following another user
+  static async isFollowing(followerId, followingId) {
+    const query = `
+      SELECT EXISTS(
+        SELECT 1 FROM followers 
+        WHERE follower_id = $1 AND following_id = $2
+      ) as is_following
+    `;
+    const result = await pool.query(query, [followerId, followingId]);
+    return result.rows[0].is_following;
+  }
+
+  // Get followers list
+  static async getFollowers(userId, limit = 50, offset = 0) {
+    const query = `
+      SELECT u.id, u.firebase_uid, u.full_name, u.username, u.email, u.profile_picture, u.profession, f.created_at as followed_at
+      FROM followers f
+      JOIN users u ON f.follower_id = u.id
+      WHERE f.following_id = $1
+      ORDER BY f.created_at DESC
+      LIMIT $2 OFFSET $3
+    `;
+    const result = await pool.query(query, [userId, limit, offset]);
+    return result.rows;
+  }
+
+  // Get following list
+  static async getFollowing(userId, limit = 50, offset = 0) {
+    const query = `
+      SELECT u.id, u.firebase_uid, u.full_name, u.username, u.email, u.profile_picture, u.profession, f.created_at as followed_at
+      FROM followers f
+      JOIN users u ON f.following_id = u.id
+      WHERE f.follower_id = $1
+      ORDER BY f.created_at DESC
+      LIMIT $2 OFFSET $3
+    `;
+    const result = await pool.query(query, [userId, limit, offset]);
+    return result.rows;
+  }
+
+  // Get follower/following counts
+  static async getFollowCounts(userId) {
+    const query = `
+      SELECT 
+        followers_count,
+        following_count
+      FROM users
+      WHERE id = $1
+    `;
+    const result = await pool.query(query, [userId]);
+    return result.rows[0] || { followers_count: 0, following_count: 0 };
+  }
 }
 
 module.exports = User;

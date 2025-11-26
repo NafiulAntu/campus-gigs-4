@@ -109,6 +109,14 @@ export const getUserById = (userId) => API.get(`/users/${userId}`);
 export const getUserByFirebaseUid = (firebaseUid) => API.get(`/users/firebase/${firebaseUid}`);
 export const searchUsers = (searchQuery) => API.get(`/users/search?q=${encodeURIComponent(searchQuery)}`);
 
+// Follow System API
+export const followUser = (userId) => API.post(`/users/${userId}/follow`);
+export const unfollowUser = (userId) => API.delete(`/users/${userId}/follow`);
+export const checkFollowStatus = (userId) => API.get(`/users/${userId}/follow/status`);
+export const getFollowers = (userId, params) => API.get(`/users/${userId}/followers`, { params });
+export const getFollowing = (userId, params) => API.get(`/users/${userId}/following`, { params });
+export const getFollowCounts = (userId) => API.get(`/users/${userId}/follow/counts`);
+
 // Firebase Auth Sync
 export const syncUserWithBackend = async (firebaseToken, userData) => {
   try {

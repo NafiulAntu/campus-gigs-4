@@ -4,7 +4,13 @@ import {
   getUserById, 
   getTeacherProfile, 
   getStudentProfile, 
-  getEmployeeProfile 
+  getEmployeeProfile,
+  followUser,
+  unfollowUser,
+  checkFollowStatus,
+  getFollowCounts,
+  getUserPosts,
+  toggleLike as toggleLikeAPI
 } from "../../services/api";
 import { getOrCreateConversation, testFirestoreConnection } from "../../utils/messagingUtils";
 import { diagnoseMessagingIssue } from "../../utils/accountLinking";
@@ -18,6 +24,14 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
   const [error, setError] = useState("");
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [startingChat, setStartingChat] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [followCounts, setFollowCounts] = useState({ followers_count: 0, following_count: 0 });
+  const [userPosts, setUserPosts] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentImages, setCurrentImages] = useState([]);
 
   const handleSendMessage = async () => {
     try {
@@ -99,6 +113,91 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
     }
   };
 
+  const handleFollowToggle = async () => {
+    try {
+      setFollowLoading(true);
+      
+      if (isFollowing) {
+        await unfollowUser(userId);
+        setIsFollowing(false);
+        setFollowCounts(prev => ({
+          ...prev,
+          followers_count: Math.max(0, prev.followers_count - 1)
+        }));
+      } else {
+        await followUser(userId);
+        setIsFollowing(true);
+        setFollowCounts(prev => ({
+          ...prev,
+          followers_count: prev.followers_count + 1
+        }));
+      }
+    } catch (error) {
+      console.error('Follow/unfollow error:', error);
+      alert(error.response?.data?.message || 'Failed to update follow status');
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
+  const fetchUserPosts = async () => {
+    try {
+      setPostsLoading(true);
+      const response = await getUserPosts(userId);
+      setUserPosts(response.data.posts || []);
+    } catch (error) {
+      console.error('Error fetching user posts:', error);
+      setUserPosts([]);
+    } finally {
+      setPostsLoading(false);
+    }
+  };
+
+  const toggleLike = async (postId) => {
+    try {
+      const response = await toggleLikeAPI(postId);
+      setUserPosts(prev =>
+        prev.map(p => {
+          if (p.id !== postId) return p;
+          return {
+            ...p,
+            user_liked: response.data.liked,
+            likes_count: response.data.likesCount
+          };
+        })
+      );
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  };
+
+  const openImageViewer = (images, startIndex) => {
+    setCurrentImages(images);
+    setCurrentImageIndex(startIndex);
+    setImageViewerOpen(true);
+  };
+
+  const closeImageViewer = () => {
+    setImageViewerOpen(false);
+    setCurrentImages([]);
+    setCurrentImageIndex(0);
+  };
+
+  const formatTimeAgo = (dateString) => {
+    const now = new Date();
+    const postDate = new Date(dateString);
+    const diffMs = now - postDate;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return postDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -111,7 +210,30 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
         
         // Check if viewing own profile
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        setIsOwnProfile(currentUser.id === parseInt(userId));
+        const ownProfile = currentUser.id === parseInt(userId);
+        setIsOwnProfile(ownProfile);
+        
+        // Fetch follow status and counts if not own profile
+        if (!ownProfile) {
+          try {
+            const [statusResponse, countsResponse] = await Promise.all([
+              checkFollowStatus(userId),
+              getFollowCounts(userId)
+            ]);
+            setIsFollowing(statusResponse.data.isFollowing);
+            setFollowCounts(countsResponse.data.data);
+          } catch (err) {
+            console.error('Error fetching follow data:', err);
+          }
+        } else {
+          // For own profile, just fetch counts
+          try {
+            const countsResponse = await getFollowCounts(userId);
+            setFollowCounts(countsResponse.data.data);
+          } catch (err) {
+            console.error('Error fetching follow counts:', err);
+          }
+        }
         
         // Fetch profession-specific profile data
         if (userData.username && userData.profession) {
@@ -149,6 +271,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
 
     if (userId) {
       fetchUserProfile();
+      fetchUserPosts();
     }
   }, [userId]);
 
@@ -233,32 +356,45 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
           {/* User Details */}
           <div className="mb-6">
             <div className="flex items-start justify-between mb-4">
-              <div>
+              <div className="flex-1">
                 <h2 className="text-2xl font-bold text-white mb-1">
                   {profileData?.fullName || user.full_name || "Unknown User"}
                 </h2>
                 <p className="text-blue-400 mb-3">@{profileData?.username || user.username}</p>
               </div>
               
-              {/* Message Button - Only show if not own profile */}
+              {/* Quick Action Buttons - Only show if not own profile */}
               {!isOwnProfile && (
-                <button
-                  onClick={handleSendMessage}
-                  disabled={startingChat}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-primary-teal to-blue-500 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {startingChat ? (
-                    <>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleFollowToggle}
+                    disabled={followLoading}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      isFollowing 
+                        ? 'bg-gray-800 hover:bg-gray-700 text-white border border-gray-700' 
+                        : 'bg-gradient-to-r from-primary-teal to-blue-500 text-white shadow-md hover:shadow-lg'
+                    }`}
+                  >
+                    {followLoading ? (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Starting...</span>
-                    </>
-                  ) : (
-                    <>
+                    ) : isFollowing ? (
+                      <i className="fas fa-user-check"></i>
+                    ) : (
+                      <i className="fas fa-user-plus"></i>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={startingChat}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {startingChat ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
                       <i className="fas fa-paper-plane"></i>
-                      <span>Message</span>
-                    </>
-                  )}
-                </button>
+                    )}
+                  </button>
+                </div>
               )}
             </div>
             
@@ -343,18 +479,24 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
           </div>
 
           {/* Stats */}
-          <div className="flex gap-6 mb-6 pb-6 border-b border-white/10">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white">0</div>
-              <div className="text-sm text-gray-400">Posts</div>
+          <div className="flex gap-8 mb-6 pb-6 border-b border-white/10">
+            <div className="text-center cursor-pointer hover:scale-105 transition-transform group">
+              <div className="text-2xl font-bold text-white group-hover:text-primary-teal transition-colors">
+                {userPosts.length}
+              </div>
+              <div className="text-sm text-gray-400 group-hover:text-gray-300">Posts</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white">0</div>
-              <div className="text-sm text-gray-400">Followers</div>
+            <div className="text-center cursor-pointer hover:scale-105 transition-transform group">
+              <div className="text-2xl font-bold text-white group-hover:text-primary-teal transition-colors">
+                {followCounts.followers_count || 0}
+              </div>
+              <div className="text-sm text-gray-400 group-hover:text-gray-300">Followers</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white">0</div>
-              <div className="text-sm text-gray-400">Following</div>
+            <div className="text-center cursor-pointer hover:scale-105 transition-transform group">
+              <div className="text-2xl font-bold text-white group-hover:text-primary-teal transition-colors">
+                {followCounts.following_count || 0}
+              </div>
+              <div className="text-sm text-gray-400 group-hover:text-gray-300">Following</div>
             </div>
           </div>
 
@@ -469,13 +611,13 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
               <>
                 <button 
                   onClick={onBack}
-                  className="flex-1 px-6 py-3 bg-primary-teal hover:bg-primary-blue text-white rounded-full font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="flex-1 px-6 py-3.5 bg-gradient-to-r from-primary-teal to-blue-500 hover:from-primary-teal/90 hover:to-blue-500/90 text-white rounded-full font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-primary-teal/30"
                 >
                   <i className="fas fa-edit mr-2"></i>
                   Edit Profile
                 </button>
                 <button 
-                  className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-full font-semibold transition-all transform hover:scale-110 shadow-lg hover:shadow-red-500/50 overflow-hidden"
+                  className="group relative px-6 py-3.5 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white rounded-full font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-red-500/50 overflow-hidden"
                   title="Delete Account"
                 >
                   <span className="absolute inset-0 w-full h-full bg-white opacity-0 group-hover:opacity-20 transition-opacity"></span>
@@ -484,13 +626,48 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
               </>
             ) : (
               <>
-                <button className="flex-1 px-6 py-3 bg-primary-teal hover:bg-primary-blue text-white rounded-full font-semibold transition-all transform hover:scale-105">
-                  <i className="fas fa-user-plus mr-2"></i>
-                  Follow
+                <button 
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                  className={`flex-1 px-6 py-3.5 rounded-full font-bold transition-all transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isFollowing 
+                      ? 'bg-gray-800 hover:bg-gray-700 text-white hover:shadow-gray-700/30' 
+                      : 'bg-gradient-to-r from-primary-teal to-blue-500 hover:from-primary-teal/90 hover:to-blue-500/90 text-white hover:shadow-primary-teal/30'
+                  }`}
+                >
+                  {followLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+                      <span>Loading...</span>
+                    </>
+                  ) : isFollowing ? (
+                    <>
+                      <i className="fas fa-user-check mr-2"></i>
+                      Following
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-user-plus mr-2"></i>
+                      Follow
+                    </>
+                  )}
                 </button>
-                <button className="flex-1 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-full font-semibold transition-all transform hover:scale-105">
-                  <i className="fas fa-envelope mr-2"></i>
-                  Message
+                <button 
+                  onClick={handleSendMessage}
+                  disabled={startingChat}
+                  className="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-500/90 hover:to-cyan-500/90 text-white rounded-full font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {startingChat ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-2"></div>
+                      <span>Starting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-paper-plane mr-2"></i>
+                      Message
+                    </>
+                  )}
                 </button>
               </>
             )}
@@ -498,14 +675,205 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
 
           {/* Recent Posts Section */}
           <div className="mt-8">
-            <h3 className="text-xl font-bold text-white mb-4">Recent Posts</h3>
-            <div className="text-center py-12 bg-gray-900/30 rounded-xl border border-[#045F5F]">
-              <i className="fas fa-sticky-note text-4xl text-gray-600 mb-3"></i>
-              <p className="text-gray-400">No posts yet</p>
-            </div>
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <i className="fas fa-newspaper text-primary-teal"></i>
+              Recent Posts
+            </h3>
+            
+            {postsLoading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-teal mx-auto mb-4"></div>
+                <p className="text-gray-400">Loading posts...</p>
+              </div>
+            ) : userPosts.length === 0 ? (
+              <div className="text-center py-12 bg-gray-900/30 rounded-xl border border-[#045F5F]">
+                <i className="fas fa-file-alt text-4xl text-gray-600 mb-3"></i>
+                <p className="text-gray-400">No posts yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {userPosts.map((post) => {
+                  const avatarLetter = post.full_name ? post.full_name[0].toUpperCase() : "U";
+                  
+                  return (
+                    <div
+                      key={post.id}
+                      className="bg-gray-900/50 border border-[#045F5F] rounded-xl p-6 hover:bg-gray-900/70 transition-all"
+                    >
+                      {/* Post Header */}
+                      <div className="flex items-start gap-3 mb-4">
+                        {post.profile_picture ? (
+                          <img
+                            src={post.profile_picture}
+                            alt={post.full_name}
+                            className="w-12 h-12 rounded-full object-cover ring-2 ring-primary-teal/20"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-teal to-blue-500 flex items-center justify-center text-white font-bold text-lg ring-2 ring-primary-teal/20">
+                            {avatarLetter}
+                          </div>
+                        )}
+                        <div className="flex-1">
+                          <h4 className="text-white font-semibold text-base">{post.full_name || "Unknown User"}</h4>
+                          <p className="text-gray-400 text-sm">@{post.username || "user"}</p>
+                          <p className="text-gray-500 text-xs mt-1">{formatTimeAgo(post.created_at)}</p>
+                        </div>
+                      </div>
+
+                      {/* Post Content */}
+                      <div className="text-white text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                        {post.content}
+                      </div>
+
+                      {/* Post Media */}
+                      {post.media_urls && post.media_urls.length > 0 && (
+                        <div
+                          className={`mt-3 grid ${
+                            post.media_urls.length === 1
+                              ? "grid-cols-1"
+                              : post.media_urls.length === 2
+                              ? "grid-cols-2"
+                              : post.media_urls.length === 3
+                              ? "grid-cols-3"
+                              : "grid-cols-2"
+                          } gap-2`}
+                        >
+                          {post.media_urls.slice(0, 4).map((url, i) => {
+                            if (!url) return null;
+                            
+                            const count = post.media_urls.length;
+                            const isImage = url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                            
+                            if (isImage) {
+                              const imgHeight = count === 1 ? "h-64" : "h-40";
+                              
+                              return (
+                                <div
+                                  key={i}
+                                  className={`rounded-lg overflow-hidden border border-primary-teal/10 relative group cursor-pointer ${
+                                    count > 4 && i === 3 ? 'relative' : ''
+                                  }`}
+                                  onClick={() => openImageViewer(post.media_urls.filter(u => u.match(/\.(jpg|jpeg|png|gif|webp)$/i)), i)}
+                                >
+                                  <img
+                                    src={url}
+                                    alt=""
+                                    className={`object-cover w-full ${imgHeight} transition-all duration-200 ${
+                                      count > 4 && i === 3 ? 'brightness-50' : 'group-hover:brightness-90'
+                                    }`}
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="50%" y="50%" text-anchor="middle" fill="gray">Image</text></svg>';
+                                    }}
+                                  />
+                                  {count > 4 && i === 3 && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                                      <span className="text-white text-3xl font-bold">+{count - 4}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            } else {
+                              // File attachment
+                              const fileName = url.split('/').pop();
+                              const fileExt = fileName.split('.').pop().toLowerCase();
+                              let fileIcon = '📎';
+                              let fileColor = 'bg-primary-teal/10 text-primary-teal';
+                              
+                              if (['pdf'].includes(fileExt)) {
+                                fileIcon = '📄';
+                                fileColor = 'bg-red-500/20 text-red-400';
+                              } else if (['doc', 'docx'].includes(fileExt)) {
+                                fileIcon = '📝';
+                                fileColor = 'bg-blue-500/20 text-blue-400';
+                              } else if (['xls', 'xlsx'].includes(fileExt)) {
+                                fileIcon = '📊';
+                                fileColor = 'bg-green-500/20 text-green-400';
+                              }
+                              
+                              return (
+                                <a
+                                  key={i}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2 p-3 rounded-lg border border-primary-teal/10 bg-gray-800/20 hover:bg-gray-800/40 transition-all group col-span-full"
+                                >
+                                  <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${fileColor}`}>
+                                    {fileIcon}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-xs font-semibold text-white truncate">{fileName}</div>
+                                    <div className="text-[10px] text-gray-400 mt-0.5">{fileExt.toUpperCase()} • Click to open</div>
+                                  </div>
+                                  <i className="fas fa-external-link-alt text-xs text-gray-400 group-hover:text-primary-teal transition-colors" />
+                                </a>
+                              );
+                            }
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Image Viewer Modal */}
+      {imageViewerOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={closeImageViewer}
+        >
+          <button
+            onClick={closeImageViewer}
+            className="absolute top-6 right-6 z-30 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all hover:scale-110"
+          >
+            <i className="fas fa-times text-xl"></i>
+          </button>
+
+          {currentImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length);
+                }}
+                className="absolute left-6 z-30 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all hover:scale-110"
+              >
+                <i className="fas fa-chevron-left text-xl"></i>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex((prev) => (prev + 1) % currentImages.length);
+                }}
+                className="absolute right-6 z-30 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all hover:scale-110"
+              >
+                <i className="fas fa-chevron-right text-xl"></i>
+              </button>
+            </>
+          )}
+
+          {currentImages.length > 1 && (
+            <div className="absolute top-6 left-6 z-20 px-5 py-2.5 rounded-full bg-black/60 backdrop-blur-md text-white text-sm font-semibold">
+              {currentImageIndex + 1} / {currentImages.length}
+            </div>
+          )}
+
+          <div className="relative w-full h-full flex items-center justify-center px-4 py-20" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={currentImages[currentImageIndex]}
+              alt={`Image ${currentImageIndex + 1}`}
+              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+              style={{ maxWidth: '95vw', maxHeight: '85vh' }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
