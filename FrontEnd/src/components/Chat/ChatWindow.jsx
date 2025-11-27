@@ -34,6 +34,25 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
     setMessageInput('');
   }, [conversationId]);
 
+  // Auto-focus input when user starts typing
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Ignore if already focused on input, or if selection mode is active
+      if (document.activeElement === inputRef.current || selectionMode) return;
+      
+      // Ignore special keys (Ctrl, Alt, Escape, etc.)
+      if (e.ctrlKey || e.altKey || e.metaKey || e.key.length > 1) return;
+      
+      // Focus input and let the character be typed
+      if (inputRef.current && e.key.match(/^[a-zA-Z0-9 ]$/)) {
+        inputRef.current.focus();
+      }
+    };
+
+    document.addEventListener('keypress', handleKeyPress);
+    return () => document.removeEventListener('keypress', handleKeyPress);
+  }, [selectionMode]);
+
   // Auto-resize textarea based on content (like Facebook/LinkedIn)
   useEffect(() => {
     const textarea = inputRef.current;
@@ -375,16 +394,20 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
               <button
                 onClick={deleteSelectedMessages}
                 style={{
-                  background: 'none',
+                  background: '#ef4444',
                   border: 'none',
-                  color: '#ef4444',
+                  color: '#fff',
                   fontSize: '22px',
                   cursor: 'pointer',
                   padding: '8px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  borderRadius: '8px',
+                  transition: 'all 0.2s ease'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#dc2626'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
                 title="Delete"
               >
                 🗑️
