@@ -7,6 +7,7 @@ import SelectAllIcon from '../../assets/icons/SelectAllIcon';
 import CancelIcon from '../../assets/icons/CancelIcon';
 import SwapIcon from '../../assets/icons/SwapIcon';
 import SendIcon from '../../assets/icons/SendIcon';
+import AttachIcon from '../../assets/icons/AttachIcon';
 import './ChatWindow.css';
 
 /**
@@ -34,6 +35,7 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const contextMenuRef = useRef(null);
   const currentUserId = auth.currentUser?.uid;
 
@@ -699,6 +701,24 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
 
       {/* Message Input */}
       <form className="message-input-container" onSubmit={handleSendMessage}>
+        <button 
+          type="button"
+          className="attach-button"
+          onClick={() => fileInputRef.current?.click()}
+          title="Attach file"
+        >
+          <AttachIcon size={22} color="#89CFF0" />
+        </button>
+        <input 
+          ref={fileInputRef}
+          type="file"
+          style={{ display: 'none' }}
+          accept="image/*,video/*,.pdf,.doc,.docx"
+          onChange={(e) => {
+            // Handle file upload here
+            console.log('File selected:', e.target.files[0]);
+          }}
+        />
         <textarea
           ref={inputRef}
           value={messageInput}
@@ -710,7 +730,7 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
               handleSendMessage(e);
             }
           }}
-          placeholder="Type a message..."
+          placeholder="Aa"
           className="message-input"
           disabled={sending || !isConnected}
           autoComplete="off"
