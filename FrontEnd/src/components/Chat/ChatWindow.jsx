@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useChat } from '../../hooks/useChat';
 import { auth } from '../../config/firebase';
+import DeleteIcon from '../../assets/icons/DeleteIcon';
+import ForwardIcon from '../../assets/icons/ForwardIcon';
+import SelectAllIcon from '../../assets/icons/SelectAllIcon';
+import EditIcon from '../../assets/icons/EditIcon';
+import CancelIcon from '../../assets/icons/CancelIcon';
+import SwapIcon from '../../assets/icons/SwapIcon';
 import './ChatWindow.css';
 
 /**
@@ -24,9 +30,12 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
   const [sending, setSending] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState(new Set());
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [editInput, setEditInput] = useState('');
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
+  const editInputRef = useRef(null);
   const currentUserId = auth.currentUser?.uid;
 
   // Clear input when conversation changes to prevent override
@@ -180,6 +189,15 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
     });
   }, [messages]);
 
+  // Select all messages
+  const selectAllMessages = useCallback(() => {
+    const allIds = new Set(messages.map(msg => msg.id));
+    setSelectedMessages(allIds);
+    if (!selectionMode) {
+      setSelectionMode(true);
+    }
+  }, [messages, selectionMode]);
+
   // Delete selected messages
   const deleteSelectedMessages = useCallback(async () => {
     if (!window.confirm(`Delete ${selectedMessages.size} message(s)?`)) return;
@@ -216,6 +234,41 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
       alert('Failed to delete message');
     }
   }, [conversationId]);
+
+  // Start editing a message
+  const startEditingMessage = useCallback((message) => {
+    setEditingMessage(message.id);
+    setEditInput(message.content);
+    setTimeout(() => editInputRef.current?.focus(), 0);
+  }, []);
+
+  // Cancel editing
+  const cancelEditing = useCallback(() => {
+    setEditingMessage(null);
+    setEditInput('');
+  }, []);
+
+  // Save edited message
+  const saveEditedMessage = useCallback(async () => {
+    if (!editInput.trim() || !editingMessage) return;
+
+    try {
+      const { updateDoc, doc } = await import('firebase/firestore');
+      const { db } = await import('../../config/firebase');
+      
+      const messageRef = doc(db, 'conversations', conversationId, 'messages', editingMessage);
+      await updateDoc(messageRef, {
+        content: editInput.trim(),
+        edited: true,
+        editedAt: new Date()
+      });
+      
+      cancelEditing();
+    } catch (error) {
+      console.error('Error editing message:', error);
+      alert('Failed to edit message');
+    }
+  }, [editInput, editingMessage, conversationId, cancelEditing]);
 
   // Forward messages: duplicates selected or provided messages into target conversation
   const handleForwardMessages = useCallback(async (messagesToForward) => {
@@ -345,25 +398,42 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                 background: 'none',
                 border: 'none',
                 color: '#89CFF0',
-                fontSize: '28px',
                 cursor: 'pointer',
-                padding: '0 16px',
-                lineHeight: 1
+                padding: '8px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
+              title="Cancel Selection"
             >
-              ×
+              <CancelIcon size={24} />
             </button>
             <div style={{ flex: 1, color: '#fff', fontSize: '16px', fontWeight: '600' }}>
               {selectedMessages.size} selected
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingRight: '8px' }}>
               <button
+                onClick={selectAllMessages}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#89CFF0',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Select All"
+              >
+                <SelectAllIcon size={22} />
+              </button>
+              <button
                 onClick={reverseSelection}
                 style={{
                   background: 'none',
                   border: 'none',
                   color: '#89CFF0',
-                  fontSize: '20px',
                   cursor: 'pointer',
                   padding: '8px',
                   display: 'flex',
@@ -372,7 +442,7 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                 }}
                 title="Reverse Selection"
               >
-                ⇄
+                <SwapIcon size={22} />
               </button>
               <button
                 onClick={handleForwardMessages}
@@ -380,7 +450,6 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                   background: 'none',
                   border: 'none',
                   color: '#89CFF0',
-                  fontSize: '22px',
                   cursor: 'pointer',
                   padding: '8px',
                   display: 'flex',
@@ -389,7 +458,7 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                 }}
                 title="Forward"
               >
-                ➤
+                <ForwardIcon size={22} />
               </button>
               <button
                 onClick={deleteSelectedMessages}
@@ -397,7 +466,6 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                   background: '#ef4444',
                   border: 'none',
                   color: '#fff',
-                  fontSize: '22px',
                   cursor: 'pointer',
                   padding: '8px',
                   display: 'flex',
@@ -410,7 +478,7 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                 onMouseLeave={(e) => e.currentTarget.style.background = '#ef4444'}
                 title="Delete"
               >
-                🗑️
+                <DeleteIcon size={22} />
               </button>
             </div>
           </>
@@ -506,21 +574,123 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                   )}
 
                   <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                  <div className="message-content" style={{ 
-                    position: 'relative',
-                    background: isSelected ? (isOwn ? 'linear-gradient(135deg, #6ab8e0 0%, #4a8eb1 100%)' : 'rgba(255, 255, 255, 0.05)') : undefined,
-                    transition: 'all 0.2s ease'
-                  }}>
-                    <p>{message.content}</p>
-                  </div>
-                  <div className="message-meta">
-                    <span className="message-time">{formatTime(message.timestamp)}</span>
-                    {isOwn && (
-                      <span className="message-status">
-                        {isRead ? '✓✓' : '✓'}
-                      </span>
-                    )}
-                  </div>
+                  {editingMessage === message.id ? (
+                    // Edit Mode
+                    <div className="message-content" style={{ 
+                      position: 'relative',
+                      background: isOwn ? 'linear-gradient(135deg, #89CFF0 0%, #5FAED1 100%)' : 'rgba(255, 255, 255, 0.1)',
+                      padding: '8px'
+                    }}>
+                      <textarea
+                        ref={editInputRef}
+                        value={editInput}
+                        onChange={(e) => setEditInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            saveEditedMessage();
+                          } else if (e.key === 'Escape') {
+                            cancelEditing();
+                          }
+                        }}
+                        style={{
+                          width: '100%',
+                          minHeight: '40px',
+                          background: 'rgba(0, 0, 0, 0.2)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          borderRadius: '4px',
+                          color: '#fff',
+                          padding: '8px',
+                          fontSize: '14px',
+                          resize: 'vertical'
+                        }}
+                      />
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={cancelEditing}
+                          style={{
+                            padding: '6px 12px',
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            borderRadius: '4px',
+                            color: '#fff',
+                            cursor: 'pointer',
+                            fontSize: '13px'
+                          }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={saveEditedMessage}
+                          style={{
+                            padding: '6px 12px',
+                            background: '#89CFF0',
+                            border: 'none',
+                            borderRadius: '4px',
+                            color: '#000',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Normal View
+                    <>
+                      <div className="message-content" style={{ 
+                        position: 'relative',
+                        background: isSelected ? (isOwn ? 'linear-gradient(135deg, #6ab8e0 0%, #4a8eb1 100%)' : 'rgba(255, 255, 255, 0.05)') : undefined,
+                        transition: 'all 0.2s ease'
+                      }}>
+                        <p>{message.content}</p>
+                        {message.edited && (
+                          <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', fontStyle: 'italic', marginLeft: '8px' }}>
+                            (edited)
+                          </span>
+                        )}
+                        {/* Edit button for own messages */}
+                        {isOwn && !selectionMode && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEditingMessage(message);
+                            }}
+                            style={{
+                              position: 'absolute',
+                              top: '4px',
+                              right: '4px',
+                              background: 'rgba(0, 0, 0, 0.15)',
+                              border: 'none',
+                              borderRadius: '4px',
+                              width: '24px',
+                              height: '24px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              opacity: 0,
+                              transition: 'opacity 0.2s ease'
+                            }}
+                            className="message-edit-btn"
+                            title="Edit message"
+                          >
+                            <EditIcon size={14} color={isOwn ? '#000' : '#fff'} />
+                          </button>
+                        )}
+                      </div>
+                      <div className="message-meta">
+                        <span className="message-time">{formatTime(message.timestamp)}</span>
+                        {isOwn && (
+                          <span className="message-status">
+                            {isRead ? '✓✓' : '✓'}
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
                   </div>
                 </div>
               );

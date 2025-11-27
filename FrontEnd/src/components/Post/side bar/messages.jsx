@@ -354,10 +354,7 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
               <>
                 {conversations.length > 0 ? (
                   <div className="p-3">
-                    <div className="flex items-center justify-between mb-3 px-2">
-                      <div className="text-xs text-[#64748b] font-semibold tracking-wide">
-                        YOUR CONVERSATIONS
-                      </div>
+                    <div className="flex items-center justify-end mb-3 px-2">
                       <div className="text-xs text-[#89CFF0] font-bold">
                         {conversations.length}
                       </div>
