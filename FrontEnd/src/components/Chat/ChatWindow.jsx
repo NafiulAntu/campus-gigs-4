@@ -4,7 +4,6 @@ import { auth } from '../../config/firebase';
 import DeleteIcon from '../../assets/icons/DeleteIcon';
 import ForwardIcon from '../../assets/icons/ForwardIcon';
 import SelectAllIcon from '../../assets/icons/SelectAllIcon';
-import EditIcon from '../../assets/icons/EditIcon';
 import CancelIcon from '../../assets/icons/CancelIcon';
 import SwapIcon from '../../assets/icons/SwapIcon';
 import './ChatWindow.css';
@@ -30,12 +29,11 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
   const [sending, setSending] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState(new Set());
-  const [editingMessage, setEditingMessage] = useState(null);
-  const [editInput, setEditInput] = useState('');
+  const [contextMenu, setContextMenu] = useState(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
-  const editInputRef = useRef(null);
+  const contextMenuRef = useRef(null);
   const currentUserId = auth.currentUser?.uid;
 
   // Clear input when conversation changes to prevent override
@@ -61,6 +59,23 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
     document.addEventListener('keypress', handleKeyPress);
     return () => document.removeEventListener('keypress', handleKeyPress);
   }, [selectionMode]);
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(event.target)) {
+        setContextMenu(null);
+      }
+    };
+
+    if (contextMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [contextMenu]);
 
   // Auto-resize textarea based on content (like Facebook/LinkedIn)
   useEffect(() => {
@@ -234,41 +249,6 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
       alert('Failed to delete message');
     }
   }, [conversationId]);
-
-  // Start editing a message
-  const startEditingMessage = useCallback((message) => {
-    setEditingMessage(message.id);
-    setEditInput(message.content);
-    setTimeout(() => editInputRef.current?.focus(), 0);
-  }, []);
-
-  // Cancel editing
-  const cancelEditing = useCallback(() => {
-    setEditingMessage(null);
-    setEditInput('');
-  }, []);
-
-  // Save edited message
-  const saveEditedMessage = useCallback(async () => {
-    if (!editInput.trim() || !editingMessage) return;
-
-    try {
-      const { updateDoc, doc } = await import('firebase/firestore');
-      const { db } = await import('../../config/firebase');
-      
-      const messageRef = doc(db, 'conversations', conversationId, 'messages', editingMessage);
-      await updateDoc(messageRef, {
-        content: editInput.trim(),
-        edited: true,
-        editedAt: new Date()
-      });
-      
-      cancelEditing();
-    } catch (error) {
-      console.error('Error editing message:', error);
-      alert('Failed to edit message');
-    }
-  }, [editInput, editingMessage, conversationId, cancelEditing]);
 
   // Forward messages: duplicates selected or provided messages into target conversation
   const handleForwardMessages = useCallback(async (messagesToForward) => {
@@ -553,6 +533,16 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                   }}
                   onClick={() => selectionMode && toggleMessageSelection(message.id)}
                   onDoubleClick={() => startSelectionMode(message.id)}
+                  onContextMenu={(e) => {
+                    if (!isOwn || selectionMode) return;
+                    e.preventDefault();
+                    setContextMenu({
+                      messageId: message.id,
+                      message: message,
+                      x: e.clientX,
+                      y: e.clientY
+                    });
+                  }}
                 >
                   {/* Selection Checkbox */}
                   {selectionMode && (
@@ -574,128 +564,125 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                   )}
 
                   <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-                  {editingMessage === message.id ? (
-                    // Edit Mode
                     <div className="message-content" style={{ 
                       position: 'relative',
-                      background: isOwn ? 'linear-gradient(135deg, #89CFF0 0%, #5FAED1 100%)' : 'rgba(255, 255, 255, 0.1)',
-                      padding: '8px'
+                      background: isSelected ? (isOwn ? 'linear-gradient(135deg, #6ab8e0 0%, #4a8eb1 100%)' : 'rgba(255, 255, 255, 0.05)') : undefined,
+                      transition: 'all 0.2s ease'
                     }}>
-                      <textarea
-                        ref={editInputRef}
-                        value={editInput}
-                        onChange={(e) => setEditInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            saveEditedMessage();
-                          } else if (e.key === 'Escape') {
-                            cancelEditing();
-                          }
-                        }}
-                        style={{
-                          width: '100%',
-                          minHeight: '40px',
-                          background: 'rgba(0, 0, 0, 0.2)',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
-                          borderRadius: '4px',
-                          color: '#fff',
-                          padding: '8px',
-                          fontSize: '14px',
-                          resize: 'vertical'
-                        }}
-                      />
-                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px', justifyContent: 'flex-end' }}>
-                        <button
-                          onClick={cancelEditing}
-                          style={{
-                            padding: '6px 12px',
-                            background: 'rgba(255, 255, 255, 0.1)',
-                            border: '1px solid rgba(255, 255, 255, 0.3)',
-                            borderRadius: '4px',
-                            color: '#fff',
-                            cursor: 'pointer',
-                            fontSize: '13px'
-                          }}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={saveEditedMessage}
-                          style={{
-                            padding: '6px 12px',
-                            background: '#89CFF0',
-                            border: 'none',
-                            borderRadius: '4px',
-                            color: '#000',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '600'
-                          }}
-                        >
-                          Save
-                        </button>
-                      </div>
+                      <p>{message.content}</p>
                     </div>
-                  ) : (
-                    // Normal View
-                    <>
-                      <div className="message-content" style={{ 
-                        position: 'relative',
-                        background: isSelected ? (isOwn ? 'linear-gradient(135deg, #6ab8e0 0%, #4a8eb1 100%)' : 'rgba(255, 255, 255, 0.05)') : undefined,
-                        transition: 'all 0.2s ease'
-                      }}>
-                        <p>{message.content}</p>
-                        {message.edited && (
-                          <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', fontStyle: 'italic', marginLeft: '8px' }}>
-                            (edited)
-                          </span>
-                        )}
-                        {/* Edit button for own messages */}
-                        {isOwn && !selectionMode && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              startEditingMessage(message);
-                            }}
-                            style={{
-                              position: 'absolute',
-                              top: '4px',
-                              right: '4px',
-                              background: 'rgba(0, 0, 0, 0.15)',
-                              border: 'none',
-                              borderRadius: '4px',
-                              width: '24px',
-                              height: '24px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              opacity: 0,
-                              transition: 'opacity 0.2s ease'
-                            }}
-                            className="message-edit-btn"
-                            title="Edit message"
-                          >
-                            <EditIcon size={14} color={isOwn ? '#000' : '#fff'} />
-                          </button>
-                        )}
-                      </div>
-                      <div className="message-meta">
-                        <span className="message-time">{formatTime(message.timestamp)}</span>
-                        {isOwn && (
-                          <span className="message-status">
-                            {isRead ? '✓✓' : '✓'}
-                          </span>
-                        )}
-                      </div>
-                    </>
-                  )}
+                    <div className="message-meta">
+                      <span className="message-time">{formatTime(message.timestamp)}</span>
+                      {isOwn && (
+                        <span className="message-status">
+                          {isRead ? '✓✓' : '✓'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
             })}
             <div ref={messagesEndRef} />
+          </div>
+        )}
+
+        {/* Context Menu for Message Actions */}
+        {contextMenu && (
+          <div
+            ref={contextMenuRef}
+            style={{
+              position: 'fixed',
+              top: `${contextMenu.y}px`,
+              left: `${contextMenu.x}px`,
+              background: '#2b2b2b',
+              borderRadius: '8px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+              minWidth: '160px',
+              zIndex: 1000,
+              overflow: 'hidden',
+              animation: 'fadeIn 0.15s ease-out'
+            }}
+          >
+            <button
+              onClick={() => {
+                startSelectionMode(contextMenu.messageId);
+                setContextMenu(null);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: 'none',
+                background: 'transparent',
+                color: '#fff',
+                textAlign: 'left',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '400',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                transition: 'background 0.15s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <SelectAllIcon size={16} />
+              Select
+            </button>
+            <button
+              onClick={() => {
+                handleForwardMessages([contextMenu.message]);
+                setContextMenu(null);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: 'none',
+                background: 'transparent',
+                color: '#fff',
+                textAlign: 'left',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '400',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                transition: 'background 0.15s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <ForwardIcon size={16} />
+              Forward
+            </button>
+            <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
+            <button
+              onClick={() => {
+                handleDeleteMessage(contextMenu.messageId);
+                setContextMenu(null);
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: 'none',
+                background: 'transparent',
+                color: '#ef4444',
+                textAlign: 'left',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '400',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                transition: 'background 0.15s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <DeleteIcon size={16} />
+              Delete
+            </button>
           </div>
         )}
 
