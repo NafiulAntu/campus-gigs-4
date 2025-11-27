@@ -207,11 +207,55 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
     }
   }, [conversationId]);
 
-  // Forward messages (placeholder)
-  const handleForwardMessages = useCallback(() => {
-    alert('Forward feature coming soon!');
-    cancelSelection();
-  }, [cancelSelection]);
+  // Forward messages: duplicates selected or provided messages into target conversation
+  const handleForwardMessages = useCallback(async (messagesToForward) => {
+    try {
+      // Determine which messages to forward
+      let items = [];
+      if (Array.isArray(messagesToForward) && messagesToForward.length > 0) {
+        items = messagesToForward;
+      } else {
+        // Use currently selected messages
+        items = Array.from(selectedMessages).map(id => messages.find(m => m.id === id)).filter(Boolean);
+      }
+
+      if (items.length === 0) {
+        alert('No messages selected to forward');
+        cancelSelection();
+        return;
+      }
+
+      const target = window.prompt('Enter target conversation ID to forward to (paste conversation id):');
+      if (!target || !target.trim()) {
+        cancelSelection();
+        return;
+      }
+
+      const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../../config/firebase');
+
+      const writes = items.map(item => {
+        const payload = {
+          content: item.content,
+          senderId: currentUserId,
+          forwardedFrom: item.senderId,
+          originalTimestamp: item.timestamp || null,
+          timestamp: serverTimestamp(),
+        };
+
+        const colRef = collection(db, 'conversations', target, 'messages');
+        return addDoc(colRef, payload);
+      });
+
+      await Promise.all(writes);
+      alert(`Forwarded ${items.length} message(s)`);
+      cancelSelection();
+      setOpenMenuId(null);
+    } catch (error) {
+      console.error('Error forwarding messages:', error);
+      alert('Failed to forward messages');
+    }
+  }, [selectedMessages, messages, cancelSelection, currentUserId]);
 
   // Handle input change with smooth auto-resize
   const handleInputChange = useCallback((e) => {
@@ -403,6 +447,7 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                   className={`message ${isOwn ? 'message-own' : 'message-other'}`}
                   style={{ position: 'relative', cursor: selectionMode ? 'pointer' : 'default' }}
                   onClick={() => selectionMode && toggleMessageSelection(message.id)}
+                  onDoubleClick={() => startSelectionMode(message.id)}
                   onContextMenu={(e) => {
                     if (selectionMode) return;
                     e.preventDefault();
@@ -526,7 +571,8 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            alert('Forward feature coming soon!');
+                            // Forward this single message
+                            handleForwardMessages([message]);
                             setOpenMenuId(null);
                           }}
                           className="telegram-menu-item"
