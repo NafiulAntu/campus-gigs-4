@@ -68,8 +68,9 @@ function createSocketServer(httpServer) {
     // Broadcast presence to all connected clients
     io.emit('user:online', { userId: socket.userId, online: true });
 
-    // Join user's personal room (for direct messages)
+    // Join user's personal room (for direct messages and notifications)
     socket.join(`user:${socket.userId}`);
+    socket.join(`user_${socket.userId}`); // Alternative format for notifications
 
     // Handle joining a conversation room
     socket.on('conversation:join', async (conversationId) => {

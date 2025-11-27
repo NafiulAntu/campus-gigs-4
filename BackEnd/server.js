@@ -45,6 +45,7 @@ const studentRoutes = require('./routes/studentRoutes');
 const employeeRoutes = require('./routes/employeeRoutes');
 const postRoutes = require('./routes/postRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
+// const notificationRoutes = require('./routes/notificationRoutes'); // Temporarily disabled
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
@@ -53,6 +54,7 @@ app.use('/api/students', studentRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/upload', uploadRoutes);
+// app.use('/api/notifications', notificationRoutes); // Temporarily disabled
 
 app.get('/', (req, res) => {
   res.json({ message: 'Campus Gigs API', status: 'running' });
