@@ -6,6 +6,7 @@ import ForwardIcon from '../../assets/icons/ForwardIcon';
 import SelectAllIcon from '../../assets/icons/SelectAllIcon';
 import CancelIcon from '../../assets/icons/CancelIcon';
 import SwapIcon from '../../assets/icons/SwapIcon';
+import SendIcon from '../../assets/icons/SendIcon';
 import './ChatWindow.css';
 
 /**
@@ -727,10 +728,7 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
           {sending ? (
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M22 2L15 22L11 13L2 9L22 2Z" fill="currentColor"/>
-            </svg>
+            <SendIcon size={24} color="currentColor" />
           )}
         </button>
       </form>
