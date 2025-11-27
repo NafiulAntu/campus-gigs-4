@@ -22,36 +22,17 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
 
   const [messageInput, setMessageInput] = useState('');
   const [sending, setSending] = useState(false);
-  const [openMenuId, setOpenMenuId] = useState(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState(new Set());
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
-  const menuRef = useRef(null);
   const currentUserId = auth.currentUser?.uid;
 
   // Clear input when conversation changes to prevent override
   useEffect(() => {
     setMessageInput('');
   }, [conversationId]);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setOpenMenuId(null);
-      }
-    };
-
-    if (openMenuId) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [openMenuId]);
 
   // Auto-resize textarea based on content (like Facebook/LinkedIn)
   useEffect(() => {
@@ -159,7 +140,6 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
   const startSelectionMode = useCallback((messageId) => {
     setSelectionMode(true);
     setSelectedMessages(new Set([messageId]));
-    setOpenMenuId(null);
   }, []);
 
   // Cancel selection
@@ -199,8 +179,6 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
       
       const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
       await deleteDoc(messageRef);
-      
-      setOpenMenuId(null);
     } catch (error) {
       console.error('Error deleting message:', error);
       alert('Failed to delete message');
@@ -250,7 +228,6 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
       await Promise.all(writes);
       alert(`Forwarded ${items.length} message(s)`);
       cancelSelection();
-      setOpenMenuId(null);
     } catch (error) {
       console.error('Error forwarding messages:', error);
       alert('Failed to forward messages');
@@ -448,11 +425,6 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                   style={{ position: 'relative', cursor: selectionMode ? 'pointer' : 'default' }}
                   onClick={() => selectionMode && toggleMessageSelection(message.id)}
                   onDoubleClick={() => startSelectionMode(message.id)}
-                  onContextMenu={(e) => {
-                    if (selectionMode) return;
-                    e.preventDefault();
-                    setOpenMenuId(openMenuId === message.id ? null : message.id);
-                  }}
                 >
                   {/* Selection Checkbox */}
                   {selectionMode && (
@@ -482,157 +454,7 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                     background: isSelected ? (isOwn ? 'linear-gradient(135deg, #6ab8e0 0%, #4a8eb1 100%)' : 'rgba(255, 255, 255, 0.05)') : undefined,
                     transition: 'all 0.2s ease'
                   }}>
-                    {/* Three dots menu button */}
-                    {!selectionMode && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(openMenuId === message.id ? null : message.id);
-                        }}
-                        className="message-menu-btn"
-                        style={{
-                          position: 'absolute',
-                          top: '4px',
-                          right: '4px',
-                          width: '22px',
-                          height: '22px',
-                          borderRadius: '4px',
-                          border: 'none',
-                          background: 'rgba(0, 0, 0, 0.15)',
-                          color: isOwn ? '#000' : '#fff',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '14px',
-                          fontWeight: 'bold',
-                          opacity: 0,
-                          transition: 'all 0.15s ease',
-                          zIndex: 10
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.25)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(0, 0, 0, 0.15)';
-                        }}
-                        title="Options"
-                      >
-                        ⋮
-                      </button>
-                    )}
-                    
-                    {/* Telegram-style Dropdown menu */}
-                    {openMenuId === message.id && !selectionMode && (
-                      <div
-                        ref={menuRef}
-                        className="message-dropdown-menu telegram-menu"
-                        style={{
-                          position: 'absolute',
-                          top: '100%',
-                          right: '0',
-                          marginTop: '4px',
-                          background: '#2b2b2b',
-                          borderRadius: '8px',
-                          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-                          minWidth: '160px',
-                          zIndex: 1000,
-                          overflow: 'hidden',
-                          animation: 'fadeIn 0.15s ease-out'
-                        }}
-                      >
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            startSelectionMode(message.id);
-                          }}
-                          className="telegram-menu-item"
-                          style={{
-                            width: '100%',
-                            padding: '12px 16px',
-                            border: 'none',
-                            background: 'transparent',
-                            color: '#fff',
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '400',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            transition: 'background 0.15s ease'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                        >
-                          <span style={{ fontSize: '16px' }}>☑️</span>
-                          Select
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // Forward this single message
-                            handleForwardMessages([message]);
-                            setOpenMenuId(null);
-                          }}
-                          className="telegram-menu-item"
-                          style={{
-                            width: '100%',
-                            padding: '12px 16px',
-                            border: 'none',
-                            background: 'transparent',
-                            color: '#fff',
-                            textAlign: 'left',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: '400',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            transition: 'background 0.15s ease'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                        >
-                          <span style={{ fontSize: '16px' }}>➤</span>
-                          Forward
-                        </button>
-                        {isOwn && (
-                          <>
-                            <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.1)', margin: '4px 0' }} />
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteMessage(message.id);
-                              }}
-                              className="telegram-menu-item"
-                              style={{
-                                width: '100%',
-                                padding: '12px 16px',
-                                border: 'none',
-                                background: 'transparent',
-                                color: '#ef4444',
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                                fontSize: '14px',
-                                fontWeight: '400',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                transition: 'background 0.15s ease'
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
-                              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                            >
-                              <span style={{ fontSize: '16px' }}>🗑️</span>
-                              Delete
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                    
-                    <p style={{ paddingRight: isOwn ? '30px' : '0' }}>{message.content}</p>
+                    <p>{message.content}</p>
                   </div>
                   <div className="message-meta">
                     <span className="message-time">{formatTime(message.timestamp)}</span>
