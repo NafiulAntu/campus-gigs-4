@@ -270,32 +270,32 @@
 /* Message Input Container */
 .message-input-container {
   display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  padding: 16px 20px;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
   background: transparent;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: none;
 }
 
 .attach-button {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #89CFF0;
+  color: #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   padding: 0;
   flex-shrink: 0;
 }
 
 .attach-button:hover {
-  background: rgba(137, 207, 240, 0.1);
-  transform: scale(1.05);
+  color: #89CFF0;
+  transform: scale(1.1);
 }
 
 .attach-button:active {
@@ -304,18 +304,19 @@
 
 .message-input {
   flex: 1;
-  padding: 10px 16px;
+  padding: 10px 14px;
   border: none;
-  border-radius: 20px;
-  font-size: 15px;
+  border-radius: 0;
+  font-size: 17px;
+  font-weight: 600;
   outline: none;
   font-family: inherit;
   resize: none;
-  min-height: 36px;
+  min-height: 20px;
   max-height: 200px;
-  line-height: 1.4;
-  transition: background 0.2s;
-  background: rgba(255, 255, 255, 0.08);
+  line-height: 1.5;
+  transition: none;
+  background: transparent;
   color: #ffffff;
   overflow-y: hidden;
   overflow-x: hidden;
@@ -330,15 +331,19 @@
 }
 
 .message-input::placeholder {
-  color: #8b9bb4;
+  color: #64748b;
+  font-weight: 400;
 }
 
 .message-input:focus {
-  background: rgba(255, 255, 255, 0.12);
+  background: transparent;
+  outline: none;
+  border: none;
+  box-shadow: none;
 }
 
 .message-input:disabled {
-  background: rgba(255, 255, 255, 0.04);
+  background: transparent;
   cursor: not-allowed;
   opacity: 0.5;
 }

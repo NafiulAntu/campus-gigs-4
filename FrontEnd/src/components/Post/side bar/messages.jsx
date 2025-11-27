@@ -437,7 +437,7 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
           </div>
 
           {/* New Message Button */}
-          <div className="p-4 border-t border-white/10">
+          <div className="p-3 border-t border-white/10">
             <button 
               onClick={() => {
                 setSearchQuery('');
@@ -448,9 +448,9 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
                   searchInput.select();
                 }
               }}
-              className="w-full bg-gradient-to-r from-[#89CFF0] to-[#5FAED1] text-black py-3.5 rounded-xl font-bold hover:shadow-lg hover:shadow-[#89CFF0]/25 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-[#89CFF0] to-[#5FAED1] text-black py-2.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-[#89CFF0]/25 hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm"
             >
-              <i className="fi fi-br-edit"></i>
+              <i className="fi fi-br-edit text-base"></i>
               New Message
             </button>
           </div>
