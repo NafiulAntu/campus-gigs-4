@@ -261,14 +261,15 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
               <h1 className="text-2xl font-bold text-white tracking-tight">Messages</h1>
             </div>
             {/* Search */}
-            <div className="flex items-center gap-3 bg-[#1a1a1a] px-4 py-3 rounded-[22px] border border-white/[0.15] transition-all hover:border-white/[0.25] focus-within:border-[#89CFF0] focus-within:bg-[#0f0f0f]">
-              <i className="fi fi-br-search text-[#64748b]"></i>
+            <div className="flex items-center gap-3 px-3 py-3.5 transition-all duration-300 border-b border-[#045F5F] bg-black">
+              <i className="fi fi-br-search text-xl text-blue-400 transition-colors duration-300"></i>
               <input
                 type="text"
-                placeholder="Search users to message"
+                placeholder="Search users to message..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-white placeholder:text-[#64748b] border-0"
+                className="search-input flex-1 bg-transparent outline-none text-base text-blue-300 placeholder:text-blue-400/60 transition-colors duration-300"
+                style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
               />
               {searchQuery && (
                 <button
@@ -276,7 +277,9 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
                     setSearchQuery('');
                     setSearchResults([]);
                   }}
-                  className="text-[#64748b] hover:text-white transition-colors"
+                  className="p-1.5 rounded-full hover:bg-white/10 text-blue-400 hover:text-white transition-colors"
+                  style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
+                  onFocus={(e) => e.currentTarget.style.outline = 'none'}
                 >
                   <i className="fi fi-br-cross text-sm"></i>
                 </button>
