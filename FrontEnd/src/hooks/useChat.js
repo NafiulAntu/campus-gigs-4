@@ -43,6 +43,7 @@ export const useChat = (conversationId) => {
 
     // Real-time listener for messages
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      const currentUser = auth.currentUser;
       const loadedMessages = snapshot.docs
         .map(doc => ({
           id: doc.id,
@@ -60,6 +61,12 @@ export const useChat = (conversationId) => {
                  msg.senderId && 
                  msg.receiverId;
         })
+        .filter(msg => {
+          // Filter out messages hidden for current user (soft deleted)
+          if (!currentUser) return true;
+          const hiddenFor = msg.hiddenFor || [];
+          return !hiddenFor.includes(currentUser.uid);
+        })
         .sort((a, b) => {
           // Ensure chronological order
           const timeA = a.timestamp?.getTime() || 0;
@@ -68,7 +75,6 @@ export const useChat = (conversationId) => {
         });
 
       // Check for new messages and show notification
-      const currentUser = auth.currentUser;
       if (currentUser && loadedMessages.length > previousMessageCount.current) {
         const newMessages = loadedMessages.slice(previousMessageCount.current);
         newMessages.forEach(msg => {

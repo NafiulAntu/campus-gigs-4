@@ -221,12 +221,24 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
     if (!window.confirm(`Delete ${selectedMessages.size} message(s)?`)) return;
 
     try {
-      const { deleteDoc, doc } = await import('firebase/firestore');
+      const { deleteDoc, doc, updateDoc, arrayUnion } = await import('firebase/firestore');
       const { db } = await import('../../config/firebase');
       
-      const deletePromises = Array.from(selectedMessages).map(messageId => {
+      const deletePromises = Array.from(selectedMessages).map(async (messageId) => {
+        const message = messages.find(m => m.id === messageId);
+        if (!message) return;
+
         const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
-        return deleteDoc(messageRef);
+        
+        // If it's user's own message, delete permanently
+        if (message.senderId === currentUserId) {
+          await deleteDoc(messageRef);
+        } else {
+          // If it's another user's message, just hide it for this user (soft delete)
+          await updateDoc(messageRef, {
+            hiddenFor: arrayUnion(currentUserId)
+          });
+        }
       });
       
       await Promise.all(deletePromises);
@@ -235,23 +247,35 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
       console.error('Error deleting messages:', error);
       alert('Failed to delete messages');
     }
-  }, [selectedMessages, conversationId, cancelSelection]);
+  }, [selectedMessages, conversationId, cancelSelection, messages, currentUserId]);
 
   // Delete single message
   const handleDeleteMessage = useCallback(async (messageId) => {
     if (!window.confirm('Delete this message?')) return;
 
     try {
-      const { deleteDoc, doc } = await import('firebase/firestore');
+      const { deleteDoc, doc, updateDoc, arrayUnion } = await import('firebase/firestore');
       const { db } = await import('../../config/firebase');
       
+      const message = messages.find(m => m.id === messageId);
+      if (!message) return;
+
       const messageRef = doc(db, 'conversations', conversationId, 'messages', messageId);
-      await deleteDoc(messageRef);
+      
+      // If it's user's own message, delete permanently
+      if (message.senderId === currentUserId) {
+        await deleteDoc(messageRef);
+      } else {
+        // If it's another user's message, just hide it for this user (soft delete)
+        await updateDoc(messageRef, {
+          hiddenFor: arrayUnion(currentUserId)
+        });
+      }
     } catch (error) {
       console.error('Error deleting message:', error);
       alert('Failed to delete message');
     }
-  }, [conversationId]);
+  }, [conversationId, messages, currentUserId]);
 
   // Forward messages: duplicates selected or provided messages into target conversation
   const handleForwardMessages = useCallback(async (messagesToForward) => {
