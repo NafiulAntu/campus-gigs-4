@@ -148,6 +148,19 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
     setSelectedMessages(new Set());
   }, []);
 
+  // Reverse selection: invert which messages are selected
+  const reverseSelection = useCallback(() => {
+    setSelectedMessages(prev => {
+      const newSet = new Set();
+      messages.forEach(msg => {
+        if (!prev.has(msg.id)) {
+          newSet.add(msg.id);
+        }
+      });
+      return newSet;
+    });
+  }, [messages]);
+
   // Delete selected messages
   const deleteSelectedMessages = useCallback(async () => {
     if (!window.confirm(`Delete ${selectedMessages.size} message(s)?`)) return;
@@ -326,6 +339,23 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', paddingRight: '8px' }}>
               <button
+                onClick={reverseSelection}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#89CFF0',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  padding: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Reverse Selection"
+              >
+                ⇄
+              </button>
+              <button
                 onClick={handleForwardMessages}
                 style={{
                   background: 'none',
@@ -422,18 +452,20 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                 <div 
                   key={message.id} 
                   className={`message ${isOwn ? 'message-own' : 'message-other'}`}
-                  style={{ position: 'relative', cursor: selectionMode ? 'pointer' : 'default' }}
+                  style={{ 
+                    position: 'relative', 
+                    cursor: selectionMode ? 'pointer' : 'default',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flexDirection: isOwn ? 'row-reverse' : 'row'
+                  }}
                   onClick={() => selectionMode && toggleMessageSelection(message.id)}
                   onDoubleClick={() => startSelectionMode(message.id)}
                 >
                   {/* Selection Checkbox */}
                   {selectionMode && (
                     <div style={{
-                      position: 'absolute',
-                      left: isOwn ? 'auto' : '-35px',
-                      right: isOwn ? '-35px' : 'auto',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
                       width: '24px',
                       height: '24px',
                       borderRadius: '50%',
@@ -443,12 +475,14 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      flexShrink: 0
                     }}>
                       {isSelected && <span style={{ color: '#000', fontWeight: 'bold', fontSize: '14px' }}>✓</span>}
                     </div>
                   )}
 
+                  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
                   <div className="message-content" style={{ 
                     position: 'relative',
                     background: isSelected ? (isOwn ? 'linear-gradient(135deg, #6ab8e0 0%, #4a8eb1 100%)' : 'rgba(255, 255, 255, 0.05)') : undefined,
@@ -463,6 +497,7 @@ const ChatWindow = memo(({ conversationId, receiverId, receiverName = 'User', re
                         {isRead ? '✓✓' : '✓'}
                       </span>
                     )}
+                  </div>
                   </div>
                 </div>
               );
