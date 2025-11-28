@@ -105,6 +105,12 @@ const io = createSocketServer(httpServer);
 // Store io instance in app for controllers to access
 app.set('io', io);
 
+// Middleware to inject io into all requests
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 // Start server
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);

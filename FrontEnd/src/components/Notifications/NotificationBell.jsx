@@ -19,16 +19,18 @@ const NotificationBell = () => {
     try {
       setLoading(true);
       const token = await auth.currentUser?.getIdToken();
+      console.log('📥 Fetching notifications...');
       const response = await axios.get(`${API_URL}/notifications?limit=10`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.data.success) {
+        console.log('✅ Notifications fetched:', response.data.data.notifications.length, 'items');
         setNotifications(response.data.data.notifications);
         setUnreadCount(response.data.data.unreadCount);
       }
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      console.error('❌ Error fetching notifications:', error);
     } finally {
       setLoading(false);
     }
@@ -128,8 +130,23 @@ const NotificationBell = () => {
     // New notification received
     socket.on('notification:new', (notification) => {
       console.log('📬 New notification received via Socket.io:', notification);
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
+      console.log('📬 Actor info:', {
+        actor_name: notification.actor_name,
+        actor_username: notification.actor_username,
+        actor_full_name: notification.actor_full_name
+      });
+      
+      setNotifications(prev => {
+        console.log('📋 Current notifications count:', prev.length);
+        console.log('📋 Adding new notification to list');
+        return [notification, ...prev];
+      });
+      
+      setUnreadCount(prev => {
+        const newCount = prev + 1;
+        console.log('🔔 Unread count updated:', prev, '→', newCount);
+        return newCount;
+      });
 
       // Show browser notification if permission granted
       if (Notification.permission === 'granted') {
@@ -152,12 +169,26 @@ const NotificationBell = () => {
 
     // All notifications marked as read
     socket.on('notification:all_read', () => {
-      console.log('✅ All notifications marked as read');
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      setUnreadCount(0);
+  // Initial fetch
+  useEffect(() => {
+    console.log('🔄 NotificationBell mounted, checking auth...');
+    if (auth.currentUser) {
+      console.log('✅ User authenticated, fetching notifications');
+      fetchNotifications();
+    } else {
+      console.log('⏳ No user yet, waiting for auth...');
+    }
+    
+    // Also listen for auth state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        console.log('✅ Auth state changed, user logged in:', user.uid);
+        fetchNotifications();
+      }
     });
-
-    console.log('✅ NotificationBell: Socket listeners registered');
+    
+    return () => unsubscribe();
+  }, []);le.log('✅ NotificationBell: Socket listeners registered');
 
     return () => {
       console.log('🧹 NotificationBell: Cleaning up Socket listeners');
