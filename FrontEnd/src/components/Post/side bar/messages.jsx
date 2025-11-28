@@ -396,8 +396,8 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
                                 {conv.lastMessage || 'Start a conversation'}
                               </p>
                               {conv.unread > 0 && (
-                                <span className="h-5 px-2 min-w-[20px] bg-[#89CFF0] rounded-full flex items-center justify-center text-xs font-bold text-black shadow-md shadow-[#89CFF0]/30 flex-shrink-0">
-                                  {conv.unread}
+                                <span className="bg-[#1d9bf0] text-white text-[11px] font-semibold rounded-full min-w-[20px] h-5 px-2 flex items-center justify-center ring-2 ring-black shadow-lg flex-shrink-0">
+                                  {conv.unread > 99 ? '99+' : conv.unread}
                                 </span>
                               )}
                             </div>
