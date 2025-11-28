@@ -51,8 +51,8 @@ async function notifySup(userId, actorId, actorName, postId, io) {
     userId,
     actorId,
     type: 'sup',
-    title: '👍 New Like',
-    message: `${displayName} liked your post`,
+    title: '👍 New Sup',
+    message: `${displayName} supped your post`,
     data: { postId },
     link: `/post/${postId}`,
     io

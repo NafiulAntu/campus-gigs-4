@@ -11,7 +11,7 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
 // Load messaging test utility in development mode
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   import('./utils/messagingTest.js').catch(err => 
     console.warn('Failed to load messaging test utility:', err)
   );

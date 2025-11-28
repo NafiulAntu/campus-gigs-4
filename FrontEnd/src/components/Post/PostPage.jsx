@@ -78,12 +78,15 @@ export default function PostPage({ onNavigate = () => {} }) {
   const fetchPosts = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Fetching posts...');
       const response = await getAllPosts();
+      console.log('✅ Posts fetched:', response.data.posts);
       setPosts(response.data.posts);
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error('❌ Error fetching posts:', error);
     } finally {
       setLoading(false);
+      console.log('✓ Loading complete');
     }
   };
 
@@ -390,7 +393,7 @@ export default function PostPage({ onNavigate = () => {} }) {
   }
 
   return (
-    <div className="w-full min-h-screen">
+    <div className={`w-full min-h-screen ${brightOn ? 'bg-white' : 'bg-black'}`}>
       <div className="max-w-[1400px] mx-auto flex relative">
         {/* Fixed Left Sidebar - hidden on mobile, compact on xl-2xl, full on 2xl+ */}
         <aside className="hidden xl:block xl:w-[88px] 2xl:w-[275px] fixed left-[max(0px,calc((100vw-1400px)/2))] top-0 h-screen z-30 transition-all duration-300 xl:ml-[-10px] 2xl:ml-[-17px]">
@@ -408,7 +411,7 @@ export default function PostPage({ onNavigate = () => {} }) {
 
         {/* Main content area - Full width when not on home, normal width on home */}
         <div className={`w-full mx-auto px-0 min-h-screen transition-all duration-300 ${
-          brightOn ? 'bg-[#0F172A]' : 'bg-black'
+          brightOn ? 'bg-white' : 'bg-black'
         } ${
           currentView === "home" 
             ? "xl:w-[750px] xl:ml-[108px] 2xl:ml-[295px]" 
@@ -478,7 +481,7 @@ export default function PostPage({ onNavigate = () => {} }) {
           }`}>
             <div 
               className={`flex items-center gap-3 px-3 py-3.5 transition-all duration-300 border-b ${
-                brightOn ? 'border-white bg-[#0F172A]' : 'border-[#045F5F] bg-black'
+                brightOn ? 'border-gray-300 bg-white' : 'border-[#045F5F] bg-black'
               }`}
             >
               <i className={`fi fi-br-search text-xl transition-colors duration-300 ${
@@ -489,7 +492,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                 onFocus={() => setIsSearching(true)}
                 onChange={(e) => setQuery(e.target.value)}
                 className={`search-input flex-1 bg-transparent outline-none text-lg font-semibold transition-colors duration-300 ${
-                  brightOn ? 'text-black placeholder:text-[#008B8B]/60' : 'text-blue-300 placeholder:text-blue-400/60'
+                  brightOn ? 'text-black placeholder:text-[#008B8B]/60' : 'text-white placeholder:text-blue-400/60'
                 }`}
                 placeholder="Search #Jobs, Communities, People..."
                 style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
@@ -580,7 +583,13 @@ export default function PostPage({ onNavigate = () => {} }) {
             )}
             {loading ? (
               <div className="p-10 text-center">
-                <div className="text-primary-teal text-lg">Loading posts...</div>
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary-teal border-t-transparent mb-4"></div>
+                <div className="text-white text-lg font-semibold">Loading posts...</div>
+              </div>
+            ) : filteredPosts.length === 0 ? (
+              <div className="p-10 text-center">
+                <div className="text-white text-lg">No posts available</div>
+                <div className="text-gray-400 text-sm mt-2">Be the first to create a post!</div>
               </div>
             ) : filteredPosts.map((p, index) => {
               const avatarLetter = p.full_name ? p.full_name[0].toUpperCase() : "U";
@@ -590,11 +599,11 @@ export default function PostPage({ onNavigate = () => {} }) {
                 <div
                   key={p.id}
                   className={`mb-2 transition-colors duration-300 border overflow-hidden ${
-                    brightOn ? 'border-white' : 'border-[#045F5F]'
+                    brightOn ? 'border-white bg-white' : 'border-[#045F5F] bg-black'
                   }`}
                 >
                   <article className={`px-6 sm:px-8 py-5 sm:py-6 transition-colors duration-150 ${
-                    brightOn ? 'bg-[#0F172A] hover:bg-[#1E293B]' : 'bg-gray-900/30 hover:bg-gray-900/40'
+                    brightOn ? 'bg-white hover:bg-gray-50' : 'bg-black hover:bg-gray-900/40'
                   }`}>
                     <div className="flex items-start gap-3 sm:gap-4">
                       <button
@@ -636,23 +645,23 @@ export default function PostPage({ onNavigate = () => {} }) {
                                   }
                                 }}
                                 className={`font-bold text-[15px] sm:text-[17px] transition-colors duration-300 hover:underline cursor-pointer ${
-                                  brightOn ? 'text-white hover:text-primary-teal' : 'text-blue-400 hover:text-primary-teal'
+                                  brightOn ? 'text-black hover:text-primary-teal' : 'text-white hover:text-primary-teal'
                                 }`}
                               >
                                 {p.full_name || "Unknown"}
                               </button>
                               <span className={`text-xs sm:text-sm truncate transition-colors duration-300 ${
-                                brightOn ? 'text-[#008B8B]' : 'text-text-muted'
+                                brightOn ? 'text-gray-600' : 'text-gray-400'
                               }`}>
                                 @{p.username || "unknown"}
                               </span>
                               <span className={`hidden sm:inline transition-colors duration-300 ${
-                                brightOn ? 'text-[#008B8B]' : 'text-text-muted'
+                                brightOn ? 'text-gray-600' : 'text-gray-400'
                               }`}>•</span>
                               <a
                                 href="#"
                                 className={`text-xs sm:text-sm hover:underline hidden sm:inline transition-colors duration-300 ${
-                                  brightOn ? 'text-[#008B8B] hover:text-[#00CED1]' : 'text-text-muted hover:text-white'
+                                  brightOn ? 'text-gray-600 hover:text-black' : 'text-gray-400 hover:text-white'
                                 }`}
                               >
                                 {formatRelativeTime(p.createdAt)}
@@ -720,7 +729,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                         </div>
 
                         <div className={`mt-2 leading-[1.6] whitespace-pre-wrap font-medium text-[15px] sm:text-[17px] break-words transition-colors duration-300 ${
-                          brightOn ? 'text-white' : 'text-white'
+                          brightOn ? 'text-black' : 'text-white'
                         }`}>
                           {p.content}
                         </div>

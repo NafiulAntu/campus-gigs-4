@@ -95,7 +95,7 @@ export default function App() {
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <div className="min-h-screen bg-primary-dark font-sans text-text-light">
+      <div className="min-h-screen font-sans" style={{ backgroundColor: '#000000', color: '#ffffff' }}>
         <Suspense fallback={<LoadingFallback />}>
           <main className="pt-0">
             <Routes>

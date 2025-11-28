@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { auth } from "../../../config/firebase";
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function Notifications({ onBack }) {
   const [filter, setFilter] = useState("all");
@@ -41,7 +41,7 @@ export default function Notifications({ onBack }) {
     try {
       setLoading(true);
       const token = await auth.currentUser?.getIdToken();
-      const response = await axios.get(`${API_URL}/notifications?limit=50`, {
+      const response = await axios.get(`${API_URL}/notifications?limit=100`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -70,7 +70,7 @@ export default function Notifications({ onBack }) {
   const getActionText = (type, message) => {
     // Extract action from message
     const actions = {
-      'sup': 'liked your post',
+      'sup': 'supped your post',
       'repost': 'shared your post',
       'comment': 'commented on your post',
       'message': 'sent you a message',
@@ -84,7 +84,7 @@ export default function Notifications({ onBack }) {
 
   const getIcon = (type) => {
     const icons = {
-      'sup': '👍',
+      'sup': '🤙',
       'repost': 'fi fi-br-refresh',
       'comment': '💬',
       'send': 'fi fi-br-paper-plane',
@@ -99,17 +99,17 @@ export default function Notifications({ onBack }) {
 
   const getColor = (type) => {
     const colors = {
-      'sup': 'text-[#89CFF0]',
-      'repost': 'text-[#89CFF0]',
-      'comment': 'text-[#89CFF0]',
-      'send': 'text-[#89CFF0]',
-      'message': 'text-[#89CFF0]',
-      'accept': 'text-green-400',
-      'reject': 'text-rose-400',
-      'follow': 'text-purple-400',
-      'job_alert': 'text-blue-400'
+      'sup': 'text-[#3b82f6]',
+      'repost': 'text-[#3b82f6]',
+      'comment': 'text-[#3b82f6]',
+      'send': 'text-[#3b82f6]',
+      'message': 'text-[#3b82f6]',
+      'accept': 'text-[#3b82f6]',
+      'reject': 'text-[#3b82f6]',
+      'follow': 'text-[#3b82f6]',
+      'job_alert': 'text-[#3b82f6]'
     };
-    return colors[type] || 'text-[#89CFF0]';
+    return colors[type] || 'text-[#3b82f6]';
   };
 
   const formatTimeAgo = (timestamp) => {
@@ -129,54 +129,54 @@ export default function Notifications({ onBack }) {
       try {
         const token = await auth.currentUser?.getIdToken();
         await axios.delete(`${API_URL}/notifications/${notifId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(prev => prev.filter(n => n.id !== notifId));
+      } catch (error) {
+        console.error('Error deleting notification:', error);
+      }
+    }
+    setOpenMenuId(null);
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      await axios.put(`${API_URL}/notifications/mark-all-read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
+  const handleNotificationClick = async (notif) => {
+    // Mark as read
+    if (!notif.read) {
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        await axios.put(`${API_URL}/notifications/${notif.id}/read`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(prev => prev.map(n => 
+          n.id === notif.id ? { ...n, read: true } : n
+        ));
+      } catch (error) {
+        console.error('Error marking as read:', error);
+      }
+    }
+    
+    // Navigate to link if exists
+    if (notif.link) {
+      window.location.href = notif.link;
+    }
+  };
+
   const handleSettingsAction = (setting) => {
     // Handle notification settings toggle
     setShowSettingsMenu(false);
   };
-
-  const filteredNotifications =
-    filter === "all"
-      ? notifications
-      : filter === "unread"
-      ? notifications.filter((n) => !n.read)
-      : notifications.filter((n) => n.type === filter);
-      read: false,
-      icon: "fi fi-br-refresh",
-      color: "text-[#89CFF0]",
-    },
-    {
-      id: 3,
-      type: "send",
-      user: "Mike Johnson",
-      action: "sent your post",
-      time: "3h ago",
-      read: true,
-      icon: "fi fi-br-paper-plane",
-      color: "text-[#89CFF0]",
-    },
-    {
-      id: 4,
-      type: "accept",
-      user: "Emma Wilson",
-      action: "accepted your request",
-      content: "Your application has been accepted!",
-      time: "5h ago",
-      read: true,
-      icon: "fa-solid fa-check",
-      color: "text-green-400",
-    },
-    {
-      id: 5,
-      type: "reject",
-      user: "TechCorp",
-      action: "rejected your application",
-      content: "We'll keep your profile for future opportunities",
-      time: "1d ago",
-      read: true,
-      icon: "fa-solid fa-xmark",
-      color: "text-rose-400",
-    },
-  ];
 
   const filteredNotifications =
     filter === "all"
@@ -200,7 +200,10 @@ export default function Notifications({ onBack }) {
               </button>
               <h1 className="text-2xl font-bold text-white">Notifications</h1>
             </div>
-            <button className="text-sm text-primary-teal hover:text-primary-blue font-semibold transition-colors">
+            <button 
+              onClick={markAllAsRead}
+              className="text-sm text-primary-teal hover:text-primary-blue font-semibold transition-colors"
+            >
               Mark all as read
             </button>
           </div>
@@ -212,12 +215,8 @@ export default function Notifications({ onBack }) {
               { key: "sup", label: "Sup", icon: "🤙" },
               { key: "repost", label: "Reposts", icon: "fi fi-br-refresh" },
               { key: "accept", label: "Accepts", icon: "fa-solid fa-check" },
-            <button 
-              onClick={markAllAsRead}
-              className="text-sm text-primary-teal hover:text-primary-blue font-semibold transition-colors"
-            >
-              Mark all as read
-            </button>
+            ].map((tab) => (
+              <button
                 key={tab.key}
                 onClick={() => setFilter(tab.key)}
                 className={`font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
@@ -239,28 +238,29 @@ export default function Notifications({ onBack }) {
 
         {/* Notifications List */}
         <div className="space-y-2">
-          {filteredNotifications.length > 0 ? (
-            filteredNotifications.map((notif) => (
-              <div
-                key={notif.id}
-                className={`p-4 rounded-xl transition-colors cursor-pointer ${
-                  !notif.read
-                    ? "bg-white/[0.08] hover:bg-white/[0.12]"
-        {/* Notifications List */}
-        <div className="space-y-2">
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin h-8 w-8 border-4 border-primary-teal border-t-transparent rounded-full mx-auto"></div>
               <p className="text-text-muted mt-4">Loading notifications...</p>
             </div>
           ) : filteredNotifications.length > 0 ? (
+            filteredNotifications.map((notif) => (
+              <div
+                key={notif.id}
+                onClick={() => handleNotificationClick(notif)}
+                className={`p-4 rounded-xl transition-colors cursor-pointer ${
+                  !notif.read
+                    ? "bg-white/[0.08] hover:bg-white/[0.12]"
+                    : "bg-white/[0.04] hover:bg-white/[0.06]"
+                }`}
+              >
                 <div className="flex items-start gap-3">
                   {/* Icon */}
                   <div
                     className={`h-10 w-10 rounded-full bg-white/[0.04] flex items-center justify-center ${notif.color}`}
                   >
-                    {notif.type === "sup" ? (
-                      <span className="text-lg" style={{ filter: 'sepia(1) saturate(5) hue-rotate(160deg) brightness(1.1)' }}>{notif.icon}</span>
+                    {notif.type === "sup" || notif.type === "comment" || notif.type === "message" ? (
+                      <span className="text-lg">{notif.icon}</span>
                     ) : (
                       <i className={`${notif.icon} text-lg`}></i>
                     )}
@@ -288,32 +288,32 @@ export default function Notifications({ onBack }) {
                   {/* Actions */}
                   <div className="relative" ref={openMenuId === notif.id ? menuRef : null}>
                     <button 
-                      onClick={() => setOpenMenuId(openMenuId === notif.id ? null : notif.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === notif.id ? null : notif.id);
+                      }}
                       className="h-8 w-8 rounded-full hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-white transition-colors"
                     >
                       <i className="fi fi-br-menu-dots"></i>
                     </button>
-            filteredNotifications.map((notif) => (
-              <div
-                key={notif.id}
-                onClick={() => handleNotificationClick(notif)}
-                className={`p-4 rounded-xl transition-colors cursor-pointer ${
-                  !notif.read
-                    ? "bg-white/[0.08] hover:bg-white/[0.12]"
-                    : "bg-white/[0.04] hover:bg-white/[0.06]"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  {/* Icon */}
-                  <div
-                    className={`h-10 w-10 rounded-full bg-white/[0.04] flex items-center justify-center ${notif.color}`}
-                  >
-                    {notif.type === "sup" || notif.type === "comment" || notif.type === "message" ? (
-                      <span className="text-lg">{notif.icon}</span>
-                    ) : (
-                      <i className={`${notif.icon} text-lg`}></i>
-                    )}
-                  </div>  onClick={() => handleMenuAction("turnoff", notif.id)}
+
+                    {openMenuId === notif.id && (
+                      <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] rounded-lg shadow-xl border border-white/10 overflow-hidden z-10">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMenuAction("delete", notif.id);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
+                        >
+                          <i className="fi fi-br-trash text-sm"></i>
+                          <span className="text-sm">Delete</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMenuAction("turnoff", notif.id);
+                          }}
                           className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
                         >
                           <i className="fi fi-br-bell-slash text-sm"></i>

@@ -4,7 +4,7 @@ import { auth } from '../../config/firebase';
 import axios from 'axios';
 import './NotificationBell.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
@@ -236,7 +236,7 @@ const NotificationBell = () => {
   // Get notification icon based on type
   const getNotificationIcon = (type) => {
     const icons = {
-      sup: '👍',
+      sup: '🤙',
       repost: '🔄',
       send: '📤',
       comment: '💬',
@@ -275,7 +275,7 @@ const NotificationBell = () => {
       >
         <i className="fi fi-br-bell"></i>
         {unreadCount > 0 && (
-          <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+          <span className="notification-badge"></span>
         )}
       </button>
 
