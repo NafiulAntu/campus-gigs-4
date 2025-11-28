@@ -89,14 +89,22 @@ export default function Sidebar({ onNavigate = () => {} }) {
   const fetchMessageCount = async () => {
     try {
       const token = await auth.currentUser?.getIdToken();
-      if (!token) return;
+      if (!token) {
+        console.log('❌ No token available for message count');
+        return;
+      }
       
+      console.log('📬 Fetching message count...');
       const response = await axios.get(`${API_URL}/notifications/unread-count?type=message`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      console.log('📬 Message count response:', response.data);
+      
       if (response.data.success) {
-        setMessageCount(response.data.data.count);
+        const count = response.data.data.count;
+        console.log(`📬 Setting message count to: ${count}`);
+        setMessageCount(count);
       }
     } catch (error) {
       console.error('Error fetching message count:', error);
@@ -241,7 +249,9 @@ export default function Sidebar({ onNavigate = () => {} }) {
                 )}
                 {/* Show badge for messages */}
                 {it.key === "messages" && messageCount > 0 && (
-                  <span className="absolute top-0 right-0 w-[6px] h-[6px] bg-[#1d9bf0] rounded-full ring-2 ring-black"></span>
+                  <span className="absolute -top-1 -right-1 bg-[#1d9bf0] text-white text-[11px] font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1.5 ring-2 ring-black shadow-lg z-10">
+                    {getBadgeCount(messageCount)}
+                  </span>
                 )}
               </span>
               <span className="font-bold text-[20px] hidden 2xl:inline">
