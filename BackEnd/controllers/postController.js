@@ -1,6 +1,6 @@
 const Post = require('../models/Post');
 const { deleteFromFirebase, isFirebaseEnabled } = require('../config/firebase');
-const { notifySup, notifyRepost } = require('../utils/notificationHelpers');
+const { notifySup, notifyRepost } = require('../utils/simpleNotificationHelpers');
 
 // Create a new post
 exports.createPost = async (req, res) => {
@@ -180,11 +180,18 @@ exports.toggleLike = async (req, res) => {
     // Get updated post
     const post = await Post.getById(postId);
 
-    // TODO: Send notification when fixed
-    // if (result.liked && post.user_id !== userId) {
-    //   const io = req.app.get('io');
-    //   await notifySup(post.user_id, userId, req.user.username || req.user.fullname, postId, io);
-    // }
+    // Send notification if post was liked (not unliked) and not own post
+    if (result.liked && post.posted_by !== userId) {
+      try {
+        const io = req.app.get('io');
+        const userName = req.user.username || req.user.full_name || 'Someone';
+        await notifySup(post.posted_by, userId, userName, postId, io);
+        console.log('✅ Like notification sent to user:', post.posted_by);
+      } catch (notifError) {
+        console.error('⚠️ Failed to send notification:', notifError.message);
+        // Don't fail the request if notification fails
+      }
+    }
 
     res.status(200).json({ 
       message: result.liked ? 'Post liked' : 'Post unliked',
@@ -208,11 +215,18 @@ exports.toggleShare = async (req, res) => {
     // Get updated post
     const post = await Post.getById(postId);
 
-    // TODO: Send notification when fixed
-    // if (result.shared && post.user_id !== userId) {
-    //   const io = req.app.get('io');
-    //   await notifyRepost(post.user_id, userId, req.user.username || req.user.fullname, postId, io);
-    // }
+    // Send notification if post was shared (not unshared) and not own post
+    if (result.shared && post.posted_by !== userId) {
+      try {
+        const io = req.app.get('io');
+        const userName = req.user.username || req.user.full_name || 'Someone';
+        await notifyRepost(post.posted_by, userId, userName, postId, io);
+        console.log('✅ Share notification sent to user:', post.posted_by);
+      } catch (notifError) {
+        console.error('⚠️ Failed to send notification:', notifError.message);
+        // Don't fail the request if notification fails
+      }
+    }
 
     res.status(200).json({ 
       message: result.shared ? 'Post shared' : 'Post unshared',

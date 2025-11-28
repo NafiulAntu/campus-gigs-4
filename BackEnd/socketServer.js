@@ -2,6 +2,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const admin = require('firebase-admin');
 const db = require('./config/db');
+const { notifyMessage } = require('./utils/simpleNotificationHelpers');
 
 // Initialize Firebase Admin (if not already initialized)
 if (!admin.apps.length) {
@@ -133,7 +134,27 @@ function createSocketServer(httpServer) {
             participants: admin.firestore.FieldValue.arrayUnion(socket.userId, recipientId)
           }, { merge: true });
 
-        // 4. Send push notification if recipient is offline
+        // 4. Send notification to recipient
+        if (recipientId && recipientId !== socket.userId) {
+          try {
+            // Get PostgreSQL user ID from Firebase UID
+            const result = await db.query('SELECT id, username, full_name FROM users WHERE firebase_uid = $1', [socket.userId]);
+            const sender = result.rows[0];
+            const recipientResult = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [recipientId]);
+            const recipient = recipientResult.rows[0];
+            
+            if (sender && recipient) {
+              const senderName = sender.username || sender.full_name || 'Someone';
+              const messagePreview = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+              await notifyMessage(recipient.id, sender.id, senderName, conversationId, messagePreview, io);
+              console.log('✅ Message notification sent to user:', recipient.id);
+            }
+          } catch (notifError) {
+            console.error('⚠️ Failed to send message notification:', notifError.message);
+          }
+        }
+
+        // 5. Send push notification if recipient is offline
         if (recipientId && !activeUsers.has(recipientId)) {
           await sendPushNotification(recipientId, {
             title: 'New message',

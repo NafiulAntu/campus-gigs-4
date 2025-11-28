@@ -59,7 +59,7 @@ const NotificationBell = () => {
       });
 
       setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
@@ -75,7 +75,7 @@ const NotificationBell = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
     } catch (error) {
       console.error('Error marking all as read:', error);
@@ -98,7 +98,7 @@ const NotificationBell = () => {
 
   // Handle notification click
   const handleNotificationClick = (notification) => {
-    if (!notification.read) {
+    if (!notification.is_read) {
       markAsRead(notification.id);
     }
 
@@ -114,8 +114,11 @@ const NotificationBell = () => {
   useEffect(() => {
     if (!socket || !isConnected) return;
 
+    console.log('✅ NotificationBell: Setting up Socket.io listeners');
+
     // New notification received
     socket.on('notification:new', (notification) => {
+      console.log('📬 New notification received via Socket.io:', notification);
       setNotifications(prev => [notification, ...prev]);
       setUnreadCount(prev => prev + 1);
 
@@ -132,14 +135,14 @@ const NotificationBell = () => {
     // Notification marked as read
     socket.on('notification:read', ({ notificationId }) => {
       setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     });
 
     // All notifications marked as read
     socket.on('notification:all_read', () => {
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
     });
 
@@ -253,7 +256,7 @@ const NotificationBell = () => {
               notifications.map((notif) => (
                 <div
                   key={notif.id}
-                  className={`notification-item ${!notif.read ? 'unread' : ''}`}
+                  className={`notification-item ${!notif.is_read ? 'unread' : ''}`}
                   onClick={() => handleNotificationClick(notif)}
                 >
                   <div className="notification-icon">
@@ -264,7 +267,7 @@ const NotificationBell = () => {
                     <p className="notification-message">{notif.message}</p>
                     <span className="notification-time">{formatTimeAgo(notif.created_at)}</span>
                   </div>
-                  {!notif.read && <span className="notification-dot"></span>}
+                  {!notif.is_read && <span className="notification-dot"></span>}
                   <button
                     className="notification-delete"
                     onClick={(e) => {
