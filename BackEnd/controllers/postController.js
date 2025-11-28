@@ -180,12 +180,11 @@ exports.toggleLike = async (req, res) => {
     // Get updated post
     const post = await Post.getById(postId);
 
-    // Send notification if post was liked (not unliked)
-    if (result.liked && post.user_id !== userId) {
-      const io = req.app.get('io');
-      await notifySup(post.user_id, userId, req.user.username || req.user.fullname, postId, io);
-      console.log('✅ Like notification sent to user:', post.user_id);
-    }
+    // TODO: Send notification when fixed
+    // if (result.liked && post.user_id !== userId) {
+    //   const io = req.app.get('io');
+    //   await notifySup(post.user_id, userId, req.user.username || req.user.fullname, postId, io);
+    // }
 
     res.status(200).json({ 
       message: result.liked ? 'Post liked' : 'Post unliked',
@@ -209,12 +208,11 @@ exports.toggleShare = async (req, res) => {
     // Get updated post
     const post = await Post.getById(postId);
 
-    // Send notification if post was shared (not unshared)
-    if (result.shared && post.user_id !== userId) {
-      const io = req.app.get('io');
-      await notifyRepost(post.user_id, userId, req.user.username || req.user.fullname, postId, io);
-      console.log('✅ Share notification sent to user:', post.user_id);
-    }
+    // TODO: Send notification when fixed
+    // if (result.shared && post.user_id !== userId) {
+    //   const io = req.app.get('io');
+    //   await notifyRepost(post.user_id, userId, req.user.username || req.user.fullname, postId, io);
+    // }
 
     res.status(200).json({ 
       message: result.shared ? 'Post shared' : 'Post unshared',

@@ -21,18 +21,19 @@ class Post {
         u.username,
         u.profile_picture,
         u.email,
-        false as user_liked,
-        false as user_shared,
-        p.likes as likes_count,
+        COALESCE((SELECT COUNT(*) FROM post_likes WHERE post_id = p.id AND user_id = $1), 0) > 0 as user_liked,
+        COALESCE((SELECT COUNT(*) FROM post_shares WHERE post_id = p.id AND user_id = $1), 0) > 0 as user_shared,
+        COALESCE((SELECT COUNT(*) FROM post_likes WHERE post_id = p.id), 0) as likes_count,
         p.replies as comments_count,
-        0 as shares_count,
-        p.media as media_urls
+        COALESCE((SELECT COUNT(*) FROM post_shares WHERE post_id = p.id), 0) as shares_count,
+        p.media as media_urls,
+        p.posted_by as user_id
       FROM posts p
       JOIN users u ON p.posted_by = u.id
       ORDER BY p.created_at DESC
-      LIMIT $1 OFFSET $2
+      LIMIT $2 OFFSET $3
     `;
-    const result = await pool.query(query, [limit, offset]);
+    const result = await pool.query(query, [currentUserId, limit, offset]);
     return result.rows;
   }
 
@@ -69,10 +70,11 @@ class Post {
         u.username,
         u.profile_picture,
         u.email,
-        p.likes as likes_count,
+        COALESCE((SELECT COUNT(*) FROM post_likes WHERE post_id = p.id), 0) as likes_count,
         p.replies as comments_count,
-        0 as shares_count,
-        p.media as media_urls
+        COALESCE((SELECT COUNT(*) FROM post_shares WHERE post_id = p.id), 0) as shares_count,
+        p.media as media_urls,
+        p.posted_by as user_id
       FROM posts p
       JOIN users u ON p.posted_by = u.id
       WHERE p.id = $1
@@ -100,17 +102,26 @@ class Post {
     return result.rows[0];
   }
 
-  // Like/Unlike a post (simplified without post_likes table)
+  // Like/Unlike a post
   static async toggleLike(postId, userId) {
-    // Just increment likes count for now
-    const query = `
-      UPDATE posts
-      SET likes = likes + 1
-      WHERE id = $1
-      RETURNING *
-    `;
-    const result = await pool.query(query, [postId]);
-    return { liked: true, post: result.rows[0] };
+    try {
+      // Check if user already liked the post
+      const checkQuery = `SELECT * FROM post_likes WHERE post_id = $1 AND user_id = $2`;
+      const checkResult = await pool.query(checkQuery, [postId, userId]);
+      
+      if (checkResult.rows.length > 0) {
+        // Unlike: Remove the like
+        await pool.query(`DELETE FROM post_likes WHERE post_id = $1 AND user_id = $2`, [postId, userId]);
+        return { liked: false };
+      } else {
+        // Like: Add the like
+        await pool.query(`INSERT INTO post_likes (post_id, user_id) VALUES ($1, $2)`, [postId, userId]);
+        return { liked: true };
+      }
+    } catch (error) {
+      console.error('Error in toggleLike:', error);
+      throw error;
+    }
   }
 
   // Add a comment to a post (simplified without post_comments table)
@@ -131,10 +142,26 @@ class Post {
     return [];
   }
 
-  // Share/Unshare a post (simplified without post_shares table)
+  // Share/Unshare a post
   static async toggleShare(postId, userId) {
-    // No shares table, just return success
-    return { shared: true };
+    try {
+      // Check if user already shared the post
+      const checkQuery = `SELECT * FROM post_shares WHERE post_id = $1 AND user_id = $2`;
+      const checkResult = await pool.query(checkQuery, [postId, userId]);
+      
+      if (checkResult.rows.length > 0) {
+        // Unshare: Remove the share
+        await pool.query(`DELETE FROM post_shares WHERE post_id = $1 AND user_id = $2`, [postId, userId]);
+        return { shared: false };
+      } else {
+        // Share: Add the share
+        await pool.query(`INSERT INTO post_shares (post_id, user_id) VALUES ($1, $2)`, [postId, userId]);
+        return { shared: true };
+      }
+    } catch (error) {
+      console.error('Error in toggleShare:', error);
+      throw error;
+    }
   }
 
   // Check if user liked a post (placeholder)
