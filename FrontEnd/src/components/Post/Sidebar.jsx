@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSocket } from "../../hooks/useSocket";
+import { auth } from "../../config/firebase";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function Sidebar({ onNavigate = () => {} }) {
   const navigate = useNavigate();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [user, setUser] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [messageCount, setMessageCount] = useState(0);
   const menuRef = useRef(null);
+  const { socket, isConnected } = useSocket();
 
   // Load user data from localStorage
   useEffect(() => {
@@ -44,6 +52,110 @@ export default function Sidebar({ onNavigate = () => {} }) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showAccountMenu]);
+
+  // Fetch notification count
+  const fetchNotificationCount = async () => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return;
+      
+      const response = await axios.get(`${API_URL}/notifications/unread-count`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setNotificationCount(response.data.data.count);
+      }
+    } catch (error) {
+      console.error('Error fetching notification count:', error);
+    }
+  };
+
+  // Fetch message count (unread messages)
+  const fetchMessageCount = async () => {
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return;
+      
+      // This endpoint needs to be created in backend
+      const response = await axios.get(`${API_URL}/messages/unread-count`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setMessageCount(response.data.count || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching message count:', error);
+    }
+  };
+
+  // Initial fetch and periodic updates
+  useEffect(() => {
+    if (auth.currentUser) {
+      fetchNotificationCount();
+      fetchMessageCount();
+    }
+
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        fetchNotificationCount();
+        fetchMessageCount();
+      }
+    });
+
+    // Refresh counts every 30 seconds
+    const interval = setInterval(() => {
+      if (auth.currentUser) {
+        fetchNotificationCount();
+        fetchMessageCount();
+      }
+    }, 30000);
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Socket.io real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    // New notification received
+    socket.on('notification:new', () => {
+      setNotificationCount(prev => prev + 1);
+    });
+
+    // Notification marked as read
+    socket.on('notification:read', () => {
+      setNotificationCount(prev => Math.max(0, prev - 1));
+    });
+
+    // All notifications marked as read
+    socket.on('notification:all_read', () => {
+      setNotificationCount(0);
+    });
+
+    // New message received
+    socket.on('message:new', () => {
+      setMessageCount(prev => prev + 1);
+    });
+
+    // Message read
+    socket.on('message:read', () => {
+      setMessageCount(prev => Math.max(0, prev - 1));
+    });
+
+    return () => {
+      socket.off('notification:new');
+      socket.off('notification:read');
+      socket.off('notification:all_read');
+      socket.off('message:new');
+      socket.off('message:read');
+    };
+  }, [socket, isConnected]);
+
   // X.com-like nav configuration
   const nav = [
     { key: "home", label: "Home", icon: "fi fi-br-home" },
@@ -90,9 +202,23 @@ export default function Sidebar({ onNavigate = () => {} }) {
               className={`group relative w-full text-left px-4 py-3 rounded-full flex items-center 2xl:gap-4 justify-center 2xl:justify-start transition-all duration-200 hover:bg-white/10 text-white hover:text-primary-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-teal`}
               title={it.label}
             >
-              <i
-                className={`${it.icon} text-[26px] transition-all duration-200 group-hover:scale-105 group-hover:text-primary-teal`}
-              ></i>
+              <span className="relative">
+                <i
+                  className={`${it.icon} text-[26px] transition-all duration-200 group-hover:scale-105 group-hover:text-primary-teal`}
+                ></i>
+                {/* Show badge for notifications */}
+                {it.key === "notifications" && notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-[#ff3b3b] to-[#ff6b6b] text-white text-[10px] font-bold rounded-full h-[18px] min-w-[18px] flex items-center justify-center px-1 shadow-lg">
+                    {notificationCount > 99 ? '99+' : notificationCount}
+                  </span>
+                )}
+                {/* Show badge for messages */}
+                {it.key === "messages" && messageCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] text-white text-[10px] font-bold rounded-full h-[18px] min-w-[18px] flex items-center justify-center px-1 shadow-lg">
+                    {messageCount > 99 ? '99+' : messageCount}
+                  </span>
+                )}
+              </span>
               <span className="font-bold text-[20px] hidden 2xl:inline">
                 {it.label}
               </span>
