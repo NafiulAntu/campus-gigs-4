@@ -17,6 +17,10 @@ const firebaseConfig = {
   measurementId: "G-HV08HG640X"
 };
 
+// VAPID Key for Push Notifications
+// Get this from: Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
+export const VAPID_KEY = "YOUR_VAPID_KEY_HERE"; // TODO: Replace with actual VAPID key
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
@@ -24,5 +28,6 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export { app };
 
 export default app;

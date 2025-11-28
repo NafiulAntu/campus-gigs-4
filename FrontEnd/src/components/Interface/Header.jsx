@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import NotificationBell from "../Notifications/NotificationBell";
 
 export default function Header({
   onNavigate = () => {},
@@ -176,6 +177,9 @@ export default function Header({
                 <span>Search</span>
               </button>
             )}
+
+            {/* Notification Bell */}
+            <NotificationBell />
 
             <button
               onClick={() => onNavigate("login")}
