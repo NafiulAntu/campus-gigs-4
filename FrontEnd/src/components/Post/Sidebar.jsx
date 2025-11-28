@@ -56,8 +56,6 @@ export default function Sidebar({ onNavigate = () => {} }) {
     { key: "profile", label: "Profile", icon: "fi fi-br-user" },
   ];
 
-  const notifCount = 3; // demo badge
-
   return (
     <div className="h-screen flex flex-col justify-between py-1">
       {/* Brand */}
@@ -92,16 +90,9 @@ export default function Sidebar({ onNavigate = () => {} }) {
               className={`group relative w-full text-left px-4 py-3 rounded-full flex items-center 2xl:gap-4 justify-center 2xl:justify-start transition-all duration-200 hover:bg-white/10 text-white hover:text-primary-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-teal`}
               title={it.label}
             >
-              <span className="relative">
-                <i
-                  className={`${it.icon} text-[26px] transition-all duration-200 group-hover:scale-105 group-hover:text-primary-teal`}
-                ></i>
-                {it.key === "notifications" && notifCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary-teal text-white text-[10px] font-bold rounded-full h-[18px] min-w-[18px] flex items-center justify-center px-1">
-                    {notifCount}
-                  </span>
-                )}
-              </span>
+              <i
+                className={`${it.icon} text-[26px] transition-all duration-200 group-hover:scale-105 group-hover:text-primary-teal`}
+              ></i>
               <span className="font-bold text-[20px] hidden 2xl:inline">
                 {it.label}
               </span>

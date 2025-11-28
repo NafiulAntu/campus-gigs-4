@@ -274,9 +274,6 @@ const NotificationBell = () => {
         }}
       >
         <i className="fi fi-br-bell"></i>
-        {unreadCount > 0 && (
-          <span className="notification-badge"></span>
-        )}
       </button>
 
       {showDropdown && (
