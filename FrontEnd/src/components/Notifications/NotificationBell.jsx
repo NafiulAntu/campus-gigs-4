@@ -169,6 +169,21 @@ const NotificationBell = () => {
 
     // All notifications marked as read
     socket.on('notification:all_read', () => {
+      console.log('✅ All notifications marked as read');
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+    });
+
+    console.log('✅ NotificationBell: Socket listeners registered');
+
+    return () => {
+      console.log('🧹 NotificationBell: Cleaning up Socket listeners');
+      socket.off('notification:new');
+      socket.off('notification:read');
+      socket.off('notification:all_read');
+    };
+  }, [socket, isConnected]);
+
   // Initial fetch
   useEffect(() => {
     console.log('🔄 NotificationBell mounted, checking auth...');
@@ -188,21 +203,6 @@ const NotificationBell = () => {
     });
     
     return () => unsubscribe();
-  }, []);le.log('✅ NotificationBell: Socket listeners registered');
-
-    return () => {
-      console.log('🧹 NotificationBell: Cleaning up Socket listeners');
-      socket.off('notification:new');
-      socket.off('notification:read');
-      socket.off('notification:all_read');
-    };
-  }, [socket, isConnected]);
-
-  // Initial fetch
-  useEffect(() => {
-    if (auth.currentUser) {
-      fetchNotifications();
-    }
   }, []);
 
   // Fetch unread count periodically

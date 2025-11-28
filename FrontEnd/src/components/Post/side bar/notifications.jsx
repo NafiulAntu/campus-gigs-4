@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
+import { auth } from "../../../config/firebase";
+import axios from "axios";
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 export default function Notifications({ onBack }) {
   const [filter, setFilter] = useState("all");
   const [openMenuId, setOpenMenuId] = useState(null);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
   const menuRef = useRef(null);
   const settingsMenuRef = useRef(null);
 
@@ -26,34 +32,114 @@ export default function Notifications({ onBack }) {
     };
   }, [openMenuId, showSettingsMenu]);
 
-  const handleMenuAction = (action, notifId) => {
-    // Handle notification actions (delete, mute, etc.)
-    setOpenMenuId(null);
+  // Fetch notifications from API
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const token = await auth.currentUser?.getIdToken();
+      const response = await axios.get(`${API_URL}/notifications?limit=50`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        const apiNotifications = response.data.data.notifications.map(notif => ({
+          id: notif.id,
+          type: notif.type,
+          user: notif.actor_name || notif.actor_username || notif.actor_full_name || 'Unknown User',
+          action: getActionText(notif.type, notif.message),
+          content: notif.data?.commentPreview || notif.data?.messagePreview || null,
+          time: formatTimeAgo(notif.created_at),
+          read: notif.is_read,
+          icon: getIcon(notif.type),
+          color: getColor(notif.type),
+          link: notif.link
+        }));
+        setNotifications(apiNotifications);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const getActionText = (type, message) => {
+    // Extract action from message
+    const actions = {
+      'sup': 'liked your post',
+      'repost': 'shared your post',
+      'comment': 'commented on your post',
+      'message': 'sent you a message',
+      'accept': 'accepted your request',
+      'reject': 'rejected your application',
+      'follow': 'started following you',
+      'job_alert': 'posted a new job'
+    };
+    return actions[type] || message;
+  };
+
+  const getIcon = (type) => {
+    const icons = {
+      'sup': '👍',
+      'repost': 'fi fi-br-refresh',
+      'comment': '💬',
+      'send': 'fi fi-br-paper-plane',
+      'message': '💬',
+      'accept': 'fa-solid fa-check',
+      'reject': 'fa-solid fa-xmark',
+      'follow': 'fa-solid fa-user-plus',
+      'job_alert': 'fa-solid fa-briefcase'
+    };
+    return icons[type] || 'fi fi-br-bell';
+  };
+
+  const getColor = (type) => {
+    const colors = {
+      'sup': 'text-[#89CFF0]',
+      'repost': 'text-[#89CFF0]',
+      'comment': 'text-[#89CFF0]',
+      'send': 'text-[#89CFF0]',
+      'message': 'text-[#89CFF0]',
+      'accept': 'text-green-400',
+      'reject': 'text-rose-400',
+      'follow': 'text-purple-400',
+      'job_alert': 'text-blue-400'
+    };
+    return colors[type] || 'text-[#89CFF0]';
+  };
+
+  const formatTimeAgo = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const handleMenuAction = async (action, notifId) => {
+    if (action === 'delete') {
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        await axios.delete(`${API_URL}/notifications/${notifId}`, {
   const handleSettingsAction = (setting) => {
     // Handle notification settings toggle
     setShowSettingsMenu(false);
   };
 
-  const notifications = [
-    {
-      id: 1,
-      type: "sup",
-      user: "John Doe",
-      action: "said sup to your post",
-      time: "5m ago",
-      read: false,
-      icon: "🤙",
-      color: "text-[#89CFF0]",
-    },
-    {
-      id: 2,
-      type: "repost",
-      user: "Sarah Smith",
-      action: "reposted your post",
-      content: "Great work! This is exactly what I was looking for.",
-      time: "1h ago",
+  const filteredNotifications =
+    filter === "all"
+      ? notifications
+      : filter === "unread"
+      ? notifications.filter((n) => !n.read)
+      : notifications.filter((n) => n.type === filter);
       read: false,
       icon: "fi fi-br-refresh",
       color: "text-[#89CFF0]",
@@ -126,9 +212,12 @@ export default function Notifications({ onBack }) {
               { key: "sup", label: "Sup", icon: "🤙" },
               { key: "repost", label: "Reposts", icon: "fi fi-br-refresh" },
               { key: "accept", label: "Accepts", icon: "fa-solid fa-check" },
-              { key: "reject", label: "Rejects", icon: "fa-solid fa-xmark" },
-            ].map((tab) => (
-              <button
+            <button 
+              onClick={markAllAsRead}
+              className="text-sm text-primary-teal hover:text-primary-blue font-semibold transition-colors"
+            >
+              Mark all as read
+            </button>
                 key={tab.key}
                 onClick={() => setFilter(tab.key)}
                 className={`font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
@@ -157,9 +246,14 @@ export default function Notifications({ onBack }) {
                 className={`p-4 rounded-xl transition-colors cursor-pointer ${
                   !notif.read
                     ? "bg-white/[0.08] hover:bg-white/[0.12]"
-                    : "bg-white/[0.04] hover:bg-white/[0.06]"
-                }`}
-              >
+        {/* Notifications List */}
+        <div className="space-y-2">
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin h-8 w-8 border-4 border-primary-teal border-t-transparent rounded-full mx-auto"></div>
+              <p className="text-text-muted mt-4">Loading notifications...</p>
+            </div>
+          ) : filteredNotifications.length > 0 ? (
                 <div className="flex items-start gap-3">
                   {/* Icon */}
                   <div
@@ -199,26 +293,27 @@ export default function Notifications({ onBack }) {
                     >
                       <i className="fi fi-br-menu-dots"></i>
                     </button>
-
-                    {/* Dropdown Menu */}
-                    {openMenuId === notif.id && (
-                      <div className="absolute left-full top-[-14px] ml-6 w-50 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
-                        <button
-                          onClick={() => handleMenuAction("report", notif.id)}
-                          className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-flag text-sm"></i>
-                          <span className="text-sm">Report</span>
-                        </button>
-                        <button
-                          onClick={() => handleMenuAction("delete", notif.id)}
-                          className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
-                        >
-                          <i className="fi fi-br-trash text-sm"></i>
-                          <span className="text-sm">Delete</span>
-                        </button>
-                        <button
-                          onClick={() => handleMenuAction("turnoff", notif.id)}
+            filteredNotifications.map((notif) => (
+              <div
+                key={notif.id}
+                onClick={() => handleNotificationClick(notif)}
+                className={`p-4 rounded-xl transition-colors cursor-pointer ${
+                  !notif.read
+                    ? "bg-white/[0.08] hover:bg-white/[0.12]"
+                    : "bg-white/[0.04] hover:bg-white/[0.06]"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  {/* Icon */}
+                  <div
+                    className={`h-10 w-10 rounded-full bg-white/[0.04] flex items-center justify-center ${notif.color}`}
+                  >
+                    {notif.type === "sup" || notif.type === "comment" || notif.type === "message" ? (
+                      <span className="text-lg">{notif.icon}</span>
+                    ) : (
+                      <i className={`${notif.icon} text-lg`}></i>
+                    )}
+                  </div>  onClick={() => handleMenuAction("turnoff", notif.id)}
                           className="w-full px-4 py-2.5 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 cursor-pointer"
                         >
                           <i className="fi fi-br-bell-slash text-sm"></i>
