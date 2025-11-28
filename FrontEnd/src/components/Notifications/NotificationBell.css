@@ -31,12 +31,12 @@
   position: absolute;
   top: 6px;
   right: 6px;
-  background: linear-gradient(135deg, #ff3b3b 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #89CFF0 0%, #5FAED1 100%);
   color: white;
   border-radius: 50%;
   width: 10px;
   height: 10px;
-  box-shadow: 0 2px 8px rgba(255, 59, 59, 0.4);
+  box-shadow: 0 2px 8px rgba(137, 207, 240, 0.4);
   animation: pulse 2s infinite;
 }
 
@@ -227,8 +227,8 @@
 }
 
 .notification-delete:hover {
-  background: rgba(255, 59, 59, 0.1);
-  color: #ff3b3b;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
 
 .notification-loading {
