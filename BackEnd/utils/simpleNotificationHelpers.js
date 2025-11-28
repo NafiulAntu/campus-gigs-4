@@ -7,8 +7,11 @@ async function createAndSend({ userId, actorId, type, title, message, data = {},
   try {
     // Don't notify self
     if (userId === actorId) {
+      console.log('⏩ Skipped notification: user is actor (userId === actorId)');
       return null;
     }
+
+    console.log(`📝 Creating notification: userId=${userId}, actorId=${actorId}, type=${type}`);
 
     // Create notification in database
     const query = `
@@ -20,12 +23,16 @@ async function createAndSend({ userId, actorId, type, title, message, data = {},
     const result = await pool.query(query, values);
     const notification = result.rows[0];
 
-    console.log('✅ Notification created:', notification.id);
+    console.log(`✅ Notification created in DB: ID=${notification.id}`);
 
     // Send via Socket.io if available
     if (io) {
-      io.to(`user_${userId}`).emit('notification:new', notification);
-      console.log('📡 Notification sent via Socket.io to user:', userId);
+      const roomName = `user_${userId}`;
+      console.log(`📡 Emitting to Socket.io room: ${roomName}`);
+      io.to(roomName).emit('notification:new', notification);
+      console.log(`✅ Notification emitted to room ${roomName}`);
+    } else {
+      console.warn('⚠️ Socket.io instance not available, notification not sent real-time');
     }
 
     return notification;
@@ -39,12 +46,13 @@ async function createAndSend({ userId, actorId, type, title, message, data = {},
  * Notify when someone likes a post
  */
 async function notifySup(userId, actorId, actorName, postId, io) {
+  const displayName = actorName || 'Someone';
   return createAndSend({
     userId,
     actorId,
     type: 'sup',
-    title: 'New Sup!',
-    message: `${actorName} liked your post`,
+    title: '👍 New Like',
+    message: `${displayName} liked your post`,
     data: { postId },
     link: `/post/${postId}`,
     io
@@ -55,12 +63,13 @@ async function notifySup(userId, actorId, actorName, postId, io) {
  * Notify when someone shares/reposts
  */
 async function notifyRepost(userId, actorId, actorName, postId, io) {
+  const displayName = actorName || 'Someone';
   return createAndSend({
     userId,
     actorId,
     type: 'repost',
-    title: 'Post Shared!',
-    message: `${actorName} shared your post`,
+    title: '🔄 Post Shared',
+    message: `${displayName} shared your post`,
     data: { postId },
     link: `/post/${postId}`,
     io
@@ -78,6 +87,24 @@ async function notifySend(userId, actorId, actorName, contentType, io) {
     title: 'Content Sent',
     message: `${actorName} sent you ${contentType}`,
     data: { contentType },
+    io
+  });
+}
+
+/**
+ * Notify when someone comments on a post
+ */
+async function notifyComment(userId, actorId, actorName, postId, commentPreview, io) {
+  const displayName = actorName || 'Someone';
+  const preview = commentPreview?.substring(0, 50) || 'your post';
+  return createAndSend({
+    userId,
+    actorId,
+    type: 'comment',
+    title: '💬 New Comment',
+    message: `${displayName} commented on your post`,
+    data: { postId, commentPreview: preview },
+    link: `/post/${postId}`,
     io
   });
 }
@@ -167,6 +194,7 @@ module.exports = {
   notifyRepost,
   notifySend,
   notifyMessage,
+  notifyComment,
   notifyJobAccept,
   notifyJobReject,
   notifyJobAlert,

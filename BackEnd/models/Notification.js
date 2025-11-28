@@ -27,10 +27,21 @@ class Notification {
     try {
       let query = `
         SELECT 
-          n.*,
+          n.id,
+          n.user_id,
+          n.type,
+          n.title,
+          n.message,
+          n.data,
+          n.read as is_read,
+          n.created_at,
+          n.read_at,
+          n.actor_id,
+          n.link,
+          COALESCE(u.username, u.full_name, 'Unknown User') as actor_name,
           u.username as actor_username,
-          u.full_name as actor_name,
-          u.profile_picture as actor_photo
+          u.full_name as actor_full_name,
+          u.profile_picture as actor_profile_picture
         FROM notifications n
         LEFT JOIN users u ON n.actor_id = u.id
         WHERE n.user_id = $1

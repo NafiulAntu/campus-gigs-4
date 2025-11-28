@@ -60,6 +60,32 @@ app.get('/', (req, res) => {
   res.json({ message: 'Campus Gigs API', status: 'running' });
 });
 
+// Debug endpoint to check Socket.io status
+app.get('/api/debug/socket-rooms', (req, res) => {
+  const io = req.app.get('io');
+  if (!io) {
+    return res.json({ error: 'Socket.io not initialized' });
+  }
+
+  const rooms = [];
+  const sockets = [];
+
+  io.sockets.sockets.forEach((socket) => {
+    sockets.push({
+      id: socket.id,
+      firebaseUid: socket.userId,
+      pgUserId: socket.pgUserId,
+      rooms: Array.from(socket.rooms)
+    });
+  });
+
+  res.json({
+    connectedSockets: io.sockets.sockets.size,
+    sockets,
+    serverRooms: Array.from(io.sockets.adapter.rooms.keys())
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
@@ -74,7 +100,10 @@ const httpServer = http.createServer(app);
 
 // Initialize Socket.io server
 const { createSocketServer } = require('./socketServer');
-createSocketServer(httpServer);
+const io = createSocketServer(httpServer);
+
+// Store io instance in app for controllers to access
+app.set('io', io);
 
 // Start server
 httpServer.listen(PORT, () => {

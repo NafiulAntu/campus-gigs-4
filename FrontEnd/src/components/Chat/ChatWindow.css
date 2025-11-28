@@ -272,7 +272,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 8px 20px;
   background: transparent;
   border-top: none;
 }
@@ -304,7 +304,7 @@
 
 .message-input {
   flex: 1;
-  padding: 10px 14px;
+  padding: 6px 14px;
   border: none;
   border-radius: 0;
   font-size: 17px;
@@ -312,9 +312,9 @@
   outline: none;
   font-family: inherit;
   resize: none;
-  min-height: 20px;
+  min-height: 0;
   max-height: 200px;
-  line-height: 1.5;
+  line-height: 1;
   transition: none;
   background: transparent;
   color: #ffffff;

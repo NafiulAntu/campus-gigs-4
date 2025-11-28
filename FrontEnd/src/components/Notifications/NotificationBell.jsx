@@ -112,9 +112,18 @@ const NotificationBell = () => {
 
   // Socket.io real-time listeners
   useEffect(() => {
-    if (!socket || !isConnected) return;
+    console.log('🔍 NotificationBell: Socket state check', { 
+      socketExists: !!socket, 
+      isConnected,
+      socketId: socket?.id 
+    });
 
-    console.log('✅ NotificationBell: Setting up Socket.io listeners');
+    if (!socket || !isConnected) {
+      console.warn('⚠️ NotificationBell: Socket not ready, skipping listener setup');
+      return;
+    }
+
+    console.log('✅ NotificationBell: Setting up Socket.io listeners on socket:', socket.id);
 
     // New notification received
     socket.on('notification:new', (notification) => {
@@ -134,6 +143,7 @@ const NotificationBell = () => {
 
     // Notification marked as read
     socket.on('notification:read', ({ notificationId }) => {
+      console.log('✅ Notification marked as read:', notificationId);
       setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
@@ -142,11 +152,15 @@ const NotificationBell = () => {
 
     // All notifications marked as read
     socket.on('notification:all_read', () => {
+      console.log('✅ All notifications marked as read');
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
     });
 
+    console.log('✅ NotificationBell: Socket listeners registered');
+
     return () => {
+      console.log('🧹 NotificationBell: Cleaning up Socket listeners');
       socket.off('notification:new');
       socket.off('notification:read');
       socket.off('notification:all_read');
@@ -191,9 +205,10 @@ const NotificationBell = () => {
   // Get notification icon based on type
   const getNotificationIcon = (type) => {
     const icons = {
-      sup: '🤙',
+      sup: '👍',
       repost: '🔄',
       send: '📤',
+      comment: '💬',
       message: '💬',
       accept: '✅',
       reject: '❌',
@@ -263,7 +278,9 @@ const NotificationBell = () => {
                     {getNotificationIcon(notif.type)}
                   </div>
                   <div className="notification-content">
-                    <p className="notification-title">{notif.title}</p>
+                    <p className="notification-title">
+                      <strong>{notif.actor_name || notif.actor_username || notif.actor_full_name || 'Someone'}</strong>
+                    </p>
                     <p className="notification-message">{notif.message}</p>
                     <span className="notification-time">{formatTimeAgo(notif.created_at)}</span>
                   </div>

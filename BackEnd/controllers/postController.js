@@ -1,6 +1,6 @@
 const Post = require('../models/Post');
 const { deleteFromFirebase, isFirebaseEnabled } = require('../config/firebase');
-const { notifySup, notifyRepost } = require('../utils/simpleNotificationHelpers');
+const { notifySup, notifyRepost, notifyComment } = require('../utils/simpleNotificationHelpers');
 
 // Create a new post
 exports.createPost = async (req, res) => {
@@ -175,22 +175,29 @@ exports.toggleLike = async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
 
+    console.log(`👍 toggleLike: postId=${postId}, userId=${userId}`);
+
     const result = await Post.toggleLike(postId, userId);
     
     // Get updated post
     const post = await Post.getById(postId);
 
+    console.log(`📊 Post info: posted_by=${post.posted_by}, liked=${result.liked}, isOwnPost=${post.posted_by === userId}`);
+
     // Send notification if post was liked (not unliked) and not own post
     if (result.liked && post.posted_by !== userId) {
       try {
         const io = req.app.get('io');
-        const userName = req.user.username || req.user.full_name || 'Someone';
+        const userName = req.user.full_name || req.user.username || 'Someone';
+        console.log(`🔔 Sending like notification: from userId=${userId} (${userName}) to userId=${post.posted_by}`);
         await notifySup(post.posted_by, userId, userName, postId, io);
-        console.log('✅ Like notification sent to user:', post.posted_by);
+        console.log('✅ Like notification sent successfully');
       } catch (notifError) {
-        console.error('⚠️ Failed to send notification:', notifError.message);
+        console.error('⚠️ Failed to send like notification:', notifError.message);
         // Don't fail the request if notification fails
       }
+    } else {
+      console.log('⏩ Skipping notification: liked=', result.liked, 'isOwnPost=', post.posted_by === userId);
     }
 
     res.status(200).json({ 
@@ -210,22 +217,29 @@ exports.toggleShare = async (req, res) => {
     const { postId } = req.params;
     const userId = req.user.id;
 
+    console.log(`🔄 toggleShare: postId=${postId}, userId=${userId}`);
+
     const result = await Post.toggleShare(postId, userId);
     
     // Get updated post
     const post = await Post.getById(postId);
 
+    console.log(`📊 Post info: posted_by=${post.posted_by}, shared=${result.shared}, isOwnPost=${post.posted_by === userId}`);
+
     // Send notification if post was shared (not unshared) and not own post
     if (result.shared && post.posted_by !== userId) {
       try {
         const io = req.app.get('io');
-        const userName = req.user.username || req.user.full_name || 'Someone';
+        const userName = req.user.full_name || req.user.username || 'Someone';
+        console.log(`🔔 Sending share notification: from userId=${userId} (${userName}) to userId=${post.posted_by}`);
         await notifyRepost(post.posted_by, userId, userName, postId, io);
-        console.log('✅ Share notification sent to user:', post.posted_by);
+        console.log('✅ Share notification sent successfully');
       } catch (notifError) {
-        console.error('⚠️ Failed to send notification:', notifError.message);
+        console.error('⚠️ Failed to send share notification:', notifError.message);
         // Don't fail the request if notification fails
       }
+    } else {
+      console.log('⏩ Skipping notification: shared=', result.shared, 'isOwnPost=', post.posted_by === userId);
     }
 
     res.status(200).json({ 
@@ -246,11 +260,34 @@ exports.addComment = async (req, res) => {
     const { comment } = req.body;
     const userId = req.user.id;
 
+    console.log(`💬 addComment: postId=${postId}, userId=${userId}`);
+
     if (!comment || comment.trim() === '') {
       return res.status(400).json({ error: 'Comment text is required' });
     }
 
     const newComment = await Post.addComment(postId, userId, comment);
+    
+    // Get post to check ownership
+    const post = await Post.getById(postId);
+
+    console.log(`📊 Post info: posted_by=${post.posted_by}, isOwnPost=${post.posted_by === userId}`);
+
+    // Send notification if not own post
+    if (post.posted_by !== userId) {
+      try {
+        const io = req.app.get('io');
+        const userName = req.user.full_name || req.user.username || 'Someone';
+        console.log(`🔔 Sending comment notification: from userId=${userId} (${userName}) to userId=${post.posted_by}`);
+        await notifyComment(post.posted_by, userId, userName, postId, comment, io);
+        console.log('✅ Comment notification sent successfully');
+      } catch (notifError) {
+        console.error('⚠️ Failed to send comment notification:', notifError.message);
+        // Don't fail the request if notification fails
+      }
+    } else {
+      console.log('⏩ Skipping notification: user commented on own post');
+    }
 
     res.status(201).json({ 
       message: 'Comment added successfully',

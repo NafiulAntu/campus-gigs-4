@@ -57,8 +57,23 @@ function createSocketServer(httpServer) {
     }
   });
 
-  io.on('connection', (socket) => {
-    console.log(`🔌 Socket connected: ${socket.id} (User: ${socket.userId})`);
+  io.on('connection', async (socket) => {
+    console.log(`🔌 Socket connected: ${socket.id} (Firebase UID: ${socket.userId})`);
+    
+    // Get PostgreSQL user ID from Firebase UID
+    try {
+      const result = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [socket.userId]);
+      if (result.rows.length > 0) {
+        socket.pgUserId = result.rows[0].id; // Store PostgreSQL user ID
+        console.log(`✅ Mapped Firebase UID to PostgreSQL ID: ${socket.userId} -> ${socket.pgUserId}`);
+      } else {
+        console.warn(`⚠️ No PostgreSQL user found for Firebase UID: ${socket.userId}`);
+        socket.pgUserId = null;
+      }
+    } catch (error) {
+      console.error('❌ Error fetching PostgreSQL user ID:', error.message);
+      socket.pgUserId = null;
+    }
     
     // Track active user
     activeUsers.set(socket.userId, socket.id);
@@ -69,9 +84,12 @@ function createSocketServer(httpServer) {
     // Broadcast presence to all connected clients
     io.emit('user:online', { userId: socket.userId, online: true });
 
-    // Join user's personal room (for direct messages and notifications)
-    socket.join(`user:${socket.userId}`);
-    socket.join(`user_${socket.userId}`); // Alternative format for notifications
+    // Join user's personal rooms (for direct messages and notifications)
+    socket.join(`user:${socket.userId}`); // Firebase UID room for messages
+    if (socket.pgUserId) {
+      socket.join(`user_${socket.pgUserId}`); // PostgreSQL ID room for notifications
+      console.log(`📡 User joined notification room: user_${socket.pgUserId}`);
+    }
 
     // Handle joining a conversation room
     socket.on('conversation:join', async (conversationId) => {
