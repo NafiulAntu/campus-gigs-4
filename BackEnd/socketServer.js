@@ -49,7 +49,6 @@ function createSocketServer(httpServer) {
       socket.userId = decodedToken.uid;
       socket.userEmail = decodedToken.email;
       
-      console.log(`✅ Socket authenticated: ${socket.userEmail} (${socket.userId})`);
       next();
     } catch (error) {
       console.error('Socket authentication failed:', error.message);
@@ -58,20 +57,17 @@ function createSocketServer(httpServer) {
   });
 
   io.on('connection', async (socket) => {
-    console.log(`🔌 Socket connected: ${socket.id} (Firebase UID: ${socket.userId})`);
-    
     // Get PostgreSQL user ID from Firebase UID
     try {
       const result = await db.query('SELECT id FROM users WHERE firebase_uid = $1', [socket.userId]);
       if (result.rows.length > 0) {
-        socket.pgUserId = result.rows[0].id; // Store PostgreSQL user ID
-        console.log(`✅ Mapped Firebase UID to PostgreSQL ID: ${socket.userId} -> ${socket.pgUserId}`);
+        socket.pgUserId = result.rows[0].id;
       } else {
-        console.warn(`⚠️ No PostgreSQL user found for Firebase UID: ${socket.userId}`);
+        console.warn(`No PostgreSQL user found for Firebase UID: ${socket.userId}`);
         socket.pgUserId = null;
       }
     } catch (error) {
-      console.error('❌ Error fetching PostgreSQL user ID:', error.message);
+      console.error('Error fetching PostgreSQL user ID:', error.message);
       socket.pgUserId = null;
     }
     
@@ -88,7 +84,6 @@ function createSocketServer(httpServer) {
     socket.join(`user:${socket.userId}`); // Firebase UID room for messages
     if (socket.pgUserId) {
       socket.join(`user_${socket.pgUserId}`); // PostgreSQL ID room for notifications
-      console.log(`📡 User joined notification room: user_${socket.pgUserId}`);
     }
 
     // Handle joining a conversation room
@@ -113,8 +108,6 @@ function createSocketServer(httpServer) {
     socket.on('message:send', async (data) => {
       try {
         const { conversationId, text, recipientId, attachments } = data;
-        
-        console.log(`💬 Message from ${socket.userId} to conversation ${conversationId}`);
 
         // Create message object
         const message = {
@@ -165,7 +158,6 @@ function createSocketServer(httpServer) {
               const senderName = sender.username || sender.full_name || 'Someone';
               const messagePreview = text.substring(0, 50) + (text.length > 50 ? '...' : '');
               await notifyMessage(recipient.id, sender.id, senderName, conversationId, messagePreview, io);
-              console.log('✅ Message notification sent to user:', recipient.id);
             }
           } catch (notifError) {
             console.error('⚠️ Failed to send message notification:', notifError.message);

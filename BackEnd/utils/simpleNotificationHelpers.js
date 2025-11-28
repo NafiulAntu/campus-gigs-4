@@ -7,11 +7,8 @@ async function createAndSend({ userId, actorId, type, title, message, data = {},
   try {
     // Don't notify self
     if (userId === actorId) {
-      console.log('⏩ Skipped notification: user is actor (userId === actorId)');
       return null;
     }
-
-    console.log(`📝 Creating notification: userId=${userId}, actorId=${actorId}, type=${type}`);
 
     // Create notification in database
     const query = `
@@ -22,8 +19,6 @@ async function createAndSend({ userId, actorId, type, title, message, data = {},
     const values = [userId, type, title, message, JSON.stringify(data), actorId, link];
     const result = await pool.query(query, values);
     const notification = result.rows[0];
-
-    console.log(`✅ Notification created in DB: ID=${notification.id}`);
 
     // Send via Socket.io if available
     if (io) {
@@ -43,16 +38,12 @@ async function createAndSend({ userId, actorId, type, title, message, data = {},
       const fullNotification = fullResult.rows[0];
 
       const roomName = `user_${userId}`;
-      console.log(`📡 Emitting to Socket.io room: ${roomName}`);
       io.to(roomName).emit('notification:new', fullNotification);
-      console.log(`✅ Notification emitted to room ${roomName}`);
-    } else {
-      console.warn('⚠️ Socket.io instance not available, notification not sent real-time');
     }
 
     return notification;
   } catch (error) {
-    console.error('❌ Error in createAndSend:', error.message);
+    console.error('Error creating notification:', error.message);
     throw error;
   }
 }

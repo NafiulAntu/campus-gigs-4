@@ -15,15 +15,6 @@ export default function Sidebar({ onNavigate = () => {} }) {
   const menuRef = useRef(null);
   const { socket, isConnected } = useSocket();
 
-  // Debug: Log state changes
-  useEffect(() => {
-    console.log('💬 Message count state changed to:', messageCount);
-  }, [messageCount]);
-
-  useEffect(() => {
-    console.log('🔔 Notification count state changed to:', notificationCount);
-  }, [notificationCount]);
-
   // Load user data from localStorage
   useEffect(() => {
     const loadUser = () => {
@@ -68,18 +59,15 @@ export default function Sidebar({ onNavigate = () => {} }) {
       const token = await auth.currentUser?.getIdToken();
       if (!token) return;
       
-      // Get total unread count
       const totalResponse = await axios.get(`${API_URL}/notifications/unread-count`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Get message-only count
       const messageResponse = await axios.get(`${API_URL}/notifications/unread-count?type=message`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (totalResponse.data.success && messageResponse.data.success) {
-        // Notification count = total - messages (so messages don't show in notification badge)
         const totalCount = totalResponse.data.data.count;
         const msgCount = messageResponse.data.data.count;
         setNotificationCount(totalCount - msgCount);
@@ -98,31 +86,17 @@ export default function Sidebar({ onNavigate = () => {} }) {
   const fetchMessageCount = async () => {
     try {
       const token = await auth.currentUser?.getIdToken();
-      if (!token) {
-        console.log('❌ No token available for message count');
-        return;
-      }
+      if (!token) return;
       
-      console.log('📬 Fetching message count from:', `${API_URL}/notifications/unread-count?type=message`);
       const response = await axios.get(`${API_URL}/notifications/unread-count?type=message`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('📬 Message count API response:', response.data);
-      
       if (response.data.success) {
-        const count = response.data.data.count;
-        console.log(`📬 Message count from API: ${count}`);
-        console.log(`📬 Setting messageCount state to: ${count}`);
-        setMessageCount(count);
-        
-        // Verify state was set
-        setTimeout(() => {
-          console.log(`📬 Verified messageCount state is now: ${count}`);
-        }, 100);
+        setMessageCount(response.data.data.count);
       }
     } catch (error) {
-      console.error('❌ Error fetching message count:', error.response?.data || error.message);
+      console.error('Error fetching message count:', error);
     }
   };
 
@@ -156,52 +130,22 @@ export default function Sidebar({ onNavigate = () => {} }) {
 
   // Socket.io real-time updates
   useEffect(() => {
-    if (!socket || !isConnected) {
-      console.log('⚠️ Socket not ready:', { socket: !!socket, isConnected });
-      return;
-    }
+    if (!socket || !isConnected) return;
 
-    console.log('✅ Socket.io connected, setting up notification listeners');
-
-    // New notification received
     socket.on('notification:new', (notification) => {
-      console.log('🔔 Received notification via Socket.io:', {
-        id: notification.id,
-        type: notification.type,
-        message: notification.message,
-        actor: notification.actor_name
-      });
-      
-      // If it's a message notification, update message count
       if (notification.type === 'message') {
-        console.log('💬 Message notification detected!');
-        setMessageCount(prev => {
-          const newCount = prev + 1;
-          console.log(`💬 Message count updated: ${prev} -> ${newCount}`);
-          return newCount;
-        });
+        setMessageCount(prev => prev + 1);
       } else {
-        // Otherwise update notification count
-        console.log(`📢 ${notification.type} notification - updating notification count`);
-        setNotificationCount(prev => {
-          const newCount = prev + 1;
-          console.log(`📢 Notification count updated: ${prev} -> ${newCount}`);
-          return newCount;
-        });
+        setNotificationCount(prev => prev + 1);
       }
     });
 
-    // Notification marked as read
     socket.on('notification:read', ({ notificationId }) => {
-      console.log('✓ Notification marked as read, refreshing counts');
-      // Fetch both counts to update correctly
       fetchNotificationCount();
       fetchMessageCount();
     });
 
-    // All notifications marked as read
     socket.on('notification:all_read', () => {
-      console.log('✓✓ All notifications marked as read');
       setNotificationCount(0);
       setMessageCount(0);
     });
