@@ -38,7 +38,8 @@ exports.getNotifications = async (req, res) => {
 exports.getUnreadCount = async (req, res) => {
   try {
     const userId = req.user.id;
-    const count = await Notification.getUnreadCount(userId);
+    const { type } = req.query; // Optional type filter (e.g., 'message')
+    const count = await Notification.getUnreadCount(userId, type);
 
     res.json({
       success: true,

@@ -27,9 +27,24 @@ async function createAndSend({ userId, actorId, type, title, message, data = {},
 
     // Send via Socket.io if available
     if (io) {
+      // Fetch complete notification with actor info for real-time emission
+      const fullQuery = `
+        SELECT 
+          n.*,
+          n.read as is_read,
+          COALESCE(u.full_name, u.username, 'Unknown User') as actor_name,
+          u.username as actor_username,
+          u.profile_picture as actor_profile_picture
+        FROM notifications n
+        LEFT JOIN users u ON n.actor_id = u.id
+        WHERE n.id = $1
+      `;
+      const fullResult = await pool.query(fullQuery, [notification.id]);
+      const fullNotification = fullResult.rows[0];
+
       const roomName = `user_${userId}`;
       console.log(`📡 Emitting to Socket.io room: ${roomName}`);
-      io.to(roomName).emit('notification:new', notification);
+      io.to(roomName).emit('notification:new', fullNotification);
       console.log(`✅ Notification emitted to room ${roomName}`);
     } else {
       console.warn('⚠️ Socket.io instance not available, notification not sent real-time');

@@ -53,37 +53,50 @@ export default function Sidebar({ onNavigate = () => {} }) {
     };
   }, [showAccountMenu]);
 
-  // Fetch notification count
+  // Fetch notification count (excluding messages)
   const fetchNotificationCount = async () => {
     try {
       const token = await auth.currentUser?.getIdToken();
       if (!token) return;
       
-      const response = await axios.get(`${API_URL}/notifications/unread-count`, {
+      // Get total unread count
+      const totalResponse = await axios.get(`${API_URL}/notifications/unread-count`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (response.data.success) {
-        setNotificationCount(response.data.data.count);
+      // Get message-only count
+      const messageResponse = await axios.get(`${API_URL}/notifications/unread-count?type=message`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (totalResponse.data.success && messageResponse.data.success) {
+        // Notification count = total - messages (so messages don't show in notification badge)
+        const totalCount = totalResponse.data.data.count;
+        const msgCount = messageResponse.data.data.count;
+        setNotificationCount(totalCount - msgCount);
       }
     } catch (error) {
       console.error('Error fetching notification count:', error);
     }
   };
 
-  // Fetch message count (unread messages)
+  //badge
+  const getBadgeCount = (count) => {
+    return count > 99 ? '99+' : count;
+  };
+
+  // Fetch message count using type filter
   const fetchMessageCount = async () => {
     try {
       const token = await auth.currentUser?.getIdToken();
       if (!token) return;
       
-      // This endpoint needs to be created in backend
-      const response = await axios.get(`${API_URL}/messages/unread-count`, {
+      const response = await axios.get(`${API_URL}/notifications/unread-count?type=message`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.data.success) {
-        setMessageCount(response.data.count || 0);
+        setMessageCount(response.data.data.count);
       }
     } catch (error) {
       console.error('Error fetching message count:', error);
@@ -120,39 +133,53 @@ export default function Sidebar({ onNavigate = () => {} }) {
 
   // Socket.io real-time updates
   useEffect(() => {
-    if (!socket || !isConnected) return;
+    if (!socket || !isConnected) {
+      console.log('⚠️ Socket not ready:', { socket: !!socket, isConnected });
+      return;
+    }
+
+    console.log('✅ Socket.io connected, setting up notification listeners');
 
     // New notification received
-    socket.on('notification:new', () => {
-      setNotificationCount(prev => prev + 1);
+    socket.on('notification:new', (notification) => {
+      console.log('🔔 Received notification:', notification);
+      
+      // If it's a message notification, update message count
+      if (notification.type === 'message') {
+        console.log('💬 Message notification - incrementing message count');
+        setMessageCount(prev => {
+          console.log(`Message count: ${prev} -> ${prev + 1}`);
+          return prev + 1;
+        });
+      } else {
+        // Otherwise update notification count
+        console.log(`📢 ${notification.type} notification - incrementing notification count`);
+        setNotificationCount(prev => {
+          console.log(`Notification count: ${prev} -> ${prev + 1}`);
+          return prev + 1;
+        });
+      }
     });
 
     // Notification marked as read
-    socket.on('notification:read', () => {
-      setNotificationCount(prev => Math.max(0, prev - 1));
+    socket.on('notification:read', ({ notificationId }) => {
+      console.log('✓ Notification marked as read, refreshing counts');
+      // Fetch both counts to update correctly
+      fetchNotificationCount();
+      fetchMessageCount();
     });
 
     // All notifications marked as read
     socket.on('notification:all_read', () => {
+      console.log('✓✓ All notifications marked as read');
       setNotificationCount(0);
-    });
-
-    // New message received
-    socket.on('message:new', () => {
-      setMessageCount(prev => prev + 1);
-    });
-
-    // Message read
-    socket.on('message:read', () => {
-      setMessageCount(prev => Math.max(0, prev - 1));
+      setMessageCount(0);
     });
 
     return () => {
       socket.off('notification:new');
       socket.off('notification:read');
       socket.off('notification:all_read');
-      socket.off('message:new');
-      socket.off('message:read');
     };
   }, [socket, isConnected]);
 
@@ -209,13 +236,13 @@ export default function Sidebar({ onNavigate = () => {} }) {
                 {/* Show badge for notifications */}
                 {it.key === "notifications" && notificationCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-gradient-to-r from-[#ff3b3b] to-[#ff6b6b] text-white text-[10px] font-bold rounded-full h-[18px] min-w-[18px] flex items-center justify-center px-1 shadow-lg">
-                    {notificationCount > 99 ? '99+' : notificationCount}
+                    {getBadgeCount(notificationCount)}
                   </span>
                 )}
                 {/* Show badge for messages */}
                 {it.key === "messages" && messageCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] text-white text-[10px] font-bold rounded-full h-[18px] min-w-[18px] flex items-center justify-center px-1 shadow-lg">
-                    {messageCount > 99 ? '99+' : messageCount}
+                    {getBadgeCount(messageCount)}
                   </span>
                 )}
               </span>

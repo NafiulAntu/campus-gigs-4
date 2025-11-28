@@ -67,14 +67,21 @@ class Notification {
   /**
    * Get unread notification count for a user
    */
-  static async getUnreadCount(userId) {
+  static async getUnreadCount(userId, type = null) {
     try {
-      const query = `
+      let query = `
         SELECT COUNT(*) as count
         FROM notifications
         WHERE user_id = $1 AND read = FALSE
       `;
-      const result = await pool.query(query, [userId]);
+      const values = [userId];
+      
+      if (type) {
+        query += ' AND type = $2';
+        values.push(type);
+      }
+      
+      const result = await pool.query(query, values);
       return parseInt(result.rows[0].count);
     } catch (error) {
       console.error('Error fetching unread count:', error);
