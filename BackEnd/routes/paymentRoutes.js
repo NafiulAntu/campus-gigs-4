@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const paymentController = require('../controllers/paymentController');
-const { authenticateToken } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 // Initiate payment (protected)
-router.post('/initiate', authenticateToken, paymentController.initiatePayment);
+router.post('/initiate', protect, paymentController.initiatePayment);
 
 // SSLCommerz callbacks (public - SSLCommerz will call these)
 router.post('/success', paymentController.paymentSuccess);
@@ -13,7 +13,7 @@ router.post('/cancel', paymentController.paymentCancel);
 router.post('/ipn', paymentController.paymentIPN);
 
 // Transaction history (protected)
-router.get('/transaction/:transactionId', authenticateToken, paymentController.getTransaction);
-router.get('/history', authenticateToken, paymentController.getTransactionHistory);
+router.get('/transaction/:transactionId', protect, paymentController.getTransaction);
+router.get('/history', protect, paymentController.getTransactionHistory);
 
 module.exports = router;
