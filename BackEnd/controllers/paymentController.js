@@ -1,5 +1,5 @@
 const SSLCommerzPayment = require('sslcommerz-lts');
-const { sequelize } = require('../config/sequelize');
+const sequelize = require('../config/sequelize');
 const Subscription = require('../models/Subscription');
 const PaymentTransaction = require('../models/PaymentTransaction');
 const User = require('../models/User');
