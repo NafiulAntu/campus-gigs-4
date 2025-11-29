@@ -18,6 +18,10 @@ const ResetPassword = lazy(() => import("./log/sign/ResetPassword.jsx"));
 const AuthLayout = lazy(() => import("./Interface/AuthLayout.jsx"));
 const Terms = lazy(() => import("./log/sign/Terms.jsx"));
 const Privacy = lazy(() => import("./log/sign/Privacy.jsx"));
+const Premium = lazy(() => import("./Post/Premium.jsx"));
+const PaymentSuccess = lazy(() => import("./Post/PaymentResult.jsx").then(m => ({ default: m.PaymentSuccess })));
+const PaymentFailed = lazy(() => import("./Post/PaymentResult.jsx").then(m => ({ default: m.PaymentFailed })));
+const PaymentCancelled = lazy(() => import("./Post/PaymentResult.jsx").then(m => ({ default: m.PaymentCancelled })));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -87,7 +91,7 @@ export default function App() {
       }
     });
   }, []);
-  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/reset-password", "/terms", "/privacy"];
+  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/reset-password", "/terms", "/privacy", "/premium", "/payment/success", "/payment/failed", "/payment/cancelled"];
   const shouldHideFooter = hideFooterOn.includes(
     location.pathname.toLowerCase()
   );
@@ -107,6 +111,10 @@ export default function App() {
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/post" element={<PostPage />} />
+              <Route path="/premium" element={<Premium />} />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/failed" element={<PaymentFailed />} />
+              <Route path="/payment/cancelled" element={<PaymentCancelled />} />
               <Route path="/auth/callback" element={<CallbackHandler />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
