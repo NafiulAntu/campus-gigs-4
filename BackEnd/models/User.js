@@ -263,6 +263,25 @@ class User {
     const result = await pool.query(query, [userId]);
     return result.rows[0] || { followers_count: 0, following_count: 0 };
   }
+
+  // Find user by primary key (alias for findById for Sequelize compatibility)
+  static async findByPk(id) {
+    return this.findById(id);
+  }
+
+  // Update premium status
+  static async updatePremiumStatus(id, is_premium, premium_expires_at = null) {
+    const query = `
+      UPDATE users 
+      SET is_premium = $1, 
+          premium_expires_at = $2,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+      RETURNING id, is_premium, premium_expires_at
+    `;
+    const result = await pool.query(query, [is_premium, premium_expires_at, id]);
+    return result.rows[0];
+  }
 }
 
 module.exports = User;
