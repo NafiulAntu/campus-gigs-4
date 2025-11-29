@@ -48,6 +48,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
