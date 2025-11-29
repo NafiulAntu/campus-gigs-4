@@ -159,10 +159,7 @@ exports.paymentSuccess = async (req, res) => {
       );
 
       // Update user premium status
-      await User.update(
-        { is_premium: true, premium_expires_at: endDate },
-        { where: { id: userId }, transaction: t }
-      );
+      await User.updatePremiumStatus(userId, true, endDate);
 
       // After commit, emit notification
       t.afterCommit(async () => {

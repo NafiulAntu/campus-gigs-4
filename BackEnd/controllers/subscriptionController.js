@@ -169,10 +169,10 @@ exports.expireSubscriptions = async () => {
       // Update users' premium status
       const userIds = expiredSubs.map(sub => sub.user_id);
       if (userIds.length > 0) {
-        await User.update(
-          { is_premium: false, premium_expires_at: null },
-          { where: { id: userIds }, transaction: t }
-        );
+        // Update each user's premium status
+        for (const userId of userIds) {
+          await User.updatePremiumStatus(userId, false, null);
+        }
       }
 
       // Send notifications after commit
