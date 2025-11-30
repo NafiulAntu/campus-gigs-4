@@ -15,6 +15,7 @@ import {
 import { getOrCreateConversation } from "../../utils/messagingUtils";
 import { diagnoseMessagingIssue } from "../../utils/accountLinking";
 import { auth } from "../../config/firebase";
+import SendMoney from "./SendMoney";
 
 export default function UserProfile({ userId, onBack, onMessageClick }) {
   const navigate = useNavigate();
@@ -32,6 +33,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentImages, setCurrentImages] = useState([]);
+  const [showSendMoney, setShowSendMoney] = useState(false);
 
   const handleSendMessage = async () => {
     try {
@@ -386,6 +388,13 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                     ) : (
                       <i className="fas fa-paper-plane"></i>
                     )}
+                  </button>
+                  <button
+                    onClick={() => setShowSendMoney(true)}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all"
+                    title="Send Money"
+                  >
+                    <i className="fas fa-money-bill-wave"></i>
                   </button>
                 </div>
               )}
@@ -869,6 +878,22 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
           </div>
         </div>
       )}
+
+      {/* Send Money Modal */}
+      <SendMoney 
+        isOpen={showSendMoney}
+        onClose={() => setShowSendMoney(false)}
+        receiverInfo={{
+          id: userId,
+          full_name: user?.full_name || 'Unknown',
+          username: user?.username || 'unknown',
+          profile_picture: user?.profile_picture || profileData?.profilePicUrl
+        }}
+        onSuccess={(transaction) => {
+          console.log('Transaction successful:', transaction);
+          // You can add a success notification here
+        }}
+      />
     </div>
   );
 }

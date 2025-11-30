@@ -129,3 +129,10 @@ export const syncUserWithBackend = async (firebaseToken, userData) => {
     throw error;
   }
 };
+
+// Transaction API
+export const sendMoney = (data) => API.post('/transactions/send', data);
+export const getTransactions = (limit) => API.get('/transactions/history', { params: { limit } });
+export const getTransactionById = (transactionId) => API.get(`/transactions/${transactionId}`);
+export const getBalance = () => API.get('/transactions/balance/current');
+export const addBalance = (amount) => API.post('/transactions/balance/add', { amount });
