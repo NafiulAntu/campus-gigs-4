@@ -195,8 +195,12 @@ const Premium = ({ onBack }) => {
 
       <div className="pricing-cards">
         {/* Free Plan */}
-        <div className="pricing-card">
+        <div className="pricing-card free-plan">
+          <div className="plan-badge">Free</div>
           <div className="plan-header">
+            <div className="plan-icon">
+              <i className="fi fi-br-rocket"></i>
+            </div>
             <h3>Free</h3>
             <div className="price">
               <span className="currency">৳</span>
@@ -206,25 +210,29 @@ const Premium = ({ onBack }) => {
           </div>
 
           <ul className="features-list">
-            <li>✓ 5 posts per month</li>
-            <li>✓ Basic profile features</li>
-            <li>✓ Join communities</li>
-            <li>✓ Send messages</li>
-            <li>✓ Basic search</li>
+            <li><i className="fi fi-br-check"></i> 5 posts per month</li>
+            <li><i className="fi fi-br-check"></i> Basic profile features</li>
+            <li><i className="fi fi-br-check"></i> Join communities</li>
+            <li><i className="fi fi-br-check"></i> Send messages</li>
+            <li><i className="fi fi-br-check"></i> Basic search</li>
           </ul>
 
           <button 
             disabled
-            className="upgrade-btn disabled"
-            style={{opacity: 0.5, cursor: 'not-allowed'}}
+            className="upgrade-btn current-plan"
           >
+            <i className="fi fi-br-check-circle"></i>
             Current Plan
           </button>
         </div>
 
         {/* 15 Days Plan */}
-        <div className="pricing-card">
+        <div className="pricing-card starter-plan">
+          <div className="plan-badge">Try Premium</div>
           <div className="plan-header">
+            <div className="plan-icon">
+              <i className="fi fi-br-star"></i>
+            </div>
             <h3>15 Days</h3>
             <div className="price">
               <span className="currency">৳</span>
@@ -234,107 +242,140 @@ const Premium = ({ onBack }) => {
           </div>
 
           <ul className="features-list">
-            <li>✓ Unlimited posts</li>
-            <li>✓ Premium badge</li>
-            <li>✓ Priority placement</li>
-            <li>✓ Basic analytics</li>
-            <li>✓ Read receipts</li>
-            <li>✓ Try premium features</li>
+            <li><i className="fi fi-br-check"></i> Unlimited posts</li>
+            <li><i className="fi fi-br-check"></i> Premium badge</li>
+            <li><i className="fi fi-br-check"></i> Priority placement</li>
+            <li><i className="fi fi-br-check"></i> Basic analytics</li>
+            <li><i className="fi fi-br-check"></i> Read receipts</li>
+            <li><i className="fi fi-br-check"></i> Try all features</li>
           </ul>
 
           <button 
             onClick={() => handleUpgrade('15days')}
             disabled={loading}
-            className="upgrade-btn"
+            className="upgrade-btn starter"
           >
-            {loading ? 'Processing...' : 'Get 15 Days'}
+            {loading ? (
+              <>
+                <i className="fi fi-rr-spinner animate-spin"></i>
+                Processing...
+              </>
+            ) : (
+              <>
+                <i className="fi fi-br-shopping-cart"></i>
+                Get 15 Days
+              </>
+            )}
           </button>
         </div>
 
         {/* 30 Days Plan */}
-        <div className="pricing-card featured">
-          <div className="badge">Popular</div>
+        <div className="pricing-card premium-plan featured">
+          <div className="plan-badge popular">
+            <i className="fi fi-br-crown"></i> Most Popular
+          </div>
           <div className="plan-header">
+            <div className="plan-icon">
+              <i className="fi fi-br-diamond"></i>
+            </div>
             <h3>30 Days</h3>
             <div className="price">
               <span className="currency">৳</span>
               <span className="amount">150</span>
               <span className="period">/month</span>
             </div>
-            <p className="savings">Best value for monthly users</p>
+            <p className="savings">
+              <i className="fi fi-br-badge-percent"></i>
+              Best value for monthly
+            </p>
           </div>
 
           <ul className="features-list">
-            <li>✓ Everything in 15 Days</li>
-            <li>✓ Advanced analytics</li>
-            <li>✓ Pin posts to profile</li>
-            <li>✓ Custom themes</li>
-            <li>✓ Priority support</li>
+            <li><i className="fi fi-br-check"></i> Everything in 15 Days</li>
+            <li><i className="fi fi-br-check"></i> Advanced analytics</li>
+            <li><i className="fi fi-br-check"></i> Pin posts to profile</li>
+            <li><i className="fi fi-br-check"></i> Custom themes</li>
+            <li><i className="fi fi-br-check"></i> Priority support</li>
+            <li><i className="fi fi-br-check"></i> Enhanced visibility</li>
           </ul>
 
           <button 
             onClick={() => handleUpgrade('30days')}
             disabled={loading}
-            className="upgrade-btn featured"
+            className="upgrade-btn premium"
           >
-            {loading ? 'Processing...' : 'Get 30 Days'}
-          </button>
-        </div>
-
-        {/* Yearly Plan */}
-        <div className="pricing-card">
-          <div className="plan-header">
-            <h3>Yearly</h3>
-            <div className="price">
-              <span className="currency">৳</span>
-              <span className="amount">1,500</span>
-              <span className="period">/year</span>
-            </div>
-            <p className="savings">Save ৳300 (17% off)</p>
-          </div>
-
-          <ul className="features-list">
-            <li>✓ Everything in 30 Days</li>
-            <li>✓ 2 months free</li>
-            <li>✓ Priority support</li>
-            <li>✓ Exclusive features</li>
-            <li>✓ Early access to updates</li>
-          </ul>
-
-          <button 
-            onClick={() => handleUpgrade('yearly')}
-            disabled={loading}
-            className="upgrade-btn"
-          >
-            {loading ? 'Processing...' : 'Upgrade Yearly'}
+            {loading ? (
+              <>
+                <i className="fi fi-rr-spinner animate-spin"></i>
+                Processing...
+              </>
+            ) : (
+              <>
+                <i className="fi fi-br-rocket-lunch"></i>
+                Upgrade Now
+              </>
+            )}
           </button>
         </div>
       </div>
 
       <div className="payment-methods">
-        <h3>Secure Payment via SSLCommerz</h3>
-        <div className="methods">
-          <span>bKash</span>
-          <span>Nagad</span>
-          <span>Rocket</span>
-          <span>Cards</span>
-          <span>Banking</span>
+        <div className="methods-header">
+          <i className="fi fi-br-shield-check"></i>
+          <h3>Secure Payment via SSLCommerz</h3>
         </div>
+        <div className="methods">
+          <div className="method-item">
+            <div className="method-icon bkash"></div>
+            <span>bKash</span>
+          </div>
+          <div className="method-item">
+            <div className="method-icon nagad"></div>
+            <span>Nagad</span>
+          </div>
+          <div className="method-item">
+            <div className="method-icon rocket"></div>
+            <span>Rocket</span>
+          </div>
+          <div className="method-item">
+            <div className="method-icon card"></div>
+            <span>Cards</span>
+          </div>
+          <div className="method-item">
+            <div className="method-icon bank"></div>
+            <span>Banking</span>
+          </div>
+        </div>
+        <p className="security-note">
+          <i className="fi fi-br-lock"></i>
+          All transactions are encrypted and secure
+        </p>
       </div>
 
       <div className="faq-section">
-        <h3>Frequently Asked Questions</h3>
-        <div className="faq-item">
-          <h4>Can I cancel anytime?</h4>
-          <p>Yes, you can turn off auto-renewal anytime. You'll continue to have premium access until the end of your billing period.</p>
-        </div>
-        <div className="faq-item">
-          <h4>What payment methods are accepted?</h4>
-          <p>We accept bKash, Nagad, Rocket, all major credit/debit cards, and internet banking through SSLCommerz.</p>
-        </div>
-        <div className="faq-item">
-          <h4>Is my payment information secure?</h4>
-          <p>Absolutely! We use SSLCommerz, Bangladesh's leading payment gateway with PCI DSS Level 1 certification.</p>
+        <h3><i className="fi fi-br-interrogation"></i> Frequently Asked Questions</h3>
+        <div className="faq-grid">
+          <div className="faq-item">
+            <div className="faq-icon">
+              <i className="fi fi-br-time-past"></i>
+            </div>
+            <h4>Can I cancel anytime?</h4>
+            <p>Yes, you can turn off auto-renewal anytime. You'll keep premium access until the end of your billing period.</p>
+          </div>
+          <div className="faq-item">
+            <div className="faq-icon">
+              <i className="fi fi-br-credit-card"></i>
+            </div>
+            <h4>Payment methods?</h4>
+            <p>We accept bKash, Nagad, Rocket, all major credit/debit cards, and internet banking through SSLCommerz.</p>
+          </div>
+          <div className="faq-item">
+            <div className="faq-icon">
+              <i className="fi fi-br-shield-check"></i>
+            </div>
+            <h4>Is payment secure?</h4>
+            <p>Absolutely! We use SSLCommerz, Bangladesh's leading payment gateway with PCI DSS Level 1 certification.</p>
+          </div>
         </div>
       </div>
         </div>
