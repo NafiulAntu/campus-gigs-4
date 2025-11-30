@@ -12,18 +12,25 @@ const is_live = process.env.SSLCOMMERZ_MODE === 'live'; // true for live, false 
 
 // Pricing
 const PRICING = {
-  monthly: 299,
-  yearly: 2999
+  '15days': 99,
+  '30days': 150,
+  yearly: 1500
+};
+
+const PLAN_DAYS = {
+  '15days': 15,
+  '30days': 30,
+  yearly: 365
 };
 
 // Initialize payment
 exports.initiatePayment = async (req, res) => {
   try {
-    const { plan_type } = req.body; // 'monthly' or 'yearly'
+    const { plan_type } = req.body; // '15days', '30days', or 'yearly'
     const userId = req.user.id;
 
     // Validate plan
-    if (!['monthly', 'yearly'].includes(plan_type)) {
+    if (!['15days', '30days', 'yearly'].includes(plan_type)) {
       return res.status(400).json({ error: 'Invalid plan type' });
     }
 
@@ -130,11 +137,8 @@ exports.paymentSuccess = async (req, res) => {
       // Calculate dates
       const startDate = new Date();
       const endDate = new Date();
-      if (planType === 'monthly') {
-        endDate.setMonth(endDate.getMonth() + 1);
-      } else {
-        endDate.setFullYear(endDate.getFullYear() + 1);
-      }
+      const planDays = PLAN_DAYS[planType];
+      endDate.setDate(endDate.getDate() + planDays);
 
       // Cancel existing active subscriptions
       await Subscription.update(

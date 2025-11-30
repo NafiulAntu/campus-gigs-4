@@ -78,6 +78,17 @@ export default function Profile({ onBack }) {
     showOnlineStatus: false,
   });
 
+  const [paymentPreferences, setPaymentPreferences] = useState({
+    allowPayments: true,
+    paymentMethods: {
+      bkash: true,
+      nagad: true,
+      rocket: true,
+      card: true,
+    },
+    paymentNote: '',
+  });
+
   // Load user data on mount and auto-detect profession
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -1560,6 +1571,113 @@ export default function Profile({ onBack }) {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Payment Preferences */}
+            <div className="bg-white/[0.04] rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <i className="fi fi-br-wallet text-primary-teal"></i>
+                Payment Preferences
+              </h3>
+              
+              {/* Allow Payments Toggle */}
+              <div className="mb-6 p-4 bg-black/40 border border-white/10 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-start gap-3 flex-1">
+                    <div className="h-10 w-10 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <i className="fi fi-br-money text-primary-teal text-lg"></i>
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-white mb-1">Allow others to send me money</p>
+                      <p className="text-sm text-text-muted">Enable or disable receiving payments from other users</p>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <Switcher8
+                      isChecked={paymentPreferences.allowPayments}
+                      onChange={() => setPaymentPreferences(prev => ({
+                        ...prev,
+                        allowPayments: !prev.allowPayments
+                      }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Methods Selection */}
+              {paymentPreferences.allowPayments && (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-white mb-3">
+                      Accepted Payment Methods
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { key: 'bkash', label: 'bKash', icon: '💳', color: 'from-pink-500/20 to-pink-600/10 border-pink-500/30' },
+                        { key: 'nagad', label: 'Nagad', icon: '📱', color: 'from-orange-500/20 to-orange-600/10 border-orange-500/30' },
+                        { key: 'rocket', label: 'Rocket', icon: '🚀', color: 'from-purple-500/20 to-purple-600/10 border-purple-500/30' },
+                        { key: 'card', label: 'Card', icon: '💳', color: 'from-blue-500/20 to-blue-600/10 border-blue-500/30' },
+                      ].map((method) => (
+                        <div
+                          key={method.key}
+                          onClick={() => setPaymentPreferences(prev => ({
+                            ...prev,
+                            paymentMethods: {
+                              ...prev.paymentMethods,
+                              [method.key]: !prev.paymentMethods[method.key]
+                            }
+                          }))}
+                          className={`p-4 bg-gradient-to-br ${method.color} border rounded-lg cursor-pointer transition-all hover:scale-105 ${
+                            paymentPreferences.paymentMethods[method.key] 
+                              ? 'ring-2 ring-primary-teal' 
+                              : 'opacity-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{method.icon}</span>
+                            <div className="flex-1">
+                              <p className="font-semibold text-white text-sm">{method.label}</p>
+                              <p className="text-xs text-text-muted">
+                                {paymentPreferences.paymentMethods[method.key] ? 'Enabled' : 'Disabled'}
+                              </p>
+                            </div>
+                            <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
+                              paymentPreferences.paymentMethods[method.key]
+                                ? 'border-primary-teal bg-primary-teal'
+                                : 'border-white/30'
+                            }`}>
+                              {paymentPreferences.paymentMethods[method.key] && (
+                                <i className="fi fi-br-check text-white text-xs"></i>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Payment Note */}
+                  <div>
+                    <label className="block text-sm font-semibold text-white mb-2">
+                      Payment Instructions (Optional)
+                    </label>
+                    <textarea
+                      value={paymentPreferences.paymentNote}
+                      onChange={(e) => setPaymentPreferences(prev => ({
+                        ...prev,
+                        paymentNote: e.target.value
+                      }))}
+                      placeholder="e.g., Please include your username in the payment note..."
+                      rows={3}
+                      className="w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal resize-none"
+                      maxLength={200}
+                    />
+                    <p className="text-xs text-text-muted mt-1">
+                      {paymentPreferences.paymentNote.length}/200 characters
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Danger Zone */}

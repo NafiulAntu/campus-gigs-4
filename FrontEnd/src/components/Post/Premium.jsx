@@ -194,61 +194,117 @@ const Premium = ({ onBack }) => {
       {error && <div className="error-message">{error}</div>}
 
       <div className="pricing-cards">
-        {/* Monthly Plan */}
+        {/* Free Plan */}
         <div className="pricing-card">
           <div className="plan-header">
-            <h3>Monthly</h3>
+            <h3>Free</h3>
             <div className="price">
               <span className="currency">৳</span>
-              <span className="amount">299</span>
-              <span className="period">/month</span>
+              <span className="amount">0</span>
+              <span className="period">/forever</span>
             </div>
           </div>
 
           <ul className="features-list">
-            <li>✓ Unlimited posts per month</li>
-            <li>✓ Priority placement in search</li>
-            <li>✓ Advanced analytics dashboard</li>
-            <li>✓ Premium badge on profile</li>
-            <li>✓ Message read receipts</li>
-            <li>✓ Pin posts to profile</li>
-            <li>✓ Custom profile themes</li>
-            <li>✓ Early access to new features</li>
+            <li>✓ 5 posts per month</li>
+            <li>✓ Basic profile features</li>
+            <li>✓ Join communities</li>
+            <li>✓ Send messages</li>
+            <li>✓ Basic search</li>
           </ul>
 
           <button 
-            onClick={() => handleUpgrade('monthly')}
+            disabled
+            className="upgrade-btn disabled"
+            style={{opacity: 0.5, cursor: 'not-allowed'}}
+          >
+            Current Plan
+          </button>
+        </div>
+
+        {/* 15 Days Plan */}
+        <div className="pricing-card">
+          <div className="plan-header">
+            <h3>15 Days</h3>
+            <div className="price">
+              <span className="currency">৳</span>
+              <span className="amount">99</span>
+              <span className="period">/15 days</span>
+            </div>
+          </div>
+
+          <ul className="features-list">
+            <li>✓ Unlimited posts</li>
+            <li>✓ Premium badge</li>
+            <li>✓ Priority placement</li>
+            <li>✓ Basic analytics</li>
+            <li>✓ Read receipts</li>
+            <li>✓ Try premium features</li>
+          </ul>
+
+          <button 
+            onClick={() => handleUpgrade('15days')}
             disabled={loading}
             className="upgrade-btn"
           >
-            {loading ? 'Processing...' : 'Upgrade Monthly'}
+            {loading ? 'Processing...' : 'Get 15 Days'}
+          </button>
+        </div>
+
+        {/* 30 Days Plan */}
+        <div className="pricing-card featured">
+          <div className="badge">Popular</div>
+          <div className="plan-header">
+            <h3>30 Days</h3>
+            <div className="price">
+              <span className="currency">৳</span>
+              <span className="amount">150</span>
+              <span className="period">/month</span>
+            </div>
+            <p className="savings">Best value for monthly users</p>
+          </div>
+
+          <ul className="features-list">
+            <li>✓ Everything in 15 Days</li>
+            <li>✓ Advanced analytics</li>
+            <li>✓ Pin posts to profile</li>
+            <li>✓ Custom themes</li>
+            <li>✓ Priority support</li>
+          </ul>
+
+          <button 
+            onClick={() => handleUpgrade('30days')}
+            disabled={loading}
+            className="upgrade-btn featured"
+          >
+            {loading ? 'Processing...' : 'Get 30 Days'}
           </button>
         </div>
 
         {/* Yearly Plan */}
-        <div className="pricing-card featured">
-          <div className="badge">Best Value</div>
+        <div className="pricing-card">
           <div className="plan-header">
             <h3>Yearly</h3>
             <div className="price">
               <span className="currency">৳</span>
-              <span className="amount">2,999</span>
+              <span className="amount">1,500</span>
               <span className="period">/year</span>
             </div>
-            <p className="savings">Save ৳589 (17% off)</p>
+            <p className="savings">Save ৳300 (17% off)</p>
           </div>
 
           <ul className="features-list">
-            <li>✓ Everything in Monthly</li>
+            <li>✓ Everything in 30 Days</li>
             <li>✓ 2 months free</li>
             <li>✓ Priority support</li>
-            <li>✓ Exclusive yearly features</li>
+            <li>✓ Exclusive features</li>
+            <li>✓ Early access to updates</li>
           </ul>
 
           <button 
             onClick={() => handleUpgrade('yearly')}
             disabled={loading}
-            className="upgrade-btn featured"
+            className="upgrade-btn"
           >
             {loading ? 'Processing...' : 'Upgrade Yearly'}
           </button>
