@@ -321,7 +321,7 @@ export default function Payments({ onBack }) {
                 {/* bKash */}
                 <div className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border border-pink-500/20 rounded-xl p-6 hover:border-pink-500/40 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center p-1">
+                    <div className="h-12 w-12 rounded-xl flex items-center justify-center p-1">
                       <img src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" alt="bKash" className="w-full h-full object-contain" />
                     </div>
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
@@ -335,7 +335,7 @@ export default function Payments({ onBack }) {
                 {/* Nagad */}
                 <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-6 hover:border-orange-500/40 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center p-1">
+                    <div className="h-12 w-12 rounded-xl flex items-center justify-center p-1">
                       <img src="https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png" alt="Nagad" className="w-full h-full object-contain" />
                     </div>
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
@@ -349,7 +349,7 @@ export default function Payments({ onBack }) {
                 {/* Rocket */}
                 <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center p-1">
+                    <div className="h-12 w-12 rounded-xl flex items-center justify-center p-1">
                       <img src="https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg" alt="Rocket" className="w-full h-full object-contain" />
                     </div>
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
@@ -372,7 +372,7 @@ export default function Payments({ onBack }) {
                 {/* Visa */}
                 <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:border-blue-500/40 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center p-1">
+                    <div className="h-12 w-12 rounded-xl flex items-center justify-center p-1">
                       <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa" className="w-full h-full object-contain" />
                     </div>
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
@@ -386,7 +386,7 @@ export default function Payments({ onBack }) {
                 {/* Mastercard */}
                 <div className="bg-gradient-to-br from-red-500/10 to-orange-600/5 border border-red-500/20 rounded-xl p-6 hover:border-red-500/40 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center p-1">
+                    <div className="h-12 w-12 rounded-xl flex items-center justify-center p-1">
                       <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="w-full h-full object-contain" />
                     </div>
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
