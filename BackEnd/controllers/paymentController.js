@@ -10,10 +10,10 @@ const store_id = process.env.SSLCOMMERZ_STORE_ID;
 const store_passwd = process.env.SSLCOMMERZ_STORE_PASSWORD;
 const is_live = process.env.SSLCOMMERZ_MODE === 'live'; // true for live, false for sandbox
 
-// Pricing
+// Pricing (matches Premium.jsx frontend)
 const PRICING = {
   '15days': 99,
-  '30days': 150,
+  '30days': 299,
   yearly: 1500
 };
 
