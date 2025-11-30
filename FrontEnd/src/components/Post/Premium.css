@@ -412,7 +412,6 @@
   padding: 20px;
   background: transparent;
   border-radius: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
   min-width: 100px;
   min-height: 90px;
@@ -421,7 +420,6 @@
 .method-item:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(37, 99, 235, 0.25);
-  border-color: rgba(37, 99, 235, 0.3);
 }
 
 .payment-logo {
