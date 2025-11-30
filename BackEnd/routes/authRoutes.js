@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { signup, signin, forgotPassword, resetPassword, oauthCallback, deleteAccount, firebaseSync } = require('../controllers/authController');
+const { signup, signin, forgotPassword, resetPassword, oauthCallback, deleteAccount, firebaseSync, verifyOTP, resendOTP } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const passport = require('../config/passport');
 
@@ -8,6 +8,8 @@ const passport = require('../config/passport');
 router.post('/signup', signup);
 router.post('/signin', signin);
 router.post('/forgot-password', forgotPassword);
+router.post('/verify-otp', verifyOTP);
+router.post('/resend-otp', resendOTP);
 router.post('/reset-password', resetPassword);
 
 // Protected routes

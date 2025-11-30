@@ -37,6 +37,8 @@ API.interceptors.request.use(async (req) => {
 export const signup = (data) => API.post('/auth/signup', data);
 export const signin = (data) => API.post('/auth/signin', data);
 export const forgotPassword = (data) => API.post('/auth/forgot-password', data);
+export const verifyOTP = (data) => API.post('/auth/verify-otp', data);
+export const resendOTP = (data) => API.post('/auth/resend-otp', data);
 export const resetPassword = (data) => API.post('/auth/reset-password', data);
 export const deleteAccount = (data) => API.delete('/auth/delete-account', { data });
 

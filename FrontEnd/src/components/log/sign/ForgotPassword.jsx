@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { forgotPassword } from '../../../services/api';
 import { FaEnvelope, FaArrowLeft } from 'react-icons/fa';
 import { Canvas } from "@react-three/fiber";
@@ -7,6 +7,7 @@ import { Stars } from "@react-three/drei";
 import { motion, useMotionValue, useMotionTemplate, animate } from "framer-motion";
 
 export default function ForgotPassword() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,10 +45,15 @@ export default function ForgotPassword() {
 
     try {
       await forgotPassword({ email });
-      setSuccess('Password reset link sent to your email!');
+      setSuccess('OTP sent to your email!');
       setResendTimer(60); // 60 seconds cooldown
+      
+      // Navigate to OTP verification page after 1 second
+      setTimeout(() => {
+        navigate('/verify-otp', { state: { email } });
+      }, 1000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to send reset link. Please try again.');
+      setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -121,8 +127,7 @@ export default function ForgotPassword() {
             fontSize: '15px',
             lineHeight: '1.6'
           }}>
-            Enter your email address and
-            we'll send you a link to reset your password.
+            Enter your email address and we'll send you a 6-digit verification code to reset your password.
           </p>
 
           <form onSubmit={handleSubmit} className="signin-form">
@@ -145,7 +150,7 @@ export default function ForgotPassword() {
               disabled={loading || success}
               style={{ marginTop: '16px' }}
             >
-              {loading ? 'Sending...' : success ? '✓ Sent!' : 'Send Reset Link'}
+              {loading ? 'Sending...' : success ? '✓ Sent!' : 'Send OTP'}
             </button>
 
             {error && (
@@ -164,50 +169,18 @@ export default function ForgotPassword() {
             )}
             
             {success && (
-              <div style={{ marginTop: '16px' }}>
-                <p style={{ 
-                  color: '#10b981', 
-                  fontSize: '14px', 
-                  textAlign: 'center',
-                  padding: '12px',
-                  background: 'rgba(16, 185, 129, 0.1)',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                  marginBottom: '12px'
-                }}>
-                  ✓ {success}
-                </p>
-                <div style={{ textAlign: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={handleResend}
-                    disabled={resendTimer > 0 || loading}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: resendTimer > 0 ? 'rgba(255, 255, 255, 0.4)' : '#3b82f6',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: resendTimer > 0 ? 'not-allowed' : 'pointer',
-                      textDecoration: resendTimer > 0 ? 'none' : 'underline',
-                      padding: '4px 8px',
-                      transition: 'color 0.3s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      if (resendTimer === 0 && !loading) {
-                        e.target.style.color = '#10b981';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (resendTimer === 0 && !loading) {
-                        e.target.style.color = '#3b82f6';
-                      }
-                    }}
-                  >
-                    {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend Link'}
-                  </button>
-                </div>
-              </div>
+              <p style={{ 
+                color: '#10b981', 
+                fontSize: '14px', 
+                textAlign: 'center',
+                padding: '12px',
+                background: 'rgba(16, 185, 129, 0.1)',
+                borderRadius: '8px',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                marginTop: '16px'
+              }}>
+                ✓ {success} Redirecting...
+              </p>
             )}
           </form>
         </div>

@@ -4,6 +4,9 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
+// In-memory OTP storage (use Redis in production)
+const otpStore = new Map();
+
 // Signup Controller (Local Authentication with bcrypt)
 // Note: This endpoint is for backend-managed authentication
 // Firebase users use Firebase Authentication and have password = NULL in the database
@@ -130,7 +133,7 @@ exports.signin = async (req, res) => {
   }
 };
 
-// Forgot Password - Generate reset token
+// Forgot Password - Generate and send OTP
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -143,27 +146,128 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       // Don't reveal if email exists
-      return res.json({ message: 'If email exists, reset link will be sent' });
+      return res.json({ message: 'If email exists, OTP will be sent' });
     }
 
-    // Generate reset token (valid for 1 hour)
-    const resetToken = jwt.sign(
-      { id: user.id, email: user.email, purpose: 'password-reset' },
-      JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store OTP with expiry (5 minutes)
+    otpStore.set(email, {
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
+      attempts: 0
+    });
 
-    // In production, send email with reset link
-    // For now, return the token (you'll integrate email service later)
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    // In production, send OTP via email
+    // For now, log it to console for testing
+    console.log(`\n🔐 OTP for ${email}: ${otp}\n`);
 
     res.json({
-      message: 'If email exists, reset link will be sent',
+      message: 'OTP sent to your email',
       // Remove this in production - only for development
-      resetLink: resetLink
+      otp: process.env.NODE_ENV === 'development' ? otp : undefined
     });
   } catch (error) {
     console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Server error—please try again' });
+  }
+};
+
+// Verify OTP
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+
+    // Check if OTP exists
+    const stored = otpStore.get(email);
+    if (!stored) {
+      return res.status(400).json({ message: 'OTP not found or expired' });
+    }
+
+    // Check expiry
+    if (Date.now() > stored.expiresAt) {
+      otpStore.delete(email);
+      return res.status(400).json({ message: 'OTP expired. Please request a new one.' });
+    }
+
+    // Check attempts (max 5)
+    if (stored.attempts >= 5) {
+      otpStore.delete(email);
+      return res.status(400).json({ message: 'Too many failed attempts. Please request a new OTP.' });
+    }
+
+    // Verify OTP
+    if (stored.otp !== otp) {
+      stored.attempts++;
+      return res.status(400).json({ 
+        message: `Invalid OTP. ${5 - stored.attempts} attempts remaining.` 
+      });
+    }
+
+    // OTP verified - generate reset token
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const resetToken = jwt.sign(
+      { id: user.id, email: user.email, purpose: 'password-reset' },
+      JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    // Delete OTP after successful verification
+    otpStore.delete(email);
+
+    res.json({
+      message: 'OTP verified successfully',
+      token: resetToken
+    });
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    res.status(500).json({ message: 'Server error—please try again' });
+  }
+};
+
+// Resend OTP
+exports.resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.json({ message: 'If email exists, OTP will be sent' });
+    }
+
+    // Generate new OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store OTP with expiry (5 minutes)
+    otpStore.set(email, {
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+      attempts: 0
+    });
+
+    console.log(`\n🔐 New OTP for ${email}: ${otp}\n`);
+
+    res.json({
+      message: 'New OTP sent to your email',
+      // Remove this in production
+      otp: process.env.NODE_ENV === 'development' ? otp : undefined
+    });
+  } catch (error) {
+    console.error('Resend OTP error:', error);
     res.status(500).json({ message: 'Server error—please try again' });
   }
 };

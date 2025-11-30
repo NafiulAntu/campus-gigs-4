@@ -9,7 +9,8 @@ import { motion, useMotionValue, useMotionTemplate, animate } from "framer-motio
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const location = useLocation();
+  const token = location.state?.token || searchParams.get('token');
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

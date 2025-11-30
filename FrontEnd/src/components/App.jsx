@@ -14,6 +14,7 @@ const Signup = lazy(() => import("./log/sign/Signup.jsx"));
 const Footer = lazy(() => import("./Interface/Footer.jsx"));
 const PostPage = lazy(() => import("./Post/PostPage.jsx"));
 const ForgotPassword = lazy(() => import("./log/sign/ForgotPassword.jsx"));
+const OTPVerification = lazy(() => import("./log/sign/OTPVerification.jsx"));
 const ResetPassword = lazy(() => import("./log/sign/ResetPassword.jsx"));
 const AuthLayout = lazy(() => import("./Interface/AuthLayout.jsx"));
 const Terms = lazy(() => import("./log/sign/Terms.jsx"));
@@ -91,7 +92,7 @@ export default function App() {
       }
     });
   }, []);
-  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/reset-password", "/terms", "/privacy", "/premium", "/payment/success", "/payment/failed", "/payment/cancelled"];
+  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/verify-otp", "/reset-password", "/terms", "/privacy", "/premium", "/payment/success", "/payment/failed", "/payment/cancelled"];
   const shouldHideFooter = hideFooterOn.includes(
     location.pathname.toLowerCase()
   );
@@ -107,6 +108,7 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<AuthLayout><ForgotPassword /></AuthLayout>} />
+              <Route path="/verify-otp" element={<AuthLayout><OTPVerification /></AuthLayout>} />
               <Route path="/reset-password" element={<AuthLayout><ResetPassword /></AuthLayout>} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
