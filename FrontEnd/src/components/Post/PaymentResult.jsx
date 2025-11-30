@@ -3,6 +3,38 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
 import './PaymentResult.css';
 
+// Payment method logo mapping
+const paymentLogos = {
+  'bKash': 'https://freelogopng.com/images/all_img/1656234841bkash-app-logo-png.png',
+  'Nagad': 'https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png',
+  'Rocket': 'https://futurestartup.com/content/images/2021/03/DBBL-Mobile-Banking-Becomes-Rocket.jpg',
+  'VISA': 'https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg',
+  'MASTER': 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg',
+  'AMEX': 'https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo.svg',
+  'DBBL': 'https://futurestartup.com/content/images/2021/03/DBBL-Mobile-Banking-Becomes-Rocket.jpg',
+  'UPAY': 'https://www.ucash.com.bd/assets/img/logo.png'
+};
+
+// Get payment method logo
+const getPaymentLogo = (paymentMethod) => {
+  if (!paymentMethod) return null;
+  
+  const method = paymentMethod.toUpperCase();
+  
+  // Check for exact matches
+  if (paymentLogos[paymentMethod]) return paymentLogos[paymentMethod];
+  
+  // Check for partial matches
+  if (method.includes('BKASH')) return paymentLogos['bKash'];
+  if (method.includes('NAGAD')) return paymentLogos['Nagad'];
+  if (method.includes('ROCKET') || method.includes('DBBL')) return paymentLogos['Rocket'];
+  if (method.includes('VISA')) return paymentLogos['VISA'];
+  if (method.includes('MASTER')) return paymentLogos['MASTER'];
+  if (method.includes('AMEX')) return paymentLogos['AMEX'];
+  
+  return null;
+};
+
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const [transaction, setTransaction] = useState(null);
@@ -59,7 +91,16 @@ const PaymentSuccess = () => {
             </div>
             <div className="detail-row">
               <span>Payment Method:</span>
-              <strong>{transaction.payment_method || 'Online'}</strong>
+              <div className="payment-method-display">
+                {getPaymentLogo(transaction.payment_method) && (
+                  <img 
+                    src={getPaymentLogo(transaction.payment_method)} 
+                    alt={transaction.payment_method}
+                    className="payment-method-logo"
+                  />
+                )}
+                <strong>{transaction.payment_method || 'Online'}</strong>
+              </div>
             </div>
           </div>
         )}

@@ -323,6 +323,7 @@ const Premium = ({ onBack }) => {
       <div className="payment-methods">
         <div className="methods-header">
           <h3>Payment Methods</h3>
+          <p className="methods-subtitle">Choose your preferred payment method for transactions</p>
         </div>
         <div className="methods">
           <div className="method-item">
