@@ -34,7 +34,7 @@
 
 .premium-hero h1 {
   font-size: 3rem;
-  font-weight: 900;
+  font-weight: 800;
   background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -46,7 +46,7 @@
 
 .premium-hero p {
   font-size: 1.25rem;
-  color: #475569;
+  color: #64748b;
   font-weight: 600;
   animation: fadeInUp 0.6s ease-out 0.4s both;
 }
@@ -111,32 +111,70 @@
 }
 
 .pricing-card.featured {
-  border-color: #2563eb;
-  box-shadow: 0 20px 50px rgba(37, 99, 235, 0.4);
-  transform: scale(1.05);
+  border-color: #667eea;
+.plan-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 1;
 }
 
-.pricing-card.featured:hover {
-  transform: scale(1.05) translateY(-12px);
+.plan-header h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-.pricing-card.free-plan {
-  border-color: rgba(148, 163, 184, 0.3);
+.price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 12px;
 }
 
-.pricing-card.starter-plan {
-  border-color: rgba(59, 130, 246, 0.4);
+.currency {
+  font-size: 1.75rem;
+  color: #a0aec0;
+  font-weight: 600;
 }
 
-.pricing-card.premium-plan {
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-  border-color: #2563eb;
+.amount {
+  font-size: 4rem;
+  font-weight: 800;
+  color: white;
+  line-height: 1;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.plan-badge {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+.period {
+  font-size: 1rem;
+  color: #a0aec0;
+  font-weight: 500;
+}
+
+.savings {
+  font-size: 0.875rem;
+  color: #667eea;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.savings i {
+  font-size: 1rem;
+} right: 20px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   color: white;
@@ -189,12 +227,11 @@
 
 .plan-header h3 {
   font-size: 1.75rem;
-  font-weight: 900;
+  font-weight: 700;
   margin-bottom: 20px;
-  color: #2563eb;
+  color: white;
   text-transform: uppercase;
   letter-spacing: 1px;
-  text-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 .price {
@@ -207,16 +244,16 @@
 
 .currency {
   font-size: 1.75rem;
-  color: #64748b;
-  font-weight: 700;
+  color: #a0aec0;
+  font-weight: 600;
 }
 
 .amount {
   font-size: 4rem;
-  font-weight: 900;
+  font-weight: 800;
   color: white;
   line-height: 1;
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -224,8 +261,8 @@
 
 .period {
   font-size: 1rem;
-  color: #64748b;
-  font-weight: 600;
+  color: #a0aec0;
+  font-weight: 500;
 }
 
 .savings {
@@ -399,92 +436,10 @@
 
 .payment-methods h3 {
   font-size: 1.5rem;
-  font-weight: 900;
+  font-weight: 800;
   color: #2563eb;
   margin: 0;
   text-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
-}
-
-.methods {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-
-.method-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.method-item:hover {
-  transform: translateY(-5px);
-  background: rgba(37, 99, 235, 0.1);
-  border-color: rgba(37, 99, 235, 0.4);
-}
-
-.method-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.method-icon.bkash {
-  background: linear-gradient(135deg, #e2136e 0%, #c8105e 100%);
-}
-
-.method-icon.nagad {
-  background: linear-gradient(135deg, #f68820 0%, #e67610 100%);
-}
-
-.method-icon.rocket {
-  background: linear-gradient(135deg, #8e44ad 0%, #702d8d 100%);
-}
-
-.method-icon.card {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-}
-
-.method-icon.bank {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.method-item span {
-  color: #e2e8f0;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.security-note {
-  color: #94a3b8;
-  font-size: 0.875rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 20px;
-  font-weight: 500;
-}
-
-.security-note i {
-  color: #2563eb;
-  font-size: 1rem;
 }
 
 /* FAQ Section */
@@ -494,7 +449,7 @@
 }
 
 .faq-section h3 {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
   font-weight: 900;
   background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   -webkit-background-clip: text;
@@ -511,7 +466,7 @@
 
 .faq-section h3 i {
   color: #2563eb;
-  font-size: 2.5rem;
+  font-size: 2.25rem;
 }
 
 .faq-grid {
@@ -580,8 +535,8 @@
 }
 
 .faq-item h4 {
-  font-size: 1.4rem;
-  font-weight: 900;
+  font-size: 1.35rem;
+  font-weight: 800;
   color: #2563eb;
   margin-bottom: 14px;
   line-height: 1.4;
@@ -590,8 +545,89 @@
 .faq-item p {
   color: #94a3b8;
   line-height: 1.8;
-  font-size: 1rem;
+  font-size: 0.98rem;
   font-weight: 500;
+} border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.method-icon.bkash {
+  background: linear-gradient(135deg, #e2136e 0%, #c8105e 100%);
+}
+
+.method-icon.nagad {
+  background: linear-gradient(135deg, #f68820 0%, #e67610 100%);
+}
+
+.method-icon.rocket {
+  background: linear-gradient(135deg, #8e44ad 0%, #702d8d 100%);
+}
+
+.method-icon.card {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.method-icon.bank {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.method-item span {
+  color: #e2e8f0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.security-note {
+  color: #a0aec0;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.security-note i {
+  color: #2563eb;
+  font-size: 1rem;
+}
+
+/* FAQ Section */
+.faq-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.faq-section h3 {
+  font-size: 1.5rem;
+  margin-bottom: 24px;
+  text-align: center;
+  color: #1f2937;
+}
+
+.faq-item {
+  margin-bottom: 24px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.faq-item h4 {
+  font-size: 1.125rem;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+.faq-item p {
+  color: #6b7280;
+  line-height: 1.6;
 }
 
 /* Premium User Dashboard */
@@ -602,9 +638,9 @@
 
 .premium-header h1 {
   font-size: 2.5rem;
-  font-weight: 900;
+  font-weight: 700;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -638,6 +674,12 @@
   font-weight: 600;
   color: #111827;
   margin-bottom: 8px;
+}
+
+.price {
+  font-size: 1.125rem;
+  color: #667eea;
+  font-weight: 600;
 }
 
 .status {
