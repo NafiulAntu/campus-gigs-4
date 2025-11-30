@@ -326,21 +326,21 @@ const Premium = ({ onBack }) => {
         <div className="methods">
           <div className="method-item">
             <img 
-              src="https://logos-world.net/wp-content/uploads/2022/12/BKash-Symbol.png" 
+              src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" 
               alt="bKash" 
               className="payment-logo"
             />
           </div>
           <div className="method-item">
             <img 
-              src="https://logos-world.net/wp-content/uploads/2022/12/Nagad-Logo.png" 
+              src="https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png" 
               alt="Nagad" 
               className="payment-logo"
             />
           </div>
           <div className="method-item">
             <img 
-              src="https://static.vecteezy.com/system/resources/thumbnails/068/706/013/small_2x/rocket-color-logo-mobile-banking-icon-png.png" 
+              src="https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg" 
               alt="Rocket" 
               className="payment-logo"
             />
