@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import './Premium.css';
 
-const Premium = () => {
+const Premium = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [error, setError] = useState('');
@@ -67,11 +67,30 @@ const Premium = () => {
 
   if (subscription?.is_premium) {
     return (
-      <div className="premium-container">
-        <div className="premium-header">
-          <h1>🎉 You're Premium!</h1>
-          <p>Enjoying all the exclusive features</p>
+      <div className="fixed inset-0 bg-black overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex-shrink-0 bg-black/95 backdrop-blur-sm border-b border-white/10">
+          <div className="flex items-center gap-4 px-4 py-3">
+            <button
+              onClick={onBack}
+              className="h-9 w-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+            >
+              <i className="fi fi-br-arrow-left text-white text-xl"></i>
+            </button>
+            <div>
+              <h2 className="text-xl font-bold text-white">Premium</h2>
+              <p className="text-sm text-gray-400">You're Premium!</p>
+            </div>
+          </div>
         </div>
+        
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="premium-container">
+            <div className="premium-header">
+              <h1>🎉 You're Premium!</h1>
+              <p>Enjoying all the exclusive features</p>
+            </div>
 
         <div className="subscription-details">
           <div className="detail-card">
@@ -140,16 +159,37 @@ const Premium = () => {
             </div>
           </div>
         </div>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="premium-container">
-      <div className="premium-hero">
-        <h1>Upgrade to Premium</h1>
-        <p>Unlock powerful features to grow your presence on Campus Gigs</p>
+    <div className="fixed inset-0 bg-black overflow-hidden flex flex-col">
+      {/* Header */}
+      <div className="flex-shrink-0 bg-black/95 backdrop-blur-sm border-b border-white/10">
+        <div className="flex items-center gap-4 px-4 py-3">
+          <button
+            onClick={onBack}
+            className="h-9 w-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
+          >
+            <i className="fi fi-br-arrow-left text-white text-xl"></i>
+          </button>
+          <div>
+            <h2 className="text-xl font-bold text-white">Premium</h2>
+            <p className="text-sm text-gray-400">Upgrade your account</p>
+          </div>
+        </div>
       </div>
+      
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="premium-container">
+          <div className="premium-hero">
+            <h1>Upgrade to Premium</h1>
+            <p>Unlock powerful features to grow your presence on Campus Gigs</p>
+          </div>
 
       {error && <div className="error-message">{error}</div>}
 
@@ -239,6 +279,8 @@ const Premium = () => {
         <div className="faq-item">
           <h4>Is my payment information secure?</h4>
           <p>Absolutely! We use SSLCommerz, Bangladesh's leading payment gateway with PCI DSS Level 1 certification.</p>
+        </div>
+      </div>
         </div>
       </div>
     </div>

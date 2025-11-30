@@ -1,54 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getTransactions, getBalance } from "../../../services/api";
 
 export default function Payments({ onBack }) {
   const [activeTab, setActiveTab] = useState("overview");
+  const [transactions, setTransactions] = useState([]);
+  const [balance, setBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
-  const transactions = [
-    {
-      id: "TXN001",
-      type: "received",
-      amount: 150.00,
-      from: "TechCorp Inc.",
-      description: "Frontend Development - Project Payment",
-      date: "2025-11-01",
-      status: "completed",
-    },
-    {
-      id: "TXN002",
-      type: "sent",
-      amount: 9.99,
-      to: "Campus Gigs",
-      description: "Premium Subscription - Monthly",
-      date: "2025-11-01",
-      status: "completed",
-    },
-    {
-      id: "TXN003",
-      type: "received",
-      amount: 200.00,
-      from: "Design Studio",
-      description: "UI/UX Design Services",
-      date: "2025-10-28",
-      status: "pending",
-    },
-  ];
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      setCurrentUserId(user.id);
+    }
+    fetchData();
+  }, []);
 
-  const paymentMethods = [
-    {
-      id: 1,
-      type: "card",
-      name: "Visa ending in 4242",
-      expiry: "12/25",
-      default: true,
-    },
-    {
-      id: 2,
-      type: "paypal",
-      name: "PayPal Account",
-      email: "you@example.com",
-      default: false,
-    },
-  ];
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [transactionsRes, balanceRes] = await Promise.all([
+        getTransactions(50),
+        getBalance()
+      ]);
+
+      setTransactions(transactionsRes.data.transactions || []);
+      setBalance(balanceRes.data.balance || 0);
+    } catch (error) {
+      console.error('Failed to fetch payment data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const recentTransactions = transactions.slice(0, 5);
+  const thisMonthTransactions = transactions.filter(t => {
+    const date = new Date(t.created_at);
+    const now = new Date();
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  });
+  
+  const thisMonthTotal = thisMonthTransactions.reduce((sum, t) => {
+    return t.receiver_id === currentUserId ? sum + parseFloat(t.amount) : sum - parseFloat(t.amount);
+  }, 0);
+  
+  const pendingTransactions = transactions.filter(t => t.status === 'pending');
+  const pendingTotal = pendingTransactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
 
   return (
     <div className="min-h-screen bg-black">
@@ -92,35 +95,45 @@ export default function Payments({ onBack }) {
         {/* Overview Tab */}
         {activeTab === "overview" && (
           <div className="space-y-6">
-            {/* Balance Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-primary-teal to-blue-500 rounded-xl p-6 text-white">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm opacity-90">Available Balance</span>
-                  <i className="fi fi-br-wallet text-xl"></i>
-                </div>
-                <p className="text-3xl font-bold mb-1">$1,245.50</p>
-                <p className="text-sm opacity-75">+$150.00 this month</p>
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="w-10 h-10 border-4 border-primary-teal border-t-transparent rounded-full animate-spin"></div>
               </div>
+            ) : (
+              <>
+                {/* Balance Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-gradient-to-br from-primary-teal to-blue-500 rounded-xl p-6 text-white">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm opacity-90">Available Balance</span>
+                      <i className="fi fi-br-wallet text-xl"></i>
+                    </div>
+                    <p className="text-3xl font-bold mb-1">৳{balance.toFixed(2)}</p>
+                    <p className="text-sm opacity-75">
+                      {thisMonthTotal >= 0 ? '+' : ''}৳{thisMonthTotal.toFixed(2)} this month
+                    </p>
+                  </div>
 
-              <div className="bg-white/[0.04] rounded-xl p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-text-muted">Pending</span>
-                  <i className="fi fi-br-clock text-xl text-yellow-400"></i>
-                </div>
-                <p className="text-3xl font-bold text-white mb-1">$200.00</p>
-                <p className="text-sm text-text-muted">1 transaction</p>
-              </div>
+                  <div className="bg-white/[0.04] rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-text-muted">Pending</span>
+                      <i className="fi fi-br-clock text-xl text-yellow-400"></i>
+                    </div>
+                    <p className="text-3xl font-bold text-white mb-1">৳{pendingTotal.toFixed(2)}</p>
+                    <p className="text-sm text-text-muted">{pendingTransactions.length} transaction{pendingTransactions.length !== 1 ? 's' : ''}</p>
+                  </div>
 
-              <div className="bg-white/[0.04] rounded-xl p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-text-muted">This Month</span>
-                  <i className="fi fi-br-chart-line-up text-xl text-green-400"></i>
+                  <div className="bg-white/[0.04] rounded-xl p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-text-muted">This Month</span>
+                      <i className="fi fi-br-chart-line-up text-xl text-green-400"></i>
+                    </div>
+                    <p className="text-3xl font-bold text-white mb-1">৳{Math.abs(thisMonthTotal).toFixed(2)}</p>
+                    <p className="text-sm text-text-muted">{thisMonthTransactions.length} transaction{thisMonthTransactions.length !== 1 ? 's' : ''}</p>
+                  </div>
                 </div>
-                <p className="text-3xl font-bold text-white mb-1">$350.00</p>
-                <p className="text-sm text-text-muted">3 transactions</p>
-              </div>
-            </div>
+              </>
+            )}
 
             {/* Quick Actions */}
             <div className="bg-white/[0.04] rounded-xl p-6">
@@ -151,46 +164,59 @@ export default function Payments({ onBack }) {
                 Recent Activity
               </h2>
               <div className="space-y-3">
-                {transactions.slice(0, 3).map((txn) => (
-                  <div
-                    key={txn.id}
-                    className="flex items-center justify-between p-3 bg-white/[0.04] rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
+                {recentTransactions.length === 0 ? (
+                  <p className="text-text-muted text-center py-8">No recent transactions</p>
+                ) : (
+                  recentTransactions.map((txn) => {
+                    const isReceived = txn.receiver_id === currentUserId;
+                    const otherUser = isReceived 
+                      ? { name: txn.sender_name, username: txn.sender_username }
+                      : { name: txn.receiver_name, username: txn.receiver_username };
+                    
+                    return (
                       <div
-                        className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                          txn.type === "received"
-                            ? "bg-green-500/20 text-green-400"
-                            : "bg-red-500/20 text-red-400"
-                        }`}
+                        key={txn.id}
+                        className="flex items-center justify-between p-3 bg-white/[0.04] rounded-lg"
                       >
-                        <i
-                          className={`fi ${
-                            txn.type === "received"
-                              ? "fi-br-arrow-small-down"
-                              : "fi-br-arrow-small-up"
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                              isReceived
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
+                            <i
+                              className={`fi ${
+                                isReceived
+                                  ? "fi-br-arrow-small-down"
+                                  : "fi-br-arrow-small-up"
+                              }`}
+                            ></i>
+                          </div>
+                          <div>
+                            <p className="font-medium text-white">
+                              {isReceived ? 'From' : 'To'} {otherUser.name}
+                            </p>
+                            <p className="text-sm text-text-muted">
+                              {txn.notes || `@${otherUser.username}`} • {formatDate(txn.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={`font-bold ${
+                            isReceived
+                              ? "text-green-400"
+                              : "text-red-400"
                           }`}
-                        ></i>
+                        >
+                          {isReceived ? "+" : "-"}৳
+                          {parseFloat(txn.amount).toFixed(2)}
+                        </span>
                       </div>
-                      <div>
-                        <p className="font-medium text-white">
-                          {txn.description}
-                        </p>
-                        <p className="text-sm text-text-muted">{txn.date}</p>
-                      </div>
-                    </div>
-                    <span
-                      className={`font-bold ${
-                        txn.type === "received"
-                          ? "text-green-400"
-                          : "text-red-400"
-                      }`}
-                    >
-                      {txn.type === "received" ? "+" : "-"}$
-                      {txn.amount.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
