@@ -321,35 +321,48 @@ const Premium = ({ onBack }) => {
 
       <div className="payment-methods">
         <div className="methods-header">
-          <i className="fi fi-br-shield-check"></i>
-          <h3>Secure Payment via SSLCommerz</h3>
+          <h3>Payment Methods</h3>
         </div>
         <div className="methods">
           <div className="method-item">
-            <div className="method-icon bkash"></div>
-            <span>bKash</span>
+            <img 
+              src="https://logos-world.net/wp-content/uploads/2022/12/BKash-Symbol.png" 
+              alt="bKash" 
+              className="payment-logo"
+            />
           </div>
           <div className="method-item">
-            <div className="method-icon nagad"></div>
-            <span>Nagad</span>
+            <img 
+              src="https://logos-world.net/wp-content/uploads/2022/12/Nagad-Logo.png" 
+              alt="Nagad" 
+              className="payment-logo"
+            />
           </div>
           <div className="method-item">
-            <div className="method-icon rocket"></div>
-            <span>Rocket</span>
+            <img 
+              src="https://static.vecteezy.com/system/resources/thumbnails/068/706/013/small_2x/rocket-color-logo-mobile-banking-icon-png.png" 
+              alt="Rocket" 
+              className="payment-logo"
+            />
           </div>
           <div className="method-item">
-            <div className="method-icon card"></div>
-            <span>Cards</span>
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" 
+              alt="Visa" 
+              className="payment-logo"
+            />
           </div>
           <div className="method-item">
-            <div className="method-icon bank"></div>
-            <span>Banking</span>
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
+              alt="Mastercard" 
+              className="payment-logo"
+            />
           </div>
         </div>
-        <p className="security-note">
-          <i className="fi fi-br-lock"></i>
-          All transactions are encrypted and secure
-        </p>
+        <div className="ssl-badge">
+          <p>Secured by <strong>SSLCommerz</strong></p>
+        </div>
       </div>
 
       <div className="faq-section">
