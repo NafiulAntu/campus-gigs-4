@@ -409,12 +409,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 12px;
   background: transparent;
-  border-radius: 16px;
+  border-radius: 12px;
   transition: all 0.3s ease;
-  min-width: 100px;
-  min-height: 90px;
+  min-width: 70px;
+  min-height: 60px;
 }
 
 .method-item:hover {
@@ -423,8 +423,8 @@
 }
 
 .payment-logo {
-  width: 85px;
-  height: 65px;
+  width: 60px;
+  height: 45px;
   object-fit: contain;
   transition: all 0.3s ease;
   display: block;
