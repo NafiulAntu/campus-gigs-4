@@ -7,7 +7,6 @@ import Notifications from "./side bar/notifications";
 import Communities from "./side bar/communities";
 import Premium from "./Premium";
 import Payments from "./side bar/payments";
-import Transactions from "./Transactions";
 import UserProfile from "./UserProfile";
 import { getAllPosts, createPost, updatePost, deletePost as deletePostAPI, toggleLike as toggleLikeAPI, toggleShare as toggleShareAPI } from "../../services/api";
 
@@ -452,10 +451,6 @@ export default function PostPage({ onNavigate = () => {} }) {
         
         {currentView === "payments" && (
           <Payments onBack={() => setCurrentView("home")} />
-        )}
-        
-        {currentView === "transactions" && (
-          <Transactions onBack={() => setCurrentView("home")} />
         )}
         
         {currentView === "userProfile" && viewingUserId && (

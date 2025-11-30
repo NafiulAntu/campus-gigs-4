@@ -302,53 +302,120 @@ export default function Payments({ onBack }) {
         {/* Payment Methods Tab */}
         {activeTab === "methods" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">
-                Your Payment Methods
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Payment Methods
               </h2>
-              <button className="px-4 py-2 bg-primary-teal hover:bg-primary-blue text-white rounded-lg font-semibold transition-colors flex items-center gap-2">
-                <i className="fi fi-br-plus"></i>
-                Add New
-              </button>
+              <p className="text-text-muted">
+                Choose your preferred payment method for transactions
+              </p>
             </div>
 
-            {paymentMethods.map((method) => (
-              <div
-                key={method.id}
-                className="bg-white/[0.04] rounded-xl p-6 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-white/[0.04] flex items-center justify-center text-primary-teal">
-                    <i
-                      className={`${
-                        method.type === "card"
-                          ? "fi fi-br-credit-card"
-                          : "fi fi-brands-paypal"
-                      } text-2xl`}
-                    ></i>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white">{method.name}</p>
-                    <p className="text-sm text-text-muted">
-                      {method.expiry || method.email}
-                    </p>
-                  </div>
-                  {method.default && (
-                    <span className="px-3 py-1 bg-primary-teal/20 text-primary-teal rounded-full text-xs font-semibold">
-                      Default
+            {/* Mobile Banking */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <i className="fi fi-br-smartphone text-primary-teal"></i>
+                Mobile Banking
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* bKash */}
+                <div className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border border-pink-500/20 rounded-xl p-6 hover:border-pink-500/40 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="h-14 w-14 rounded-xl bg-pink-500 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-white">bKash</span>
+                    </div>
+                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                      Available
                     </span>
-                  )}
+                  </div>
+                  <h4 className="font-bold text-white mb-1 group-hover:text-pink-400 transition-colors">bKash</h4>
+                  <p className="text-sm text-text-muted">Instant mobile wallet payment</p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 bg-white/[0.04] hover:bg-white/10 text-white rounded-lg font-medium transition-colors">
-                    Edit
-                  </button>
-                  <button className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-medium transition-colors">
-                    Remove
-                  </button>
+
+                {/* Nagad */}
+                <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-6 hover:border-orange-500/40 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="h-14 w-14 rounded-xl bg-orange-500 flex items-center justify-center">
+                      <span className="text-xl font-bold text-white">Nagad</span>
+                    </div>
+                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                      Available
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-white mb-1 group-hover:text-orange-400 transition-colors">Nagad</h4>
+                  <p className="text-sm text-text-muted">Fast & secure digital payments</p>
+                </div>
+
+                {/* Rocket */}
+                <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="h-14 w-14 rounded-xl bg-purple-600 flex items-center justify-center">
+                      <i className="fi fi-br-rocket text-2xl text-white"></i>
+                    </div>
+                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                      Available
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">Rocket</h4>
+                  <p className="text-sm text-text-muted">Dutch-Bangla Bank mobile wallet</p>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Card Payments */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <i className="fi fi-br-credit-card text-primary-teal"></i>
+                Card Payments
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Visa */}
+                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:border-blue-500/40 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="h-14 w-14 rounded-xl bg-blue-600 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-white">VISA</span>
+                    </div>
+                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                      Available
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">Visa</h4>
+                  <p className="text-sm text-text-muted">Credit & Debit cards accepted</p>
+                </div>
+
+                {/* Mastercard */}
+                <div className="bg-gradient-to-br from-red-500/10 to-orange-600/5 border border-red-500/20 rounded-xl p-6 hover:border-red-500/40 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="h-14 w-14 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
+                      <span className="text-lg font-bold text-white">MC</span>
+                    </div>
+                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                      Available
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-white mb-1 group-hover:text-red-400 transition-colors">Mastercard</h4>
+                  <p className="text-sm text-text-muted">All Mastercard types supported</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Info Card */}
+            <div className="bg-primary-teal/10 border border-primary-teal/20 rounded-xl p-6">
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="h-10 w-10 rounded-full bg-primary-teal/20 flex items-center justify-center">
+                    <i className="fi fi-br-shield-check text-primary-teal text-xl"></i>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white mb-1">Secure Payments</h4>
+                  <p className="text-sm text-text-muted">
+                    All payments are processed securely through SSLCommerz payment gateway. 
+                    Your financial information is encrypted and protected.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

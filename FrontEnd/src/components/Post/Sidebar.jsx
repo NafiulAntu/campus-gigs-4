@@ -165,8 +165,7 @@ export default function Sidebar({ onNavigate = () => {} }) {
     { key: "messages", label: "Messages", icon: "fi fi-br-envelope" },
     { key: "communities", label: "Communities", icon: "fi fi-br-users-alt" },
     { key: "premium", label: "Premium", icon: "fi fi-br-diamond" },
-    { key: "payments", label: "Payments", icon: "fi fi-br-credit-card" },
-    { key: "transactions", label: "Transactions", icon: "fi fi-br-exchange-alt" },
+    { key: "payments", label: "Payments", icon: "fi fi-br-wallet" },
     { key: "profile", label: "Profile", icon: "fi fi-br-user" },
   ];
 

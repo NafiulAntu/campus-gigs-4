@@ -136,3 +136,6 @@ export const getTransactions = (limit) => API.get('/transactions/history', { par
 export const getTransactionById = (transactionId) => API.get(`/transactions/${transactionId}`);
 export const getBalance = () => API.get('/transactions/balance/current');
 export const addBalance = (amount) => API.post('/transactions/balance/add', { amount });
+
+// Export API instance as default for direct usage
+export default API;
