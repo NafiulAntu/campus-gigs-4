@@ -226,6 +226,56 @@ const Premium = ({ onBack }) => {
           </button>
         </div>
 
+        {/* 30 Days Plan */}
+        <div className="pricing-card premium-plan featured">
+          <div className="plan-badge popular">
+            <i className="fi fi-br-crown"></i> Most Popular
+          </div>
+          <div className="plan-header">
+            <div className="plan-icon">
+              <i className="fi fi-br-diamond"></i>
+            </div>
+            <h3>30 Days</h3>
+            <div className="price">
+              <span className="currency">৳</span>
+              <span className="amount">150</span>
+              <span className="period">/month</span>
+            </div>
+            <div className="savings">
+              <i className="fi fi-br-piggy-bank"></i>
+              Save ৳99!
+            </div>
+          </div>
+
+          <ul className="features-list">
+            <li><i className="fi fi-br-check"></i> Everything in 15 Days</li>
+            <li><i className="fi fi-br-check"></i> Advanced analytics</li>
+            <li><i className="fi fi-br-check"></i> Custom profile theme</li>
+            <li><i className="fi fi-br-check"></i> Verified badge</li>
+            <li><i className="fi fi-br-check"></i> Priority support</li>
+            <li><i className="fi fi-br-check"></i> Remove all ads</li>
+            <li><i className="fi fi-br-check"></i> Featured in listings</li>
+          </ul>
+
+          <button 
+            onClick={() => handleUpgrade('30days')}
+            disabled={loading}
+            className="upgrade-btn premium"
+          >
+            {loading ? (
+              <>
+                <i className="fi fi-rr-spinner animate-spin"></i>
+                Processing...
+              </>
+            ) : (
+              <>
+                <i className="fi fi-br-rocket-lunch"></i>
+                Get Premium
+              </>
+            )}
+          </button>
+        </div>
+
         {/* 15 Days Plan */}
         <div className="pricing-card starter-plan">
           <div className="plan-badge">Try Premium</div>
@@ -264,55 +314,6 @@ const Premium = ({ onBack }) => {
               <>
                 <i className="fi fi-br-shopping-cart"></i>
                 Get 15 Days
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* 30 Days Plan */}
-        <div className="pricing-card premium-plan featured">
-          <div className="plan-badge popular">
-            <i className="fi fi-br-crown"></i> Most Popular
-          </div>
-          <div className="plan-header">
-            <div className="plan-icon">
-              <i className="fi fi-br-diamond"></i>
-            </div>
-            <h3>30 Days</h3>
-            <div className="price">
-              <span className="currency">৳</span>
-              <span className="amount">150</span>
-              <span className="period">/month</span>
-            </div>
-            <p className="savings">
-              <i className="fi fi-br-badge-percent"></i>
-              Best value for monthly
-            </p>
-          </div>
-
-          <ul className="features-list">
-            <li><i className="fi fi-br-check"></i> Everything in 15 Days</li>
-            <li><i className="fi fi-br-check"></i> Advanced analytics</li>
-            <li><i className="fi fi-br-check"></i> Pin posts to profile</li>
-            <li><i className="fi fi-br-check"></i> Custom themes</li>
-            <li><i className="fi fi-br-check"></i> Priority support</li>
-            <li><i className="fi fi-br-check"></i> Enhanced visibility</li>
-          </ul>
-
-          <button 
-            onClick={() => handleUpgrade('30days')}
-            disabled={loading}
-            className="upgrade-btn premium"
-          >
-            {loading ? (
-              <>
-                <i className="fi fi-rr-spinner animate-spin"></i>
-                Processing...
-              </>
-            ) : (
-              <>
-                <i className="fi fi-br-rocket-lunch"></i>
-                Upgrade Now
               </>
             )}
           </button>
