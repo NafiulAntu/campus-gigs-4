@@ -13,7 +13,6 @@ import {
   toggleLike as toggleLikeAPI
 } from "../../services/api";
 import { getOrCreateConversation } from "../../utils/messagingUtils";
-import { diagnoseMessagingIssue } from "../../utils/accountLinking";
 import { auth } from "../../config/firebase";
 import SendMoney from "./SendMoney";
 
