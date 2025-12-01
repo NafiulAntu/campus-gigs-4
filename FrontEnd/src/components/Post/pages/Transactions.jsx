@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getTransactions, getBalance } from '../../services/api';
+import { getTransactions, getBalance } from '../../../services/api';
 
 export default function Transactions({ onBack }) {
   const [transactions, setTransactions] = useState([]);

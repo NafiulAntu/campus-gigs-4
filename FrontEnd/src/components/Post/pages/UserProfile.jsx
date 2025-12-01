@@ -11,9 +11,9 @@ import {
   getFollowCounts,
   getUserPosts,
   toggleLike as toggleLikeAPI
-} from "../../services/api";
-import { getOrCreateConversation } from "../../utils/messagingUtils";
-import { auth } from "../../config/firebase";
+} from "../../../services/api";
+import { getOrCreateConversation } from "../../../utils/messagingUtils";
+import { auth } from "../../../config/firebase";
 import SendMoney from "./SendMoney";
 
 export default function UserProfile({ userId, onBack, onMessageClick }) {

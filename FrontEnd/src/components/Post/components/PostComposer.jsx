@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { uploadFiles } from '../../services/api';
+import { uploadFiles } from '../../../services/api';
 
 export default function PostComposer({ onPost, onEdit, editingPost, brightOn = false }) {
   const [text, setText] = useState("");

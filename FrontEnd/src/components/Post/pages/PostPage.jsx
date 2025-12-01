@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useRef } from "react";
-import Sidebar from "./Sidebar";
-import PostComposer from "./PostComposer";
-import Profile from "./side bar/profile";
-import Messages from "./side bar/messages";
-import Notifications from "./side bar/notifications";
-import Communities from "./side bar/communities";
-import Premium from "./Premium";
-import Payments from "./side bar/payments";
+import Sidebar from "../sidebar/Sidebar";
+import PostComposer from "../components/PostComposer";
+import Profile from "../sidebar/profile";
+import Messages from "../sidebar/messages";
+import Notifications from "../sidebar/notifications";
+import Communities from "../sidebar/communities";
+import Premium from "../components/Premium";
+import Payments from "../sidebar/payments";
 import UserProfile from "./UserProfile";
-import { getAllPosts, createPost, updatePost, deletePost as deletePostAPI, toggleLike as toggleLikeAPI, toggleShare as toggleShareAPI } from "../../services/api";
+import { getAllPosts, createPost, updatePost, deletePost as deletePostAPI, toggleLike as toggleLikeAPI, toggleShare as toggleShareAPI } from "../../../services/api";
 
 const Switcher8 = ({ isChecked, onChange }) => {
   return (

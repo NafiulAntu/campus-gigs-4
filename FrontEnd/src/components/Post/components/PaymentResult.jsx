@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import api from '../../services/api';
-import './PaymentResult.css';
+import api from '../../../services/api';
+import '../styles/PaymentResult.css';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();

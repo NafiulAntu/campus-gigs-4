@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
-import './Premium.css';
+import api from '../../../services/api';
+import '../styles/Premium.css';
 
 const Premium = ({ onBack }) => {
   const [loading, setLoading] = useState(false);

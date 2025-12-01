@@ -1,5 +1,5 @@
 import React from 'react';
-import './PremiumBadge.css';
+import '../styles/PremiumBadge.css';
 
 const PremiumBadge = ({ size = 'medium', showText = true }) => {
   return (

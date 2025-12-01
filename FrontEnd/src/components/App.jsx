@@ -12,17 +12,17 @@ const Hero = lazy(() => import("./Interface/Hero.jsx"));
 const Login = lazy(() => import("./log/sign/Signin.jsx"));
 const Signup = lazy(() => import("./log/sign/Signup.jsx"));
 const Footer = lazy(() => import("./Interface/Footer.jsx"));
-const PostPage = lazy(() => import("./Post/PostPage.jsx"));
+const PostPage = lazy(() => import("./Post/pages/PostPage.jsx"));
 const ForgotPassword = lazy(() => import("./log/sign/ForgotPassword.jsx"));
 const OTPVerification = lazy(() => import("./log/sign/OTPVerification.jsx"));
 const ResetPassword = lazy(() => import("./log/sign/ResetPassword.jsx"));
 const AuthLayout = lazy(() => import("./Interface/AuthLayout.jsx"));
 const Terms = lazy(() => import("./log/sign/Terms.jsx"));
 const Privacy = lazy(() => import("./log/sign/Privacy.jsx"));
-const Premium = lazy(() => import("./Post/Premium.jsx"));
-const PaymentSuccess = lazy(() => import("./Post/PaymentResult.jsx").then(m => ({ default: m.PaymentSuccess })));
-const PaymentFailed = lazy(() => import("./Post/PaymentResult.jsx").then(m => ({ default: m.PaymentFailed })));
-const PaymentCancelled = lazy(() => import("./Post/PaymentResult.jsx").then(m => ({ default: m.PaymentCancelled })));
+const Premium = lazy(() => import("./Post/components/Premium.jsx"));
+const PaymentSuccess = lazy(() => import("./Post/components/PaymentResult.jsx").then(m => ({ default: m.PaymentSuccess })));
+const PaymentFailed = lazy(() => import("./Post/components/PaymentResult.jsx").then(m => ({ default: m.PaymentFailed })));
+const PaymentCancelled = lazy(() => import("./Post/components/PaymentResult.jsx").then(m => ({ default: m.PaymentCancelled })));
 
 // Loading fallback component
 const LoadingFallback = () => (

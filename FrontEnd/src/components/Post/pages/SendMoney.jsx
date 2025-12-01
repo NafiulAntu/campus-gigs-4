@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { sendMoney, getBalance } from '../../services/api';
+import { sendMoney, getBalance } from '../../../services/api';
 
 export default function SendMoney({ isOpen, onClose, receiverInfo, onSuccess }) {
   const [amount, setAmount] = useState('');
