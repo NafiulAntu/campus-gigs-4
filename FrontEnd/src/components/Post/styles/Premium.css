@@ -378,18 +378,18 @@
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  padding: 28px;
+  padding: 24px;
   margin-bottom: 40px;
   text-align: center;
   animation: fadeInUp 0.6s ease-out 0.8s both;
 }
 
 .methods-header {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .payment-methods h3 {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 900;
   color: #2563eb;
   margin: 0;
@@ -400,9 +400,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 30px;
+  gap: 18px;
   flex-wrap: wrap;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .method-item {
@@ -441,7 +441,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
 .ssl-badge p {
@@ -748,11 +748,18 @@
   }
 
   .methods {
-    gap: 16px;
+    gap: 12px;
   }
 
   .method-item {
-    padding: 12px;
+    padding: 10px;
+    min-width: 50px;
+    min-height: 40px;
+  }
+
+  .payment-logo {
+    width: 40px;
+    height: 30px;
   }
 
   .method-icon {
