@@ -169,12 +169,9 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
   };
 
   const openImageViewer = (images, startIndex) => {
-    console.log('Opening image viewer with:', images, 'at index:', startIndex);
     const imageUrls = images.filter(url => url?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
-    console.log('Filtered image URLs:', imageUrls);
     
     if (imageUrls.length === 0) {
-      console.log('No valid image URLs found');
       return;
     }
     
@@ -182,7 +179,6 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
     const clickedImage = images[startIndex];
     const actualIndex = imageUrls.findIndex(url => url === clickedImage);
     
-    console.log('Setting viewer state - images:', imageUrls, 'index:', actualIndex >= 0 ? actualIndex : 0);
     setCurrentImages(imageUrls);
     setCurrentImageIndex(actualIndex >= 0 ? actualIndex : 0);
     setImageViewerOpen(true);
@@ -898,6 +894,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                                   key={i}
                                   className={`rounded-xl overflow-hidden border border-[#045F5F]/20 cursor-pointer hover:border-[#045F5F]/50 transition-all relative group ${itemClass}`}
                                   onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
                                     openImageViewer(post.media_urls, i);
                                   }}
@@ -912,7 +909,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                                     }}
                                   />
                                   {/* Hover overlay */}
-                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center pointer-events-none">
                                     <i className="fas fa-expand text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></i>
                                   </div>
                                 </div>
@@ -978,37 +975,38 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       </div>
 
       {/* Image Viewer Modal */}
-      {imageViewerOpen && currentImages.length > 0 ? (
+      {imageViewerOpen && currentImages.length > 0 && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm"
           onClick={(e) => {
             e.stopPropagation();
             closeImageViewer();
           }}
           onMouseMove={handleImageMouseMove}
-          style={{ touchAction: 'none' }}
+          style={{ touchAction: 'none', pointerEvents: 'auto' }}
         >
-          {console.log('Image viewer modal rendering. Open:', imageViewerOpen, 'Images:', currentImages.length, 'Index:', currentImageIndex)}
-          {/* Main content area - scrollable */}
+          {/* Main content area - centered */}
           <div 
-            className="w-full h-full overflow-auto py-8 px-4 scrollbar-hide" 
+            className="w-full h-full flex items-center justify-center p-4" 
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Image container */}
-            <div className="relative max-w-4xl mx-auto">
-              <img
-                src={currentImages[currentImageIndex]}
-                alt="View"
-                className="w-full h-auto object-contain select-none rounded-lg shadow-2xl"
-                draggable={false}
-                onClick={(e) => e.stopPropagation()}
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23333"/><text x="50%" y="50%" text-anchor="middle" fill="white" font-size="20">Image not found</text></svg>';
-                }}
-              />
+            {/* Fully responsive image container box */}
+            <div className="relative bg-gray-900/50 rounded-lg shadow-2xl" style={{ width: '70vw', height: '70vh', minWidth: '320px', minHeight: '240px', maxWidth: '1400px', maxHeight: '900px' }}>
+              <div className="w-full h-full flex items-center justify-center p-4">
+                <img
+                  src={currentImages[currentImageIndex]}
+                  alt="View"
+                  className="max-w-full max-h-full w-auto h-auto object-contain select-none"
+                  draggable={false}
+                  onClick={(e) => e.stopPropagation()}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23333"/><text x="50%" y="50%" text-anchor="middle" fill="white" font-size="20">Image not found</text></svg>';
+                  }}
+                />
+              </div>
               
-              {/* Close button on image */}
+              {/* Close button on box */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -1055,7 +1053,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
             )}
           </div>
         </div>
-      ) : null}
+      )}
 
       {/* Send Money Modal */}
       <SendMoney 
