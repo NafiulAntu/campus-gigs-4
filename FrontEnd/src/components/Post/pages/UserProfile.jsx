@@ -33,6 +33,8 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentImages, setCurrentImages] = useState([]);
   const [showSendMoney, setShowSendMoney] = useState(false);
+  const [showImageControls, setShowImageControls] = useState(true);
+  const [controlsTimeout, setControlsTimeout] = useState(null);
 
   const handleSendMessage = async () => {
     try {
@@ -167,15 +169,64 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
   };
 
   const openImageViewer = (images, startIndex) => {
-    setCurrentImages(images);
-    setCurrentImageIndex(startIndex);
+    const imageUrls = images.filter(url => url?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
+    if (imageUrls.length === 0) return;
+    
+    // Find the correct index in the filtered image array
+    const clickedImage = images[startIndex];
+    const actualIndex = imageUrls.findIndex(url => url === clickedImage);
+    
+    setCurrentImages(imageUrls);
+    setCurrentImageIndex(actualIndex >= 0 ? actualIndex : 0);
     setImageViewerOpen(true);
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
   };
 
   const closeImageViewer = () => {
     setImageViewerOpen(false);
     setCurrentImages([]);
     setCurrentImageIndex(0);
+    setShowImageControls(true);
+    if (controlsTimeout) clearTimeout(controlsTimeout);
+    document.body.style.overflow = 'unset'; // Restore scrolling
+  };
+
+  const handleImageMouseMove = () => {
+    setShowImageControls(true);
+    if (controlsTimeout) clearTimeout(controlsTimeout);
+    const timeout = setTimeout(() => {
+      setShowImageControls(false);
+    }, 3000);
+    setControlsTimeout(timeout);
+  };
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % currentImages.length);
+  };
+
+  const previousImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length);
+  };
+
+  const downloadCurrentImage = () => {
+    const url = currentImages[currentImageIndex];
+    const fileName = url.split('/').pop();
+    fetch(url)
+      .then(response => response.blob())
+      .then(blob => {
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      })
+      .catch(err => {
+        console.error('Download error:', err);
+        window.open(url, '_blank');
+      });
   };
 
   const formatTimeAgo = (dateString) => {
@@ -268,6 +319,34 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       fetchUserPosts();
     }
   }, [userId]);
+
+  // Keyboard navigation for image viewer
+  useEffect(() => {
+    if (!imageViewerOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        closeImageViewer();
+      } else if (e.key === 'ArrowLeft') {
+        previousImage();
+      } else if (e.key === 'ArrowRight') {
+        nextImage();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Auto-hide controls after 3 seconds
+    const timeout = setTimeout(() => {
+      setShowImageControls(false);
+    }, 3000);
+    setControlsTimeout(timeout);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [imageViewerOpen, currentImages]);
 
   if (loading) {
     return (
@@ -768,33 +847,77 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
 
                       {/* Post Media */}
                       {post.media_urls && post.media_urls.length > 0 && (
-                        <div className={`grid gap-2 ${post.media_urls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                          {post.media_urls.slice(0, 4).map((url, i) => {
+                        <div className={`grid gap-2 ${
+                          post.media_urls.length === 1 
+                            ? 'grid-cols-1' 
+                            : post.media_urls.length === 2 
+                            ? 'grid-cols-2' 
+                            : post.media_urls.length === 3 
+                            ? 'grid-cols-2' 
+                            : 'grid-cols-2'
+                        }`}>
+                          {post.media_urls.map((url, i) => {
                             if (!url) return null;
                             
                             const isImage = url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                            const count = post.media_urls.length;
+                            const isFirstLarge = count === 3 && i === 0;
+                            const itemClass = isFirstLarge ? "col-span-2" : "";
                             
                             if (isImage) {
+                              const imgHeight = count === 1 ? "h-48" : count === 2 ? "h-40" : isFirstLarge ? "h-48" : "h-32";
+                              
                               return (
                                 <div
                                   key={i}
-                                  className="rounded-lg overflow-hidden border border-[#045F5F]/20 cursor-pointer hover:border-[#045F5F]/50 transition-all"
+                                  className={`rounded-xl overflow-hidden border border-[#045F5F]/20 cursor-pointer hover:border-[#045F5F]/50 transition-all relative group ${itemClass}`}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    openImageViewer(post.media_urls.filter(u => u?.match(/\.(jpg|jpeg|png|gif|webp)$/i)), i);
+                                    openImageViewer(post.media_urls, i);
                                   }}
                                 >
                                   <img
                                     src={url}
                                     alt=""
-                                    className="object-cover w-full h-40"
-                                    onError={(e) => e.target.style.display = 'none'}
+                                    className={`object-cover w-full ${imgHeight} hover:scale-105 transition-transform duration-300`}
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="50%" y="50%" text-anchor="middle" fill="gray">Image not found</text></svg>';
+                                    }}
                                   />
+                                  {/* Hover overlay */}
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                                    <i className="fas fa-expand text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></i>
+                                  </div>
                                 </div>
                               );
                             } else {
                               const fileName = url.split('/').pop();
                               const fileExt = fileName.split('.').pop().toLowerCase();
+                              
+                              // Get appropriate icon and color
+                              let fileIcon = '📎';
+                              let fileColor = 'bg-[#045F5F]/10 text-[#045F5F]';
+                              
+                              if (['pdf'].includes(fileExt)) {
+                                fileIcon = '📄';
+                                fileColor = 'bg-red-500/20 text-red-400';
+                              } else if (['doc', 'docx', 'odt', 'rtf'].includes(fileExt)) {
+                                fileIcon = '📝';
+                                fileColor = 'bg-blue-500/20 text-blue-400';
+                              } else if (['xls', 'xlsx', 'csv'].includes(fileExt)) {
+                                fileIcon = '📊';
+                                fileColor = 'bg-green-500/20 text-green-400';
+                              } else if (['ppt', 'pptx'].includes(fileExt)) {
+                                fileIcon = '📽️';
+                                fileColor = 'bg-orange-500/20 text-orange-400';
+                              } else if (['zip', 'rar', '7z'].includes(fileExt)) {
+                                fileIcon = '📦';
+                                fileColor = 'bg-yellow-500/20 text-yellow-400';
+                              } else if (['txt'].includes(fileExt)) {
+                                fileIcon = '📃';
+                                fileColor = 'bg-gray-500/20 text-gray-400';
+                              }
                               
                               return (
                                 <a
@@ -803,13 +926,16 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center gap-2 p-2 rounded-lg border border-[#045F5F]/20 bg-gray-800/20 hover:bg-gray-800/40 transition-all col-span-2"
+                                  className={`flex items-center gap-3 p-4 rounded-xl border border-[#045F5F]/20 bg-gray-800/20 hover:bg-gray-800/40 hover:border-[#045F5F]/40 transition-all col-span-2 ${itemClass}`}
                                 >
-                                  <span className="text-xl">📎</span>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="text-xs text-white truncate">{fileName}</div>
+                                  <div className={`flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center text-2xl ${fileColor}`}>
+                                    {fileIcon}
                                   </div>
-                                  <i className="fas fa-external-link-alt text-xs text-gray-500"></i>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-sm text-white truncate font-medium">{fileName}</div>
+                                    <div className="text-xs text-gray-500 mt-0.5 uppercase">{fileExt} file</div>
+                                  </div>
+                                  <i className="fas fa-external-link-alt text-sm text-gray-400"></i>
                                 </a>
                               );
                             }
@@ -826,54 +952,70 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       </div>
 
       {/* Image Viewer Modal */}
-      {imageViewerOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+      {imageViewerOpen && currentImages.length > 0 && (
+        <div 
+          className="fixed inset-0 z-[60] bg-black cursor-default"
           onClick={closeImageViewer}
+          onMouseMove={handleImageMouseMove}
         >
-          <button
-            onClick={closeImageViewer}
-            className="absolute top-6 right-6 z-30 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all hover:scale-110"
-          >
-            <i className="fas fa-times text-xl"></i>
-          </button>
-
-          {currentImages.length > 1 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length);
-                }}
-                className="absolute left-6 z-30 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all hover:scale-110"
-              >
-                <i className="fas fa-chevron-left text-xl"></i>
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentImageIndex((prev) => (prev + 1) % currentImages.length);
-                }}
-                className="absolute right-6 z-30 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all hover:scale-110"
-              >
-                <i className="fas fa-chevron-right text-xl"></i>
-              </button>
-            </>
-          )}
-
-          {currentImages.length > 1 && (
-            <div className="absolute top-6 left-6 z-20 px-5 py-2.5 rounded-full bg-black/60 backdrop-blur-md text-white text-sm font-semibold">
-              {currentImageIndex + 1} / {currentImages.length}
+          {/* Top bar with close button */}
+          <div className={`absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-6 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm z-20 transition-all duration-500 ${showImageControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}>
+            <div className="flex items-center gap-4">
+              {currentImages.length > 1 && (
+                <span className="text-white text-base font-medium">
+                  {currentImageIndex + 1} / {currentImages.length}
+                </span>
+              )}
             </div>
-          )}
+            <button
+              onClick={closeImageViewer}
+              className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-white transition-all"
+              aria-label="Close"
+            >
+              <i className="fas fa-times text-2xl" />
+            </button>
+          </div>
 
-          <div className="relative w-full h-full flex items-center justify-center px-4 py-20" onClick={(e) => e.stopPropagation()}>
+          {/* Main content area */}
+          <div className="absolute inset-0 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {/* Image */}
             <img
               src={currentImages[currentImageIndex]}
-              alt={`Image ${currentImageIndex + 1}`}
-              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-              style={{ maxWidth: '95vw', maxHeight: '85vh' }}
+              alt="View"
+              className="max-w-full max-h-full object-contain select-none"
+              style={{ maxWidth: '100vw', maxHeight: '100vh' }}
+              draggable={false}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23333"/><text x="50%" y="50%" text-anchor="middle" fill="white" font-size="20">Image not found</text></svg>';
+              }}
             />
+
+            {/* Navigation arrows for multiple images */}
+            {currentImages.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    previousImage();
+                  }}
+                  className={`absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-500 backdrop-blur-md border border-white/10 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                  aria-label="Previous"
+                >
+                  <i className="fas fa-chevron-left text-2xl" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextImage();
+                  }}
+                  className={`absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-500 backdrop-blur-md border border-white/10 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                  aria-label="Next"
+                >
+                  <i className="fas fa-chevron-right text-2xl" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
