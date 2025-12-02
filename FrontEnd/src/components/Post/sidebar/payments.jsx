@@ -319,57 +319,57 @@ export default function Payments({ onBack }) {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* bKash */}
-                <div className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border border-pink-500/20 rounded-xl p-6 hover:border-pink-500/40 transition-all cursor-pointer group">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl flex items-center justify-center">
+                <div className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border border-pink-500/20 rounded-xl p-4 hover:border-pink-500/40 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="h-10 w-10 rounded-lg flex items-center justify-center">
                       <img 
                         src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" 
                         alt="bKash" 
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
                       Available
                     </span>
                   </div>
-                  <h4 className="font-bold text-white mb-1 group-hover:text-pink-400 transition-colors">bKash</h4>
-                  <p className="text-sm text-text-muted">Instant mobile wallet payment</p>
+                  <h4 className="font-bold text-white mb-1 group-hover:text-pink-400 transition-colors text-sm">bKash</h4>
+                  <p className="text-xs text-text-muted">Instant mobile wallet payment</p>
                 </div>
 
                 {/* Nagad */}
-                <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-6 hover:border-orange-500/40 transition-all cursor-pointer group">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl flex items-center justify-center">
+                <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-4 hover:border-orange-500/40 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="h-10 w-10 rounded-lg flex items-center justify-center">
                       <img 
                         src="https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png" 
                         alt="Nagad" 
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
                       Available
                     </span>
                   </div>
-                  <h4 className="font-bold text-white mb-1 group-hover:text-orange-400 transition-colors">Nagad</h4>
-                  <p className="text-sm text-text-muted">Fast & secure digital payments</p>
+                  <h4 className="font-bold text-white mb-1 group-hover:text-orange-400 transition-colors text-sm">Nagad</h4>
+                  <p className="text-xs text-text-muted">Fast & secure digital payments</p>
                 </div>
 
                 {/* Rocket */}
-                <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-all cursor-pointer group">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl flex items-center justify-center">
+                <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-4 hover:border-purple-500/40 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="h-10 w-10 rounded-lg flex items-center justify-center">
                       <img 
                         src="https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg" 
                         alt="Rocket" 
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
                       Available
                     </span>
                   </div>
-                  <h4 className="font-bold text-white mb-1 group-hover:text-purple-400 transition-colors">Rocket</h4>
-                  <p className="text-sm text-text-muted">Dutch-Bangla Bank mobile wallet</p>
+                  <h4 className="font-bold text-white mb-1 group-hover:text-purple-400 transition-colors text-sm">Rocket</h4>
+                  <p className="text-xs text-text-muted">Dutch-Bangla Bank mobile wallet</p>
                 </div>
               </div>
             </div>
@@ -382,39 +382,39 @@ export default function Payments({ onBack }) {
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Visa */}
-                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:border-blue-500/40 transition-all cursor-pointer group">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl flex items-center justify-center">
+                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-4 hover:border-blue-500/40 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="h-10 w-10 rounded-lg flex items-center justify-center">
                       <img 
                         src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" 
                         alt="Visa" 
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
                       Available
                     </span>
                   </div>
-                  <h4 className="font-bold text-white mb-1 group-hover:text-blue-400 transition-colors">Visa</h4>
-                  <p className="text-sm text-text-muted">Credit & Debit cards accepted</p>
+                  <h4 className="font-bold text-white mb-1 group-hover:text-blue-400 transition-colors text-sm">Visa</h4>
+                  <p className="text-xs text-text-muted">Credit & Debit cards accepted</p>
                 </div>
 
                 {/* Mastercard */}
-                <div className="bg-gradient-to-br from-red-500/10 to-orange-600/5 border border-red-500/20 rounded-xl p-6 hover:border-red-500/40 transition-all cursor-pointer group">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl flex items-center justify-center">
+                <div className="bg-gradient-to-br from-red-500/10 to-orange-600/5 border border-red-500/20 rounded-xl p-4 hover:border-red-500/40 transition-all cursor-pointer group">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="h-10 w-10 rounded-lg flex items-center justify-center">
                       <img 
                         src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
                         alt="Mastercard" 
                         className="w-full h-full object-contain"
                       />
                     </div>
-                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
                       Available
                     </span>
                   </div>
-                  <h4 className="font-bold text-white mb-1 group-hover:text-red-400 transition-colors">Mastercard</h4>
-                  <p className="text-sm text-text-muted">All Mastercard types supported</p>
+                  <h4 className="font-bold text-white mb-1 group-hover:text-red-400 transition-colors text-sm">Mastercard</h4>
+                  <p className="text-xs text-text-muted">All Mastercard types supported</p>
                 </div>
               </div>
             </div>
