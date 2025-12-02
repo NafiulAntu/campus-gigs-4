@@ -104,7 +104,7 @@ export default function Notifications({ onBack }) {
       'comment': 'text-[#3b82f6]',
       'send': 'text-[#3b82f6]',
       'message': 'text-[#3b82f6]',
-      'accept': 'text-[#3b82f6]',
+      'accept': 'text-green-500',
       'reject': 'text-[#3b82f6]',
       'follow': 'text-[#3b82f6]',
       'job_alert': 'text-[#3b82f6]'

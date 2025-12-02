@@ -1105,37 +1105,39 @@ export default function PostPage({ onNavigate = () => {} }) {
                             )}
                           </div>
 
-                          {/* Accept/Reject buttons on the right */}
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => toggleAccept(p.id)}
-                              className={`flex items-center gap-1.5 px-2 py-1 transition-all font-semibold text-sm transition-colors duration-300 ${
-                                p.accepted
-                                  ? "text-green-400"
-                                  : `${
-                                      brightOn ? 'text-gray-400 hover:text-green-400' : 'text-text-muted hover:text-green-400'
-                                    }`
-                              }`}
-                              title="Accept"
-                            >
-                              <i className="fa-solid fa-check text-[14px]" />
-                              <span>Accept</span>
-                            </button>
-                            <button
-                              onClick={() => toggleReject(p.id)}
-                              className={`flex items-center gap-1.5 px-2 py-1 transition-all font-semibold text-sm transition-colors duration-300 ${
-                                p.rejected
-                                  ? "text-rose-400"
-                                  : `${
-                                      brightOn ? 'text-gray-400 hover:text-rose-400' : 'text-text-muted hover:text-rose-400'
-                                    }`
-                              }`}
-                              title="Reject"
-                            >
-                              <i className="fa-solid fa-xmark text-[14px]" />
-                              <span>Reject</span>
-                            </button>
-                          </div>
+                          {/* Accept/Reject buttons on the right - only for other users' posts */}
+                          {!isCurrentUserPost && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => toggleAccept(p.id)}
+                                className={`flex items-center gap-1.5 px-2 py-1 transition-all font-semibold text-sm transition-colors duration-300 ${
+                                  p.accepted
+                                    ? "text-green-400"
+                                    : `${
+                                        brightOn ? 'text-gray-400 hover:text-green-400' : 'text-text-muted hover:text-green-400'
+                                      }`
+                                }`}
+                                title="Accept"
+                              >
+                                <i className="fa-solid fa-check text-[14px]" />
+                                <span>Accept</span>
+                              </button>
+                              <button
+                                onClick={() => toggleReject(p.id)}
+                                className={`flex items-center gap-1.5 px-2 py-1 transition-all font-semibold text-sm transition-colors duration-300 ${
+                                  p.rejected
+                                    ? "text-rose-400"
+                                    : `${
+                                        brightOn ? 'text-gray-400 hover:text-rose-400' : 'text-text-muted hover:text-rose-400'
+                                      }`
+                                }`}
+                                title="Reject"
+                              >
+                                <i className="fa-solid fa-xmark text-[14px]" />
+                                <span>Reject</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
