@@ -113,8 +113,9 @@ export default function PostPage({ onNavigate = () => {} }) {
 
   // Scroll to specific post when postIdToScroll is set
   useEffect(() => {
-    if (postIdToScroll && currentView === "home" && posts.length > 0) {
-      setTimeout(() => {
+    if (postIdToScroll && posts.length > 0) {
+      // Wait a bit longer for view to fully render
+      const timer = setTimeout(() => {
         const postElement = document.getElementById(`post-${postIdToScroll}`);
         if (postElement) {
           postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -124,11 +125,15 @@ export default function PostPage({ onNavigate = () => {} }) {
           setTimeout(() => {
             postElement.style.backgroundColor = '';
           }, 2000);
+        } else {
+          console.log('Post element not found:', `post-${postIdToScroll}`);
         }
         setPostIdToScroll(null);
-      }, 300);
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
-  }, [postIdToScroll, currentView, posts]);
+  }, [postIdToScroll, posts]);
 
   async function handleNewPost(postData) {
     try {
@@ -503,7 +508,12 @@ export default function PostPage({ onNavigate = () => {} }) {
         
         {currentView === "notifications" && (
           <Notifications 
-            onBack={() => setCurrentView("home")} 
+            onBack={(postId) => {
+              setCurrentView("home");
+              if (postId) {
+                setPostIdToScroll(postId);
+              }
+            }} 
             onViewProfile={(userId) => {
               setViewingUserId(userId);
               setCurrentView("userProfile");

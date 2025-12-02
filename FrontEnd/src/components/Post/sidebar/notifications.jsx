@@ -51,6 +51,7 @@ export default function Notifications({ onBack, onViewProfile }) {
           type: notif.type,
           user: notif.actor_name || notif.actor_username || notif.actor_full_name || 'Unknown User',
           actorId: notif.actor_id,
+          postId: notif.data?.post_id || notif.related_id,
           action: getActionText(notif.type, notif.message),
           content: notif.data?.commentPreview || notif.data?.messagePreview || null,
           time: formatTimeAgo(notif.created_at),
@@ -168,8 +169,10 @@ export default function Notifications({ onBack, onViewProfile }) {
       }
     }
     
-    // Navigate to link if exists
-    if (notif.link) {
+    // Navigate to post like Recent Posts does
+    if (notif.postId) {
+      onBack(notif.postId);
+    } else if (notif.link) {
       window.location.href = notif.link;
     }
   };
@@ -254,6 +257,7 @@ export default function Notifications({ onBack, onViewProfile }) {
                     ? "bg-white/[0.08] hover:bg-white/[0.12]"
                     : "bg-white/[0.04] hover:bg-white/[0.06]"
                 }`}
+                title="Click to view post"
               >
                 <div className="flex items-start gap-3">
                   {/* Icon */}
@@ -272,21 +276,24 @@ export default function Notifications({ onBack, onViewProfile }) {
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <p className="text-white">
                         <span 
-                          className="font-semibold hover:text-primary-teal cursor-pointer transition-colors"
+                          className="font-semibold hover:text-primary-teal cursor-pointer transition-colors hover:underline"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (onViewProfile && notif.actorId) {
                               onViewProfile(notif.actorId);
                             }
                           }}
+                          title="View profile"
                         >
                           {notif.user}
                         </span>{" "}
                         <span className="text-text-muted">{notif.action}</span>
                       </p>
-                      {!notif.read && (
-                        <span className="h-2 w-2 bg-primary-teal rounded-full mt-2"></span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {!notif.read && (
+                          <span className="h-2 w-2 bg-primary-teal rounded-full"></span>
+                        )}
+                      </div>
                     </div>
                     {notif.content && (
                       <p className="text-sm text-text-muted mb-2">
