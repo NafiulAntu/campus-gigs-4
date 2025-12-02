@@ -962,7 +962,11 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                   return (
                     <div
                       key={post.id}
-                      className="bg-gray-900/40 border border-[#045F5F]/30 rounded-xl p-5 hover:border-[#045F5F]/60 hover:bg-gray-900/50 transition-all"
+                      onClick={() => {
+                        // Navigate to post page and scroll to this post
+                        onBack(post.id);
+                      }}
+                      className="bg-gray-900/40 border border-[#045F5F]/30 rounded-xl p-5 hover:border-[#045F5F]/60 hover:bg-gray-900/50 transition-all cursor-pointer"
                     >
                       {/* Post Header */}
                       <div className="flex items-start gap-3 mb-4">
@@ -1037,26 +1041,17 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                               return (
                                 <div
                                   key={i}
-                                  className={`rounded-xl overflow-hidden border border-[#045F5F]/20 cursor-pointer hover:border-[#045F5F]/50 transition-all relative group ${itemClass}`}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    openImageViewer(post.media_urls, i);
-                                  }}
+                                  className={`rounded-xl overflow-hidden border border-[#045F5F]/20 transition-all relative group ${itemClass}`}
                                 >
                                   <img
                                     src={url}
                                     alt=""
-                                    className={`object-cover w-full ${imgHeight} hover:scale-105 transition-transform duration-300`}
+                                    className={`object-cover w-full ${imgHeight}`}
                                     onError={(e) => {
                                       e.target.onerror = null;
                                       e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="50%" y="50%" text-anchor="middle" fill="gray">Image not found</text></svg>';
                                     }}
                                   />
-                                  {/* Hover overlay */}
-                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center pointer-events-none">
-                                    <i className="fas fa-expand text-white text-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></i>
-                                  </div>
                                 </div>
                               );
                             } else {
@@ -1115,7 +1110,10 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                       <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-800">
                         {/* Like button */}
                         <button
-                          onClick={() => toggleLike(post.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleLike(post.id);
+                          }}
                           className={`flex items-center gap-2 transition-colors ${
                             post.user_liked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
                           }`}
@@ -1126,7 +1124,10 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
 
                         {/* Repost button */}
                         <button
-                          onClick={() => toggleRepost(post)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleRepost(post);
+                          }}
                           className={`flex items-center gap-2 transition-colors ${
                             post.user_shared ? 'text-green-500' : 'text-gray-400 hover:text-green-500'
                           }`}
@@ -1156,7 +1157,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       {/* Image Viewer Modal */}
       {imageViewerOpen && currentImages.length > 0 && (
         <div 
-          className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm"
+          className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex items-center justify-center p-6"
           onClick={(e) => {
             e.stopPropagation();
             closeImageViewer();
@@ -1164,48 +1165,70 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
           onMouseMove={handleImageMouseMove}
           style={{ touchAction: 'none', pointerEvents: 'auto' }}
         >
-          {/* Main content area - centered */}
+          {/* Fixed size image container */}
           <div 
-            className="w-full h-full flex items-center justify-center p-4" 
+            className="relative rounded-2xl shadow-2xl bg-gray-900/80 backdrop-blur-xl border border-white/10 flex items-center justify-center"
+            style={{ 
+              width: '1200px',
+              maxWidth: '90vw',
+              height: '800px',
+              maxHeight: '85vh'
+            }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Fully responsive image container box */}
-            <div className="relative bg-gray-900/50 rounded-lg shadow-2xl" style={{ width: '70vw', height: '70vh', minWidth: '320px', minHeight: '240px', maxWidth: '1400px', maxHeight: '900px' }}>
-              <div className="w-full h-full flex items-center justify-center p-4">
-                <img
-                  src={currentImages[currentImageIndex]}
-                  alt="View"
-                  className="max-w-full max-h-full w-auto h-auto object-contain select-none"
-                  draggable={false}
-                  onClick={(e) => e.stopPropagation()}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23333"/><text x="50%" y="50%" text-anchor="middle" fill="white" font-size="20">Image not found</text></svg>';
-                  }}
-                />
-              </div>
-              
-              {/* Close button on box */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  closeImageViewer();
+            {/* Image wrapper with padding */}
+            <div 
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ padding: '60px' }}
+            >
+              <img
+                src={currentImages[currentImageIndex]}
+                alt="View"
+                className="rounded-lg shadow-2xl"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  width: 'auto',
+                  height: 'auto',
+                  objectFit: 'contain',
+                  display: 'block'
                 }}
-                className={`absolute top-3 right-3 w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all duration-500 shadow-lg z-10 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                aria-label="Close"
-              >
-                <i className="fas fa-times text-xl" />
-              </button>
-
-              {/* Image counter */}
-              {currentImages.length > 1 && (
-                <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm text-white text-sm font-medium transition-all duration-500 ${showImageControls ? 'opacity-100' : 'opacity-0'}`}>
-                  {currentImageIndex + 1} / {currentImages.length}
-                </div>
-              )}
+                draggable={false}
+                onClick={(e) => e.stopPropagation()}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23333"/><text x="50%" y="50%" text-anchor="middle" fill="white" font-size="20">Image not found</text></svg>';
+                }}
+              />
+            </div>
+            
+            {/* Top control bar */}
+            <div className={`absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-black/60 to-transparent transition-all duration-300 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+              <div className="flex items-center justify-between">
+                {/* Image counter */}
+                {currentImages.length > 1 && (
+                  <div className="px-4 py-2 rounded-lg bg-white/10 backdrop-blur-md text-white text-sm font-semibold border border-white/20">
+                    {currentImageIndex + 1} / {currentImages.length}
+                  </div>
+                )}
+                
+                {currentImages.length <= 1 && <div></div>}
+                
+                {/* Close button */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    closeImageViewer();
+                  }}
+                  className="w-10 h-10 rounded-lg bg-red-500/90 hover:bg-red-600 flex items-center justify-center text-white transition-all duration-200 shadow-lg hover:scale-105"
+                  aria-label="Close"
+                >
+                  <i className="fas fa-times text-lg" />
+                </button>
+              </div>
             </div>
 
-            {/* Navigation arrows for multiple images */}
+            {/* Navigation arrows */}
             {currentImages.length > 1 && (
               <>
                 <button
@@ -1213,20 +1236,20 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                     e.stopPropagation();
                     previousImage();
                   }}
-                  className={`fixed left-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-500 backdrop-blur-md border border-white/10 z-10 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                  className={`absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-200 backdrop-blur-md border border-white/20 shadow-lg hover:scale-105 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                   aria-label="Previous"
                 >
-                  <i className="fas fa-chevron-left text-2xl" />
+                  <i className="fas fa-chevron-left text-xl" />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     nextImage();
                   }}
-                  className={`fixed right-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-500 backdrop-blur-md border border-white/10 z-10 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                  className={`absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-200 backdrop-blur-md border border-white/20 shadow-lg hover:scale-105 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                   aria-label="Next"
                 >
-                  <i className="fas fa-chevron-right text-2xl" />
+                  <i className="fas fa-chevron-right text-xl" />
                 </button>
               </>
             )}

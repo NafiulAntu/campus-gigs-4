@@ -61,6 +61,7 @@ export default function PostPage({ onNavigate = () => {} }) {
   const [currentImages, setCurrentImages] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [repostingPost, setRepostingPost] = useState(null);
+  const [postIdToScroll, setPostIdToScroll] = useState(null);
   const menuRef = useRef(null);
 
   // Load current user
@@ -109,6 +110,25 @@ export default function PostPage({ onNavigate = () => {} }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Scroll to specific post when postIdToScroll is set
+  useEffect(() => {
+    if (postIdToScroll && currentView === "home" && posts.length > 0) {
+      setTimeout(() => {
+        const postElement = document.getElementById(`post-${postIdToScroll}`);
+        if (postElement) {
+          postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Highlight the post briefly
+          postElement.style.backgroundColor = 'rgba(4, 95, 95, 0.2)';
+          postElement.style.transition = 'background-color 0.3s ease';
+          setTimeout(() => {
+            postElement.style.backgroundColor = '';
+          }, 2000);
+        }
+        setPostIdToScroll(null);
+      }, 300);
+    }
+  }, [postIdToScroll, currentView, posts]);
 
   async function handleNewPost(postData) {
     try {
@@ -500,9 +520,12 @@ export default function PostPage({ onNavigate = () => {} }) {
         {currentView === "userProfile" && viewingUserId && (
           <UserProfile 
             userId={viewingUserId} 
-            onBack={() => {
+            onBack={(postId) => {
               setCurrentView("home");
               setViewingUserId(null);
+              if (postId) {
+                setPostIdToScroll(postId);
+              }
             }}
             onMessageClick={(conversationId, receiverInfo) => {
               console.log('Message clicked, conversation:', conversationId, 'receiver:', receiverInfo);
