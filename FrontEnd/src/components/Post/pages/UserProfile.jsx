@@ -169,13 +169,20 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
   };
 
   const openImageViewer = (images, startIndex) => {
+    console.log('Opening image viewer with:', images, 'at index:', startIndex);
     const imageUrls = images.filter(url => url?.match(/\.(jpg|jpeg|png|gif|webp)$/i));
-    if (imageUrls.length === 0) return;
+    console.log('Filtered image URLs:', imageUrls);
+    
+    if (imageUrls.length === 0) {
+      console.log('No valid image URLs found');
+      return;
+    }
     
     // Find the correct index in the filtered image array
     const clickedImage = images[startIndex];
     const actualIndex = imageUrls.findIndex(url => url === clickedImage);
     
+    console.log('Setting viewer state - images:', imageUrls, 'index:', actualIndex >= 0 ? actualIndex : 0);
     setCurrentImages(imageUrls);
     setCurrentImageIndex(actualIndex >= 0 ? actualIndex : 0);
     setImageViewerOpen(true);
@@ -971,7 +978,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       </div>
 
       {/* Image Viewer Modal */}
-      {imageViewerOpen && currentImages.length > 0 && (
+      {imageViewerOpen && currentImages.length > 0 ? (
         <div 
           className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm"
           onClick={(e) => {
@@ -981,6 +988,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
           onMouseMove={handleImageMouseMove}
           style={{ touchAction: 'none' }}
         >
+          {console.log('Image viewer modal rendering. Open:', imageViewerOpen, 'Images:', currentImages.length, 'Index:', currentImageIndex)}
           {/* Main content area - scrollable */}
           <div 
             className="w-full h-full overflow-auto py-8 px-4 scrollbar-hide" 
@@ -1047,7 +1055,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
             )}
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Send Money Modal */}
       <SendMoney 
