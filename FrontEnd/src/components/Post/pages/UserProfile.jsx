@@ -1105,46 +1105,6 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                           })}
                         </div>
                       )}
-
-                      {/* Post Actions */}
-                      <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-800">
-                        {/* Like button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleLike(post.id);
-                          }}
-                          className={`flex items-center gap-2 transition-colors ${
-                            post.user_liked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
-                          }`}
-                        >
-                          <i className={`${post.user_liked ? 'fas' : 'far'} fa-heart`}></i>
-                          <span className="text-sm">{post.likes_count || 0}</span>
-                        </button>
-
-                        {/* Repost button */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleRepost(post);
-                          }}
-                          className={`flex items-center gap-2 transition-colors ${
-                            post.user_shared ? 'text-green-500' : 'text-gray-400 hover:text-green-500'
-                          }`}
-                          title="Repost"
-                        >
-                          <i className="fas fa-retweet"></i>
-                          <span className="text-sm">{post.shares_count || 0}</span>
-                        </button>
-
-                        {/* Comment button */}
-                        <button
-                          className="flex items-center gap-2 text-gray-400 hover:text-blue-500 transition-colors"
-                        >
-                          <i className="far fa-comment"></i>
-                          <span className="text-sm">{post.comments_count || 0}</span>
-                        </button>
-                      </div>
                     </div>
                   );
                 })}

@@ -4,7 +4,7 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export default function Notifications({ onBack }) {
+export default function Notifications({ onBack, onViewProfile }) {
   const [filter, setFilter] = useState("all");
   const [openMenuId, setOpenMenuId] = useState(null);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
@@ -50,6 +50,7 @@ export default function Notifications({ onBack }) {
           id: notif.id,
           type: notif.type,
           user: notif.actor_name || notif.actor_username || notif.actor_full_name || 'Unknown User',
+          actorId: notif.actor_id,
           action: getActionText(notif.type, notif.message),
           content: notif.data?.commentPreview || notif.data?.messagePreview || null,
           time: formatTimeAgo(notif.created_at),
@@ -270,7 +271,17 @@ export default function Notifications({ onBack }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <p className="text-white">
-                        <span className="font-semibold">{notif.user}</span>{" "}
+                        <span 
+                          className="font-semibold hover:text-primary-teal cursor-pointer transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onViewProfile && notif.actorId) {
+                              onViewProfile(notif.actorId);
+                            }
+                          }}
+                        >
+                          {notif.user}
+                        </span>{" "}
                         <span className="text-text-muted">{notif.action}</span>
                       </p>
                       {!notif.read && (

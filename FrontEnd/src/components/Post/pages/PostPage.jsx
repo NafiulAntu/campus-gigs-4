@@ -502,7 +502,13 @@ export default function PostPage({ onNavigate = () => {} }) {
         )}
         
         {currentView === "notifications" && (
-          <Notifications onBack={() => setCurrentView("home")} />
+          <Notifications 
+            onBack={() => setCurrentView("home")} 
+            onViewProfile={(userId) => {
+              setViewingUserId(userId);
+              setCurrentView("userProfile");
+            }}
+          />
         )}
         
         {currentView === "communities" && (
