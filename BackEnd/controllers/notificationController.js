@@ -292,4 +292,70 @@ async function sendPushNotification(userId, title, body, data = {}, link = null)
   }
 }
 
+// Accept sup action
+exports.acceptSup = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { notificationId, actorId } = req.body;
+
+    // Mark the original notification as read
+    await Notification.markAsRead(notificationId, userId);
+
+    // Send accept notification to the actor
+    const userName = req.user.full_name || req.user.username || 'Someone';
+    const io = req.app.get('io');
+    
+    await createAndSendNotification({
+      userId: actorId,
+      type: 'accept',
+      title: 'Sup Accepted! 🎉',
+      message: `${userName} accepted your sup`,
+      data: { acceptedBy: userId },
+      actorId: userId,
+      io
+    });
+
+    res.json({
+      success: true,
+      message: 'Sup accepted successfully'
+    });
+  } catch (error) {
+    console.error('Error accepting sup:', error);
+    res.status(500).json({ success: false, error: 'Failed to accept sup' });
+  }
+};
+
+// Reject sup action
+exports.rejectSup = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { notificationId, actorId } = req.body;
+
+    // Mark the original notification as read
+    await Notification.markAsRead(notificationId, userId);
+
+    // Send reject notification to the actor
+    const userName = req.user.full_name || req.user.username || 'Someone';
+    const io = req.app.get('io');
+    
+    await createAndSendNotification({
+      userId: actorId,
+      type: 'reject',
+      title: 'Sup Response',
+      message: `${userName} rejected your sup`,
+      data: { rejectedBy: userId },
+      actorId: userId,
+      io
+    });
+
+    res.json({
+      success: true,
+      message: 'Sup rejected successfully'
+    });
+  } catch (error) {
+    console.error('Error rejecting sup:', error);
+    res.status(500).json({ success: false, error: 'Failed to reject sup' });
+  }
+};
+
 module.exports = exports;

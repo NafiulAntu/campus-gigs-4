@@ -33,4 +33,10 @@ router.post('/fcm-token', notificationController.saveFCMToken);
 // Remove FCM token
 router.delete('/fcm-token', notificationController.removeFCMToken);
 
+// Accept sup
+router.post('/accept-sup', notificationController.acceptSup);
+
+// Reject sup
+router.post('/reject-sup', notificationController.rejectSup);
+
 module.exports = router;

@@ -56,7 +56,9 @@ export default function Notifications({ onBack }) {
           read: notif.is_read,
           icon: getIcon(notif.type),
           color: getColor(notif.type),
-          link: notif.link
+          link: notif.link,
+          actorId: notif.actor_id, // Store actor_id for accept/reject actions
+          data: notif.data
         }));
         setNotifications(apiNotifications);
       }
