@@ -321,8 +321,12 @@ export default function Payments({ onBack }) {
                 {/* bKash */}
                 <div className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border border-pink-500/20 rounded-xl p-6 hover:border-pink-500/40 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-pink-500 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white">bKash</span>
+                    <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center p-2">
+                      <img 
+                        src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" 
+                        alt="bKash" 
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
                       Available
@@ -335,8 +339,12 @@ export default function Payments({ onBack }) {
                 {/* Nagad */}
                 <div className="bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20 rounded-xl p-6 hover:border-orange-500/40 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-orange-500 flex items-center justify-center">
-                      <span className="text-xl font-bold text-white">Nagad</span>
+                    <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center p-2">
+                      <img 
+                        src="https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png" 
+                        alt="Nagad" 
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
                       Available
@@ -349,8 +357,12 @@ export default function Payments({ onBack }) {
                 {/* Rocket */}
                 <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-6 hover:border-purple-500/40 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-purple-600 flex items-center justify-center">
-                      <i className="fi fi-br-rocket text-2xl text-white"></i>
+                    <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center p-2">
+                      <img 
+                        src="https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg" 
+                        alt="Rocket" 
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
                       Available
@@ -372,8 +384,12 @@ export default function Payments({ onBack }) {
                 {/* Visa */}
                 <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-6 hover:border-blue-500/40 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-blue-600 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white">VISA</span>
+                    <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center p-2">
+                      <img 
+                        src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" 
+                        alt="Visa" 
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
                       Available
@@ -386,8 +402,12 @@ export default function Payments({ onBack }) {
                 {/* Mastercard */}
                 <div className="bg-gradient-to-br from-red-500/10 to-orange-600/5 border border-red-500/20 rounded-xl p-6 hover:border-red-500/40 transition-all cursor-pointer group">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="h-14 w-14 rounded-xl bg-gradient-to-r from-red-500 to-orange-500 flex items-center justify-center">
-                      <span className="text-lg font-bold text-white">MC</span>
+                    <div className="h-14 w-14 rounded-xl bg-white flex items-center justify-center p-2">
+                      <img 
+                        src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
+                        alt="Mastercard" 
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                     <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
                       Available
