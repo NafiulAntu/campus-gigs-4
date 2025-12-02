@@ -7,6 +7,8 @@ export default function Payments({ onBack }) {
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [showWithdrawMethods, setShowWithdrawMethods] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -476,67 +478,180 @@ export default function Payments({ onBack }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-3">
-                    Withdraw To
-                  </label>
-                  <div className="grid grid-cols-1 gap-3">
-                    {/* Mobile Banking */}
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Mobile Banking</p>
-                      
-                      {/* bKash */}
-                      <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-pink-500/40 transition-all group">
-                        <input type="radio" name="withdrawMethod" className="w-4 h-4 text-pink-500 bg-transparent border-gray-500 focus:ring-pink-500" />
-                        <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
-                          <img 
-                            src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" 
-                            alt="bKash" 
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        <span className="text-gray-200 font-medium group-hover:text-pink-400 transition-colors">bKash</span>
-                      </label>
-
-                      {/* Nagad */}
-                      <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-orange-500/40 transition-all group">
-                        <input type="radio" name="withdrawMethod" className="w-4 h-4 text-orange-500 bg-transparent border-gray-500 focus:ring-orange-500" />
-                        <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
-                          <img 
-                            src="https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png" 
-                            alt="Nagad" 
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        <span className="text-gray-200 font-medium group-hover:text-orange-400 transition-colors">Nagad</span>
-                      </label>
-
-                      {/* Rocket */}
-                      <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-purple-500/40 transition-all group">
-                        <input type="radio" name="withdrawMethod" className="w-4 h-4 text-purple-500 bg-transparent border-gray-500 focus:ring-purple-500" />
-                        <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
-                          <img 
-                            src="https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg" 
-                            alt="Rocket" 
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                        <span className="text-gray-200 font-medium group-hover:text-purple-400 transition-colors">Rocket (DBBL)</span>
-                      </label>
+                  <button 
+                    onClick={() => setShowWithdrawMethods(!showWithdrawMethods)}
+                    className="group w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-white/[0.06] to-white/[0.03] border border-white/10 rounded-lg hover:border-primary-teal/50 transition-all duration-300 mb-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-5 h-5">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                          <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" className="text-primary-teal"/>
+                          <path d="M7 12L10.5 15.5L17 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-200 group-hover:text-primary-teal transition-colors">Select Payment Method</span>
                     </div>
-
-                    {/* Bank Transfer */}
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Bank Transfer</p>
-                      
-                      <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-green-500/40 transition-all group">
-                        <input type="radio" name="withdrawMethod" className="w-4 h-4 text-green-500 bg-transparent border-gray-500 focus:ring-green-500" />
-                        <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
-                          <i className="fi fi-br-bank text-2xl text-green-400"></i>
-                        </div>
-                        <span className="text-gray-200 font-medium group-hover:text-green-400 transition-colors">Bank Account</span>
-                      </label>
+                    <div className="flex items-center gap-2">
+                      {selectedMethod && (
+                        <span className="text-xs px-2 py-1 bg-primary-teal/10 text-primary-teal rounded-full border border-primary-teal/30 font-medium">
+                          {selectedMethod === 'bkash' ? 'bKash' : selectedMethod === 'nagad' ? 'Nagad' : selectedMethod === 'rocket' ? 'Rocket' : 'Bank'}
+                        </span>
+                      )}
+                      <i className={`fi fi-rr-angle-small-down text-xl text-gray-400 group-hover:text-primary-teal transition-all duration-300 ${showWithdrawMethods ? 'rotate-180' : ''}`}></i>
                     </div>
-                  </div>
+                  </button>
+                  
+                  {showWithdrawMethods && (
+                    <div className="grid grid-cols-1 gap-3 animate-[slideDown_0.3s_ease-out]">
+                      {/* Mobile Banking */}
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Mobile Banking</p>
+                        
+                        {/* bKash */}
+                        <div>
+                          <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-pink-500/40 transition-all group">
+                            <input 
+                              type="radio" 
+                              name="withdrawMethod" 
+                              value="bkash"
+                              checked={selectedMethod === 'bkash'}
+                              onChange={(e) => setSelectedMethod(e.target.value)}
+                              className="w-4 h-4 text-pink-500 bg-transparent border-gray-500 focus:ring-pink-500" 
+                            />
+                            <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
+                              <img 
+                                src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" 
+                                alt="bKash" 
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <span className="text-gray-200 font-medium group-hover:text-pink-400 transition-colors">bKash</span>
+                          </label>
+                          {selectedMethod === 'bkash' && (
+                            <div className="mt-2 ml-7 space-y-2 animate-[slideDown_0.2s_ease-out]">
+                              <input
+                                type="tel"
+                                placeholder="bKash Account Number (e.g., 01XXXXXXXXX)"
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-pink-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-pink-500 transition-colors"
+                              />
+                              <p className="text-xs text-gray-400">Enter your 11-digit bKash account number</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Nagad */}
+                        <div>
+                          <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-orange-500/40 transition-all group">
+                            <input 
+                              type="radio" 
+                              name="withdrawMethod" 
+                              value="nagad"
+                              checked={selectedMethod === 'nagad'}
+                              onChange={(e) => setSelectedMethod(e.target.value)}
+                              className="w-4 h-4 text-orange-500 bg-transparent border-gray-500 focus:ring-orange-500" 
+                            />
+                            <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
+                              <img 
+                                src="https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png" 
+                                alt="Nagad" 
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <span className="text-gray-200 font-medium group-hover:text-orange-400 transition-colors">Nagad</span>
+                          </label>
+                          {selectedMethod === 'nagad' && (
+                            <div className="mt-2 ml-7 space-y-2 animate-[slideDown_0.2s_ease-out]">
+                              <input
+                                type="tel"
+                                placeholder="Nagad Account Number (e.g., 01XXXXXXXXX)"
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-orange-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
+                              />
+                              <p className="text-xs text-gray-400">Enter your 11-digit Nagad account number</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Rocket */}
+                        <div>
+                          <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-purple-500/40 transition-all group">
+                            <input 
+                              type="radio" 
+                              name="withdrawMethod" 
+                              value="rocket"
+                              checked={selectedMethod === 'rocket'}
+                              onChange={(e) => setSelectedMethod(e.target.value)}
+                              className="w-4 h-4 text-purple-500 bg-transparent border-gray-500 focus:ring-purple-500" 
+                            />
+                            <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
+                              <img 
+                                src="https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg" 
+                                alt="Rocket" 
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                            <span className="text-gray-200 font-medium group-hover:text-purple-400 transition-colors">Rocket (DBBL)</span>
+                          </label>
+                          {selectedMethod === 'rocket' && (
+                            <div className="mt-2 ml-7 space-y-2 animate-[slideDown_0.2s_ease-out]">
+                              <input
+                                type="tel"
+                                placeholder="Rocket Account Number (e.g., 01XXXXXXXXX)"
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-purple-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+                              />
+                              <p className="text-xs text-gray-400">Enter your 11-digit Rocket account number</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Bank Transfer */}
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Bank Transfer</p>
+                        
+                        <div>
+                          <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-green-500/40 transition-all group">
+                            <input 
+                              type="radio" 
+                              name="withdrawMethod" 
+                              value="bank"
+                              checked={selectedMethod === 'bank'}
+                              onChange={(e) => setSelectedMethod(e.target.value)}
+                              className="w-4 h-4 text-green-500 bg-transparent border-gray-500 focus:ring-green-500" 
+                            />
+                            <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
+                              <i className="fi fi-br-bank text-2xl text-green-400"></i>
+                            </div>
+                            <span className="text-gray-200 font-medium group-hover:text-green-400 transition-colors">Bank Account</span>
+                          </label>
+                          {selectedMethod === 'bank' && (
+                            <div className="mt-2 ml-7 space-y-2 animate-[slideDown_0.2s_ease-out]">
+                              <input
+                                type="text"
+                                placeholder="Bank Name"
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Account Number"
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Account Holder Name"
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                              />
+                              <input
+                                type="text"
+                                placeholder="Branch Name"
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                              />
+                              <p className="text-xs text-gray-400">Enter your complete bank account details</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-4 bg-white/[0.04] rounded-lg border border-white/10">
