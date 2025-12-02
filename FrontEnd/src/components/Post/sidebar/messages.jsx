@@ -31,6 +31,12 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
           return;
         }
 
+        // Wait for conversations to load before checking
+        if (loading) {
+          console.log('⏳ Waiting for conversations to load...');
+          return;
+        }
+
         try {
           const otherUserId = initialConversation.firebase_uid || initialConversation.id;
           
@@ -43,7 +49,7 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
 
           if (existingConv) {
             // Use existing conversation
-            console.log('Using existing conversation:', existingConv.conversationId);
+            console.log('✅ Using existing conversation:', existingConv.conversationId);
             setSelectedChat({
               conversationId: existingConv.conversationId,
               receiverId: otherUserId,
@@ -52,6 +58,7 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
             });
           } else {
             // Create new conversation
+            console.log('📝 Creating new conversation for:', otherUserId);
             const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
             const currentUserName = currentUserData.full_name || currentUserData.username || currentUser.displayName || 'User';
             const currentUserPhoto = currentUserData.profile_picture || currentUser.photoURL || null;
@@ -79,7 +86,7 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
     };
 
     handleInitialConversation();
-  }, [initialConversation, conversations]);
+  }, [initialConversation, conversations, loading]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
