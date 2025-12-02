@@ -102,7 +102,7 @@ export const getPostById = (postId) => API.get(`/posts/${postId}`);
 export const updatePost = (postId, data) => API.put(`/posts/${postId}`, data);
 export const deletePost = (postId) => API.delete(`/posts/${postId}`);
 export const toggleLike = (postId) => API.post(`/posts/${postId}/like`);
-export const toggleShare = (postId) => API.post(`/posts/${postId}/share`);
+export const toggleShare = (postId, content = '') => API.post(`/posts/${postId}/share`, { content });
 export const addComment = (postId, data) => API.post(`/posts/${postId}/comment`, data);
 export const getComments = (postId) => API.get(`/posts/${postId}/comments`);
 

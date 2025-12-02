@@ -10,11 +10,123 @@ import {
   checkFollowStatus,
   getFollowCounts,
   getUserPosts,
-  toggleLike as toggleLikeAPI
+  toggleLike as toggleLikeAPI,
+  toggleShare as toggleShareAPI
 } from "../../../services/api";
 import { getOrCreateConversation } from "../../../utils/messagingUtils";
 import { auth } from "../../../config/firebase";
 import SendMoney from "./SendMoney";
+
+// Repost Composer Component
+function RepostComposer({ originalPost, onSubmit, onCancel }) {
+  const [repostText, setRepostText] = useState('');
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const handleSubmit = () => {
+    onSubmit(repostText);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Current User */}
+      <div className="flex items-start gap-3">
+        {user?.profile_picture ? (
+          <img
+            src={user.profile_picture}
+            alt={user.full_name}
+            className="w-12 h-12 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#045F5F] to-[#89CFF0] flex items-center justify-center text-white font-bold">
+            {user?.full_name?.[0]?.toUpperCase() || 'U'}
+          </div>
+        )}
+        <div className="flex-1">
+          <textarea
+            value={repostText}
+            onChange={(e) => setRepostText(e.target.value)}
+            placeholder="Add your thoughts..."
+            className="w-full bg-gray-800/50 text-white rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#045F5F] min-h-[100px]"
+            autoFocus
+          />
+        </div>
+      </div>
+
+      {/* Original Post Preview */}
+      <div className="ml-14 border-l-2 border-gray-700 pl-4">
+        <div className="bg-gray-800/30 rounded-xl p-4 border border-gray-700">
+          <div className="flex items-center gap-2 mb-2">
+            {originalPost.profile_picture ? (
+              <img
+                src={originalPost.profile_picture}
+                alt={originalPost.full_name}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#045F5F] to-[#89CFF0] flex items-center justify-center text-white font-bold text-xs">
+                {originalPost.full_name?.[0]?.toUpperCase() || 'U'}
+              </div>
+            )}
+            <div>
+              <p className="text-white font-semibold text-sm">{originalPost.full_name}</p>
+              <p className="text-gray-500 text-xs">@{originalPost.username}</p>
+            </div>
+          </div>
+          {originalPost.content && (
+            <p className="text-gray-300 text-sm">{originalPost.content}</p>
+          )}
+          {originalPost.media_urls && originalPost.media_urls.length > 0 && (
+            <div className="mt-2 flex gap-2">
+              {originalPost.media_urls.slice(0, 2).map((url, i) => {
+                const isImage = url?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                if (isImage) {
+                  return (
+                    <img
+                      key={i}
+                      src={url}
+                      alt=""
+                      className="w-20 h-20 object-cover rounded-lg"
+                    />
+                  );
+                }
+                return null;
+              })}
+              {originalPost.media_urls.length > 2 && (
+                <div className="w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-gray-400 text-xs">
+                  +{originalPost.media_urls.length - 2}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-800">
+        <button
+          onClick={onCancel}
+          className="px-6 py-2.5 rounded-full bg-gray-800 hover:bg-gray-700 text-white font-medium transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSubmit}
+          className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#045F5F] to-[#89CFF0] hover:opacity-90 text-white font-bold transition-opacity flex items-center gap-2"
+        >
+          <i className="fas fa-retweet"></i>
+          Repost
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function UserProfile({ userId, onBack, onMessageClick }) {
   const navigate = useNavigate();
@@ -35,6 +147,8 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
   const [showSendMoney, setShowSendMoney] = useState(false);
   const [showImageControls, setShowImageControls] = useState(true);
   const [controlsTimeout, setControlsTimeout] = useState(null);
+  const [repostModalOpen, setRepostModalOpen] = useState(false);
+  const [repostingPost, setRepostingPost] = useState(null);
 
   const handleSendMessage = async () => {
     try {
@@ -165,6 +279,37 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       );
     } catch (error) {
       console.error('Error toggling like:', error);
+    }
+  };
+
+  const toggleRepost = async (post) => {
+    // Open modal with post data
+    setRepostingPost(post);
+    setRepostModalOpen(true);
+  };
+
+  const handleRepostSubmit = async (content) => {
+    if (!repostingPost) return;
+    
+    try {
+      const response = await toggleShareAPI(repostingPost.id);
+      
+      setUserPosts(prev =>
+        prev.map(p => {
+          if (p.id !== repostingPost.id) return p;
+          return {
+            ...p,
+            user_shared: response.data.shared,
+            shares_count: response.data.sharesCount
+          };
+        })
+      );
+      
+      // Close modal
+      setRepostModalOpen(false);
+      setRepostingPost(null);
+    } catch (error) {
+      console.error('Error creating repost:', error);
     }
   };
 
@@ -965,6 +1110,40 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                           })}
                         </div>
                       )}
+
+                      {/* Post Actions */}
+                      <div className="flex items-center gap-6 mt-4 pt-3 border-t border-gray-800">
+                        {/* Like button */}
+                        <button
+                          onClick={() => toggleLike(post.id)}
+                          className={`flex items-center gap-2 transition-colors ${
+                            post.user_liked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
+                          }`}
+                        >
+                          <i className={`${post.user_liked ? 'fas' : 'far'} fa-heart`}></i>
+                          <span className="text-sm">{post.likes_count || 0}</span>
+                        </button>
+
+                        {/* Repost button */}
+                        <button
+                          onClick={() => toggleRepost(post)}
+                          className={`flex items-center gap-2 transition-colors ${
+                            post.user_shared ? 'text-green-500' : 'text-gray-400 hover:text-green-500'
+                          }`}
+                          title="Repost"
+                        >
+                          <i className="fas fa-retweet"></i>
+                          <span className="text-sm">{post.shares_count || 0}</span>
+                        </button>
+
+                        {/* Comment button */}
+                        <button
+                          className="flex items-center gap-2 text-gray-400 hover:text-blue-500 transition-colors"
+                        >
+                          <i className="far fa-comment"></i>
+                          <span className="text-sm">{post.comments_count || 0}</span>
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -1051,6 +1230,40 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                 </button>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Repost Modal */}
+      {repostModalOpen && repostingPost && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-gray-900 rounded-2xl border border-[#045F5F]/30 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white">Repost</h3>
+              <button
+                onClick={() => {
+                  setRepostModalOpen(false);
+                  setRepostingPost(null);
+                }}
+                className="w-10 h-10 rounded-full hover:bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+              >
+                <i className="fas fa-times text-xl" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {/* Repost Composer */}
+              <RepostComposer 
+                originalPost={repostingPost}
+                onSubmit={handleRepostSubmit}
+                onCancel={() => {
+                  setRepostModalOpen(false);
+                  setRepostingPost(null);
+                }}
+              />
+            </div>
           </div>
         </div>
       )}

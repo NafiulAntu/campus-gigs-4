@@ -27,7 +27,22 @@ class Post {
         p.replies as comments_count,
         COALESCE((SELECT COUNT(*) FROM post_shares WHERE post_id = p.id), 0) as shares_count,
         p.media as media_urls,
-        p.posted_by as user_id
+        p.posted_by as user_id,
+        p.repost_of,
+        -- Get original post data if this is a repost
+        CASE WHEN p.repost_of IS NOT NULL THEN
+          (SELECT json_build_object(
+            'id', op.id,
+            'content', op.content,
+            'media_urls', op.media,
+            'full_name', ou.full_name,
+            'username', ou.username,
+            'profile_picture', ou.profile_picture,
+            'posted_by', op.posted_by
+          ) FROM posts op
+          JOIN users ou ON op.posted_by = ou.id
+          WHERE op.id = p.repost_of)
+        ELSE NULL END as original_post
       FROM posts p
       JOIN users u ON p.posted_by = u.id
       ORDER BY p.created_at DESC
@@ -162,6 +177,47 @@ class Post {
       console.error('Error in toggleShare:', error);
       throw error;
     }
+  }
+
+  // Create a repost (share with optional comment)
+  static async createRepost(userId, originalPostId, content = '') {
+    const query = `
+      INSERT INTO posts (posted_by, content, repost_of)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    `;
+    const result = await pool.query(query, [userId, content, originalPostId]);
+    
+    // Also add to post_shares for tracking
+    await pool.query(`INSERT INTO post_shares (post_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`, [originalPostId, userId]);
+    
+    return result.rows[0];
+  }
+
+  // Get user's share of a specific post
+  static async getUserShare(postId, userId) {
+    const query = `
+      SELECT p.* FROM posts p
+      JOIN post_shares ps ON ps.post_id = $1 AND ps.user_id = $2
+      WHERE p.posted_by = $2 AND p.repost_of = $1
+      LIMIT 1
+    `;
+    const result = await pool.query(query, [postId, userId]);
+    return result.rows[0];
+  }
+
+  // Delete a repost
+  static async deleteRepost(repostId) {
+    const query = `DELETE FROM posts WHERE id = $1 RETURNING repost_of, posted_by`;
+    const result = await pool.query(query, [repostId]);
+    
+    if (result.rows[0]) {
+      // Remove from post_shares
+      await pool.query(`DELETE FROM post_shares WHERE post_id = $1 AND user_id = $2`, 
+        [result.rows[0].repost_of, result.rows[0].posted_by]);
+    }
+    
+    return result.rows[0];
   }
 
   // Check if user liked a post (placeholder)

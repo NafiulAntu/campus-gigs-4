@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { uploadFiles } from '../../../services/api';
+import { uploadFiles, toggleShare as toggleShareAPI } from '../../../services/api';
 
-export default function PostComposer({ onPost, onEdit, editingPost, brightOn = false }) {
+export default function PostComposer({ onPost, onEdit, editingPost, repostingPost, onCancelRepost, onRepost, brightOn = false }) {
   const [text, setText] = useState("");
   const [files, setFiles] = useState([]);
   const [user, setUser] = useState(null);
@@ -70,11 +70,11 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
       } else {
         setFiles([]);
       }
-    } else {
+    } else if (!repostingPost) {
       setText("");
       setFiles([]);
     }
-  }, [editingPost]);
+  }, [editingPost, repostingPost]);
 
   function cancelEdit() {
     setText("");
@@ -82,10 +82,24 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
     if (mediaInputRef.current) mediaInputRef.current.value = null;
     if (attachInputRef.current) attachInputRef.current.value = null;
     if (onEdit) onEdit(null); // This will set editingPost to null
+    if (repostingPost && onCancelRepost) onCancelRepost(); // Clear reposting post
   }
 
   async function submit() {
     try {
+      // Handle repost
+      if (repostingPost) {
+        const response = await toggleShareAPI(repostingPost.id, text.trim());
+        if (onRepost) {
+          onRepost(repostingPost.id, response.data);
+        }
+        setText("");
+        if (onCancelRepost) onCancelRepost();
+        // Refresh the page to show new repost
+        window.location.reload();
+        return;
+      }
+
       let mediaUrls = [];
       
       // Separate existing media URLs from new files
@@ -161,12 +175,66 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
                 setText(newText);
               }
             }}
-            placeholder={editingPost ? "Edit your post..." : "What's on your mind?"}
+            placeholder={editingPost ? "Edit your post..." : repostingPost ? "Add your thoughts..." : "What's on your mind?"}
             className={`w-full min-h-[120px] sm:min-h-[160px] p-3 sm:p-4 composer-input resize-none text-[16px] sm:text-[18px] leading-relaxed focus:outline-none focus:ring-2 transition-all border-2 ${
               brightOn ? 'text-white placeholder:text-[#008B8B]/60 bg-[#1E293B] border-white focus:ring-white/50 focus:border-white' : 'text-blue-300 placeholder:text-blue-400/60 bg-gray-900/30 border-[#045F5F] focus:ring-[#045F5F]/50 focus:border-[#045F5F]'
             }`}
           />
         </div>
+
+        {/* Repost Preview */}
+        {repostingPost && (
+          <div className="ml-12 border-l-2 border-[#045F5F] pl-4">
+            <div className={`rounded-xl p-4 border transition-all ${
+              brightOn ? 'bg-[#1E293B] border-white/20' : 'bg-gray-800/30 border-[#045F5F]/30'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                {repostingPost.profile_picture ? (
+                  <img
+                    src={repostingPost.profile_picture}
+                    alt={repostingPost.full_name}
+                    className="w-8 h-8 rounded-full object-cover ring-2 ring-[#045F5F]/20"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#045F5F] to-[#89CFF0] flex items-center justify-center text-white font-bold text-xs">
+                    {repostingPost.full_name?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                )}
+                <div>
+                  <p className="text-white font-semibold text-sm">{repostingPost.full_name}</p>
+                  <p className="text-gray-500 text-xs">@{repostingPost.username}</p>
+                </div>
+              </div>
+              {repostingPost.content && (
+                <p className="text-gray-300 text-sm mb-2">{repostingPost.content}</p>
+              )}
+              {repostingPost.media_urls && repostingPost.media_urls.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {repostingPost.media_urls.slice(0, 2).map((url, i) => {
+                    const isImage = url?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                    if (isImage) {
+                      return (
+                        <img
+                          key={i}
+                          src={url}
+                          alt=""
+                          className="w-20 h-20 object-cover rounded-lg"
+                        />
+                      );
+                    }
+                    return null;
+                  })}
+                  {repostingPost.media_urls.length > 2 && (
+                    <div className="w-20 h-20 bg-gray-700/50 rounded-lg flex items-center justify-center text-gray-400 text-xs">
+                      +{repostingPost.media_urls.length - 2}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Character counter */}
         <div className={`text-xs sm:text-sm text-right transition-colors duration-300 ${
           text.length > MAX_CHARS * 0.9 ? 'text-red-400' : brightOn ? 'text-gray-500' : 'text-blue-400/60'
@@ -240,7 +308,7 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
         </div>
 
         <div className="flex items-center gap-8">
-          {editingPost && (
+          {(editingPost || repostingPost) && (
             <button
               onClick={cancelEdit}
               className="px-5 sm:px-6 md:px-7 py-2 sm:py-2 bg-gray-700/50 hover:bg-red-600/50 text-red rounded-full font-bold text-[14px] sm:text-[16px] shadow-md transition-all"
@@ -250,10 +318,11 @@ export default function PostComposer({ onPost, onEdit, editingPost, brightOn = f
           )}
           <button
             onClick={submit}
-            disabled={!text && files.length === 0}
-            className="px-5 sm:px-6 md:px-8 py-2.5 sm:py-2 btn-baby-blue rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed text-[14px] sm:text-[16px] shadow-md hover:shadow-lg transition-all transform hover:scale-105 active:scale-95"
+            disabled={repostingPost ? false : (!text && files.length === 0)}
+            className="px-5 sm:px-6 md:px-8 py-2.5 sm:py-2 btn-baby-blue rounded-full font-bold disabled:opacity-50 disabled:cursor-not-allowed text-[14px] sm:text-[16px] shadow-md hover:shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2"
           >
-            {editingPost ? "Update" : "Post"}
+            {repostingPost && <i className="fas fa-retweet"></i>}
+            {editingPost ? "Update" : repostingPost ? "Repost" : "Post"}
           </button>
         </div>
       </div>

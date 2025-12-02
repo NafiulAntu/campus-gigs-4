@@ -60,6 +60,7 @@ export default function PostPage({ onNavigate = () => {} }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentImages, setCurrentImages] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
+  const [repostingPost, setRepostingPost] = useState(null);
   const menuRef = useRef(null);
 
   // Load current user
@@ -204,23 +205,27 @@ export default function PostPage({ onNavigate = () => {} }) {
     }
   }
 
-  async function toggleRepost(id) {
-    try {
-      const response = await toggleShareAPI(id);
-      setPosts((prev) =>
-        prev.map((p) => {
-          if (p.id !== id) return p;
-          return {
-            ...p,
-            user_shared: response.data.shared,
-            shares_count: response.data.sharesCount,
-          };
-        })
-      );
-    } catch (error) {
-      console.error('Error toggling share:', error);
-    }
+  async function toggleRepost(post) {
+    setRepostingPost(post);
+    setEditingPost(null);
+    // Scroll to post composer
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   }
+
+  const handleRepost = (postId, responseData) => {
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id !== postId) return p;
+        return {
+          ...p,
+          user_shared: responseData.shared,
+          shares_count: responseData.sharesCount,
+        };
+      })
+    );
+  };
 
   function toggleAccept(id) {
     setPosts((prev) =>
@@ -511,7 +516,7 @@ export default function PostPage({ onNavigate = () => {} }) {
           </div>
 
           {/* Status composer is hidden while searching */}
-          {!isSearching && <PostComposer onPost={handleNewPost} onEdit={handleUpdatePost} editingPost={editingPost} brightOn={brightOn} />}
+          {!isSearching && <PostComposer onPost={handleNewPost} onEdit={handleUpdatePost} editingPost={editingPost} repostingPost={repostingPost} onCancelRepost={() => setRepostingPost(null)} onRepost={handleRepost} brightOn={brightOn} />}
 
           {/* Divider after composer or under sticky search */}
           <div className={`transition-colors duration-300 ${
@@ -728,13 +733,95 @@ export default function PostPage({ onNavigate = () => {} }) {
                           </div>
                         </div>
 
-                        <div className={`mt-2 leading-[1.6] whitespace-pre-wrap font-medium text-[15px] sm:text-[17px] break-words transition-colors duration-300 ${
-                          brightOn ? 'text-black' : 'text-white'
-                        }`}>
-                          {p.content}
-                        </div>
+                        {/* Repost indicator */}
+                        {p.repost_of && (
+                          <div className={`mt-2 flex items-center gap-2 text-sm ${
+                            brightOn ? 'text-gray-600' : 'text-gray-400'
+                          }`}>
+                            <i className="fi fi-br-refresh"></i>
+                            <span>Reposted</span>
+                          </div>
+                        )}
 
-                        {p.media_urls && p.media_urls.length > 0 && (
+                        {/* User's repost comment */}
+                        {p.repost_of && p.content && (
+                          <div className={`mt-2 leading-[1.6] whitespace-pre-wrap font-medium text-[15px] sm:text-[17px] break-words transition-colors duration-300 ${
+                            brightOn ? 'text-black' : 'text-white'
+                          }`}>
+                            {p.content}
+                          </div>
+                        )}
+
+                        {/* Original post preview for reposts */}
+                        {p.original_post && (
+                          <div className={`mt-3 border-l-2 pl-4 transition-colors duration-300 ${
+                            brightOn ? 'border-gray-300' : 'border-[#045F5F]'
+                          }`}>
+                            <div className={`rounded-xl p-4 border transition-all ${
+                              brightOn ? 'bg-[#1E293B] border-white/20' : 'bg-gray-800/30 border-[#045F5F]/30'
+                            }`}>
+                              <div className="flex items-center gap-2 mb-2">
+                                {p.original_post.profile_picture ? (
+                                  <img
+                                    src={p.original_post.profile_picture}
+                                    alt={p.original_post.full_name}
+                                    className="w-8 h-8 rounded-full object-cover ring-2 ring-[#045F5F]/20"
+                                  />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#045F5F] to-[#89CFF0] flex items-center justify-center text-white font-bold text-xs">
+                                    {p.original_post.full_name?.[0]?.toUpperCase() || 'U'}
+                                  </div>
+                                )}
+                                <div>
+                                  <p className={`font-semibold text-sm ${brightOn ? 'text-white' : 'text-white'}`}>
+                                    {p.original_post.full_name}
+                                  </p>
+                                  <p className="text-gray-500 text-xs">@{p.original_post.username}</p>
+                                </div>
+                              </div>
+                              {p.original_post.content && (
+                                <p className={`text-sm ${brightOn ? 'text-gray-300' : 'text-gray-300'}`}>
+                                  {p.original_post.content}
+                                </p>
+                              )}
+                              {p.original_post.media_urls && p.original_post.media_urls.length > 0 && (
+                                <div className="mt-2 flex gap-2 flex-wrap">
+                                  {p.original_post.media_urls.slice(0, 2).map((url, i) => {
+                                    const isImage = url?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                                    if (isImage) {
+                                      return (
+                                        <img
+                                          key={i}
+                                          src={url}
+                                          alt=""
+                                          className="w-20 h-20 object-cover rounded-lg"
+                                        />
+                                      );
+                                    }
+                                    return null;
+                                  })}
+                                  {p.original_post.media_urls.length > 2 && (
+                                    <div className="w-20 h-20 bg-gray-700/50 rounded-lg flex items-center justify-center text-gray-400 text-xs">
+                                      +{p.original_post.media_urls.length - 2}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Regular post content (only for non-reposts) */}
+                        {!p.repost_of && (
+                          <div className={`mt-2 leading-[1.6] whitespace-pre-wrap font-medium text-[15px] sm:text-[17px] break-words transition-colors duration-300 ${
+                            brightOn ? 'text-black' : 'text-white'
+                          }`}>
+                            {p.content}
+                          </div>
+                        )}
+
+                        {/* Regular post media (only for non-reposts) */}
+                        {!p.repost_of && p.media_urls && p.media_urls.length > 0 && (
                           <div
                             className={`mt-3 grid ${
                               p.media_urls.length === 1
@@ -910,7 +997,7 @@ export default function PostPage({ onNavigate = () => {} }) {
 
                             {/* Repost button */}
                             <button
-                              onClick={() => toggleRepost(p.id)}
+                              onClick={() => toggleRepost(p)}
                               className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all ${
                                 p.user_shared
                                   ? "text-[#89CFF0] bg-[#89CFF0]/10"

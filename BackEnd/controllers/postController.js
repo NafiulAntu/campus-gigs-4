@@ -211,42 +211,56 @@ exports.toggleLike = async (req, res) => {
   }
 };
 
-// Share/Unshare a post
+// Share/Unshare a post (Create a repost)
 exports.toggleShare = async (req, res) => {
   try {
     const { postId } = req.params;
     const userId = req.user.id;
+    const { content } = req.body; // Optional repost comment
 
-    console.log(`🔄 toggleShare: postId=${postId}, userId=${userId}`);
+    console.log(`🔄 toggleShare: postId=${postId}, userId=${userId}, content=${content}`);
 
-    const result = await Post.toggleShare(postId, userId);
+    // Check if user already shared this post
+    const existingShare = await Post.getUserShare(postId, userId);
     
-    // Get updated post
-    const post = await Post.getById(postId);
-
-    console.log(`📊 Post info: posted_by=${post.posted_by}, shared=${result.shared}, isOwnPost=${post.posted_by === userId}`);
-
-    // Send notification if post was shared (not unshared) and not own post
-    if (result.shared && post.posted_by !== userId) {
-      try {
-        const io = req.app.get('io');
-        const userName = req.user.full_name || req.user.username || 'Someone';
-        console.log(`🔔 Sending share notification: from userId=${userId} (${userName}) to userId=${post.posted_by}`);
-        await notifyRepost(post.posted_by, userId, userName, postId, io);
-        console.log('✅ Share notification sent successfully');
-      } catch (notifError) {
-        console.error('⚠️ Failed to send share notification:', notifError.message);
-        // Don't fail the request if notification fails
-      }
+    if (existingShare) {
+      // Unshare - delete the repost
+      await Post.deleteRepost(existingShare.id);
+      const post = await Post.getById(postId);
+      
+      res.status(200).json({ 
+        message: 'Post unshared',
+        shared: false,
+        sharesCount: post.shares_count
+      });
     } else {
-      console.log('⏩ Skipping notification: shared=', result.shared, 'isOwnPost=', post.posted_by === userId);
+      // Share - create a new repost
+      const repostContent = content?.trim() || '';
+      const repost = await Post.createRepost(userId, postId, repostContent);
+      
+      // Get the original post for notification
+      const originalPost = await Post.getById(postId);
+      
+      // Send notification if not own post
+      if (originalPost.posted_by !== userId) {
+        try {
+          const io = req.app.get('io');
+          const userName = req.user.full_name || req.user.username || 'Someone';
+          console.log(`🔔 Sending share notification: from userId=${userId} (${userName}) to userId=${originalPost.posted_by}`);
+          await notifyRepost(originalPost.posted_by, userId, userName, postId, io);
+          console.log('✅ Share notification sent successfully');
+        } catch (notifError) {
+          console.error('⚠️ Failed to send share notification:', notifError.message);
+        }
+      }
+      
+      res.status(200).json({ 
+        message: 'Post shared',
+        shared: true,
+        sharesCount: originalPost.shares_count + 1,
+        repost: repost
+      });
     }
-
-    res.status(200).json({ 
-      message: result.shared ? 'Post shared' : 'Post unshared',
-      shared: result.shared,
-      sharesCount: post.shares_count
-    });
   } catch (error) {
     console.error('Error toggling share:', error);
     res.status(500).json({ error: 'Failed to toggle share' });
