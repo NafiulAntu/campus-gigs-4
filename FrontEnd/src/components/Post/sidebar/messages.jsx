@@ -30,27 +30,46 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
         }
 
         try {
-          // Get current user's info
-          const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
-          const currentUserName = currentUserData.full_name || currentUserData.username || currentUser.displayName || 'User';
-          const currentUserPhoto = currentUserData.profile_picture || currentUser.photoURL || null;
-
-          // Create or get conversation
-          const conversationId = await getOrCreateConversation(
-            currentUser.uid,
-            initialConversation.firebase_uid || initialConversation.id,
-            initialConversation.full_name || initialConversation.userName || initialConversation.username || 'User',
-            initialConversation.profile_picture || initialConversation.userPhoto || null,
-            currentUserName,
-            currentUserPhoto
+          const otherUserId = initialConversation.firebase_uid || initialConversation.id;
+          
+          // Check if conversation already exists in loaded conversations
+          const existingConv = conversations.find(conv => 
+            conv.participants && 
+            conv.participants.includes(currentUser.uid) && 
+            conv.participants.includes(otherUserId)
           );
 
-          setSelectedChat({
-            conversationId,
-            receiverId: initialConversation.firebase_uid || initialConversation.id,
-            receiverName: initialConversation.full_name || initialConversation.userName || initialConversation.username,
-            receiverPhoto: initialConversation.profile_picture || initialConversation.userPhoto
-          });
+          if (existingConv) {
+            // Use existing conversation
+            console.log('Using existing conversation:', existingConv.conversationId);
+            setSelectedChat({
+              conversationId: existingConv.conversationId,
+              receiverId: otherUserId,
+              receiverName: initialConversation.full_name || initialConversation.userName || initialConversation.username,
+              receiverPhoto: initialConversation.profile_picture || initialConversation.userPhoto
+            });
+          } else {
+            // Create new conversation
+            const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
+            const currentUserName = currentUserData.full_name || currentUserData.username || currentUser.displayName || 'User';
+            const currentUserPhoto = currentUserData.profile_picture || currentUser.photoURL || null;
+
+            const conversationId = await getOrCreateConversation(
+              currentUser.uid,
+              otherUserId,
+              initialConversation.full_name || initialConversation.userName || initialConversation.username || 'User',
+              initialConversation.profile_picture || initialConversation.userPhoto || null,
+              currentUserName,
+              currentUserPhoto
+            );
+
+            setSelectedChat({
+              conversationId,
+              receiverId: otherUserId,
+              receiverName: initialConversation.full_name || initialConversation.userName || initialConversation.username,
+              receiverPhoto: initialConversation.profile_picture || initialConversation.userPhoto
+            });
+          }
         } catch (error) {
           console.error('Error opening conversation:', error);
         }
@@ -58,7 +77,7 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
     };
 
     handleInitialConversation();
-  }, [initialConversation]);
+  }, [initialConversation, conversations]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -244,7 +263,28 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
         return;
       }
 
-      // Get current user's info
+      // Check if conversation already exists
+      const existingConv = conversations.find(conv => 
+        conv.participants && 
+        conv.participants.includes(currentUser.uid) && 
+        conv.participants.includes(user.firebase_uid)
+      );
+
+      if (existingConv) {
+        // Use existing conversation
+        console.log('Using existing conversation:', existingConv.conversationId);
+        setSearchQuery('');
+        setSearchResults([]);
+        setSelectedChat({
+          conversationId: existingConv.conversationId,
+          receiverId: user.firebase_uid,
+          receiverName: user.full_name || user.username,
+          receiverPhoto: user.profile_picture
+        });
+        return;
+      }
+
+      // Create new conversation
       const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
       const currentUserName = currentUserData.full_name || currentUserData.username || currentUser.displayName || 'User';
       const currentUserPhoto = currentUserData.profile_picture || currentUser.photoURL || null;
