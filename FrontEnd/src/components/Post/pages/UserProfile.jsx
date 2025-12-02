@@ -187,8 +187,15 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
     setCurrentImages([]);
     setCurrentImageIndex(0);
     setShowImageControls(true);
-    if (controlsTimeout) clearTimeout(controlsTimeout);
-    document.body.style.overflow = 'unset'; // Restore scrolling
+    if (controlsTimeout) {
+      clearTimeout(controlsTimeout);
+      setControlsTimeout(null);
+    }
+    // Force restore scrolling
+    requestAnimationFrame(() => {
+      document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+    });
   };
 
   const handleImageMouseMove = () => {
@@ -326,10 +333,13 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
         closeImageViewer();
       } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
         previousImage();
       } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
         nextImage();
       }
     };
@@ -346,7 +356,16 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       window.removeEventListener('keydown', handleKeyDown);
       if (timeout) clearTimeout(timeout);
     };
-  }, [imageViewerOpen, currentImages]);
+  }, [imageViewerOpen, currentImages.length]);
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      if (controlsTimeout) clearTimeout(controlsTimeout);
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -954,42 +973,52 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       {/* Image Viewer Modal */}
       {imageViewerOpen && currentImages.length > 0 && (
         <div 
-          className="fixed inset-0 z-[60] bg-black cursor-default"
-          onClick={closeImageViewer}
+          className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            closeImageViewer();
+          }}
           onMouseMove={handleImageMouseMove}
+          style={{ touchAction: 'none' }}
         >
-          {/* Top bar with close button */}
-          <div className={`absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-6 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm z-20 transition-all duration-500 ${showImageControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}>
-            <div className="flex items-center gap-4">
+          {/* Main content area - scrollable */}
+          <div 
+            className="w-full h-full overflow-auto py-8 px-4 scrollbar-hide" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Image container */}
+            <div className="relative max-w-4xl mx-auto">
+              <img
+                src={currentImages[currentImageIndex]}
+                alt="View"
+                className="w-full h-auto object-contain select-none rounded-lg shadow-2xl"
+                draggable={false}
+                onClick={(e) => e.stopPropagation()}
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23333"/><text x="50%" y="50%" text-anchor="middle" fill="white" font-size="20">Image not found</text></svg>';
+                }}
+              />
+              
+              {/* Close button on image */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  closeImageViewer();
+                }}
+                className={`absolute top-3 right-3 w-10 h-10 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all duration-500 shadow-lg z-10 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                aria-label="Close"
+              >
+                <i className="fas fa-times text-xl" />
+              </button>
+
+              {/* Image counter */}
               {currentImages.length > 1 && (
-                <span className="text-white text-base font-medium">
+                <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm text-white text-sm font-medium transition-all duration-500 ${showImageControls ? 'opacity-100' : 'opacity-0'}`}>
                   {currentImageIndex + 1} / {currentImages.length}
-                </span>
+                </div>
               )}
             </div>
-            <button
-              onClick={closeImageViewer}
-              className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center text-white transition-all"
-              aria-label="Close"
-            >
-              <i className="fas fa-times text-2xl" />
-            </button>
-          </div>
-
-          {/* Main content area */}
-          <div className="absolute inset-0 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            {/* Image */}
-            <img
-              src={currentImages[currentImageIndex]}
-              alt="View"
-              className="max-w-full max-h-full object-contain select-none"
-              style={{ maxWidth: '100vw', maxHeight: '100vh' }}
-              draggable={false}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="%23333"/><text x="50%" y="50%" text-anchor="middle" fill="white" font-size="20">Image not found</text></svg>';
-              }}
-            />
 
             {/* Navigation arrows for multiple images */}
             {currentImages.length > 1 && (
@@ -999,7 +1028,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                     e.stopPropagation();
                     previousImage();
                   }}
-                  className={`absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-500 backdrop-blur-md border border-white/10 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                  className={`fixed left-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-500 backdrop-blur-md border border-white/10 z-10 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                   aria-label="Previous"
                 >
                   <i className="fas fa-chevron-left text-2xl" />
@@ -1009,7 +1038,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                     e.stopPropagation();
                     nextImage();
                   }}
-                  className={`absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-500 backdrop-blur-md border border-white/10 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                  className={`fixed right-6 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all duration-500 backdrop-blur-md border border-white/10 z-10 ${showImageControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                   aria-label="Next"
                 >
                   <i className="fas fa-chevron-right text-2xl" />

@@ -6,6 +6,12 @@
 html {
   scroll-behavior: smooth;
   background-color: #000000;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 
 /* Optimize rendering performance */
@@ -15,6 +21,12 @@ body {
   text-rendering: optimizeLegibility;
   background-color: #000000;
   color: #ffffff;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 
 /* Hardware acceleration for animations */
