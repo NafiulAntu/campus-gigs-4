@@ -1030,10 +1030,22 @@ export default function PostPage({ onNavigate = () => {} }) {
 
                             {/* Send button */}
                             <button
+                              onClick={() => {
+                                setCurrentView('messages');
+                                // If not own post, set the conversation with the post author
+                                if (!isCurrentUserPost) {
+                                  setSelectedConversation({
+                                    id: p.posted_by,
+                                    full_name: p.full_name,
+                                    username: p.username,
+                                    profile_picture: p.profile_picture
+                                  });
+                                }
+                              }}
                               className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all transition-colors duration-300 ${
                                 brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
                               } hover:bg-[#89CFF0]/10`}
-                              title="Send"
+                              title="Send message"
                             >
                               <i className="fi fi-br-paper-plane text-[18px]" />
                               <span className="text-sm font-semibold">Send</span>
