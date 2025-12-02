@@ -227,6 +227,19 @@ export default function PostPage({ onNavigate = () => {} }) {
     );
   };
 
+  const scrollToPost = (postId) => {
+    // Find the post element and scroll to it
+    const postElement = document.getElementById(`post-${postId}`);
+    if (postElement) {
+      postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Highlight the post briefly
+      postElement.classList.add('ring-2', 'ring-[#045F5F]', 'ring-opacity-50');
+      setTimeout(() => {
+        postElement.classList.remove('ring-2', 'ring-[#045F5F]', 'ring-opacity-50');
+      }, 2000);
+    }
+  };
+
   function toggleAccept(id) {
     setPosts((prev) =>
       prev.map((p) => {
@@ -603,6 +616,7 @@ export default function PostPage({ onNavigate = () => {} }) {
               return (
                 <div
                   key={p.id}
+                  id={`post-${p.id}`}
                   className={`mb-2 transition-colors duration-300 border overflow-hidden ${
                     brightOn ? 'border-white bg-white' : 'border-[#045F5F] bg-black'
                   }`}
@@ -754,11 +768,14 @@ export default function PostPage({ onNavigate = () => {} }) {
 
                         {/* Original post preview for reposts */}
                         {p.original_post && (
-                          <div className={`mt-3 border-l-2 pl-4 transition-colors duration-300 ${
-                            brightOn ? 'border-gray-300' : 'border-[#045F5F]'
-                          }`}>
-                            <div className={`rounded-xl p-4 border transition-all ${
-                              brightOn ? 'bg-[#1E293B] border-white/20' : 'bg-gray-800/30 border-[#045F5F]/30'
+                          <div 
+                            onClick={() => scrollToPost(p.original_post.id)}
+                            className={`mt-3 border-l-2 pl-4 transition-colors duration-300 cursor-pointer hover:border-[#89CFF0] ${
+                              brightOn ? 'border-gray-300' : 'border-[#045F5F]'
+                            }`}
+                          >
+                            <div className={`rounded-xl p-4 border transition-all hover:border-[#045F5F] ${
+                              brightOn ? 'bg-[#1E293B] border-white/20 hover:bg-[#1E293B]/80' : 'bg-gray-800/30 border-[#045F5F]/30 hover:bg-gray-800/50'
                             }`}>
                               <div className="flex items-center gap-2 mb-2">
                                 {p.original_post.profile_picture ? (
