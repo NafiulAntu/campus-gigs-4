@@ -331,14 +331,21 @@ exports.getComments = async (req, res) => {
 exports.acceptPost = async (req, res) => {
   try {
     const { postId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
-    console.log(`✅ acceptPost: postId=${postId}, userId=${userId}`);
+    console.log(`✅ acceptPost called: postId=${postId}, userId=${userId}`);
+    console.log('User object:', req.user);
+
+    if (!userId) {
+      console.error('❌ No user ID found in request');
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
     // Get the post to check author
     const post = await Post.getById(postId);
     
     if (!post) {
+      console.error(`❌ Post not found: ${postId}`);
       return res.status(404).json({ error: 'Post not found' });
     }
 
@@ -355,8 +362,8 @@ exports.acceptPost = async (req, res) => {
         await createAndSendNotification({
           userId: post.posted_by,
           type: 'accept',
-          title: 'Post Accepted! 🎉',
-          message: `${userName} accepted your post`,
+          title: 'Request Accepted! 🎉',
+          message: `${userName} accepted your request`,
           data: { postId, acceptedBy: userId },
           actorId: userId,
           link: `/post/${postId}`,
@@ -364,7 +371,9 @@ exports.acceptPost = async (req, res) => {
         });
         console.log('✅ Accept notification sent successfully');
       } catch (notifError) {
-        console.error('⚠️ Failed to send accept notification:', notifError.message);
+        console.error('⚠️ Failed to send accept notification:', notifError);
+        console.error('Notification error stack:', notifError.stack);
+        // Continue even if notification fails
       }
     } else {
       console.log('⏩ Skipping notification: own post');
@@ -375,8 +384,9 @@ exports.acceptPost = async (req, res) => {
       accepted: true
     });
   } catch (error) {
-    console.error('Error accepting post:', error);
-    res.status(500).json({ error: 'Failed to accept post' });
+    console.error('❌ Error accepting post:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to accept post', details: error.message });
   }
 };
 
@@ -384,14 +394,21 @@ exports.acceptPost = async (req, res) => {
 exports.rejectPost = async (req, res) => {
   try {
     const { postId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
-    console.log(`❌ rejectPost: postId=${postId}, userId=${userId}`);
+    console.log(`❌ rejectPost called: postId=${postId}, userId=${userId}`);
+    console.log('User object:', req.user);
+
+    if (!userId) {
+      console.error('❌ No user ID found in request');
+      return res.status(401).json({ error: 'Authentication required' });
+    }
 
     // Get the post to check author
     const post = await Post.getById(postId);
     
     if (!post) {
+      console.error(`❌ Post not found: ${postId}`);
       return res.status(404).json({ error: 'Post not found' });
     }
 
@@ -408,8 +425,8 @@ exports.rejectPost = async (req, res) => {
         await createAndSendNotification({
           userId: post.posted_by,
           type: 'reject',
-          title: 'Post Response',
-          message: `${userName} rejected your post`,
+          title: 'Request Response',
+          message: `${userName} rejected your request`,
           data: { postId, rejectedBy: userId },
           actorId: userId,
           link: `/post/${postId}`,
@@ -417,7 +434,9 @@ exports.rejectPost = async (req, res) => {
         });
         console.log('✅ Reject notification sent successfully');
       } catch (notifError) {
-        console.error('⚠️ Failed to send reject notification:', notifError.message);
+        console.error('⚠️ Failed to send reject notification:', notifError);
+        console.error('Notification error stack:', notifError.stack);
+        // Continue even if notification fails
       }
     } else {
       console.log('⏩ Skipping notification: own post');
@@ -428,7 +447,8 @@ exports.rejectPost = async (req, res) => {
       rejected: true
     });
   } catch (error) {
-    console.error('Error rejecting post:', error);
-    res.status(500).json({ error: 'Failed to reject post' });
+    console.error('❌ Error rejecting post:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to reject post', details: error.message });
   }
 };

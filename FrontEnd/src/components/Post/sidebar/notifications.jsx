@@ -75,7 +75,7 @@ export default function Notifications({ onBack }) {
       'comment': 'commented on your post',
       'message': 'sent you a message',
       'accept': 'accepted your request',
-      'reject': 'rejected your application',
+      'reject': 'rejected your request',
       'follow': 'started following you',
       'job_alert': 'posted a new job'
     };

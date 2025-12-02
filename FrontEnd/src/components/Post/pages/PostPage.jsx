@@ -242,6 +242,7 @@ export default function PostPage({ onNavigate = () => {} }) {
 
   async function toggleAccept(id) {
     try {
+      console.log('🔄 Attempting to accept post:', id);
       const response = await acceptPostAPI(id);
       
       setPosts((prev) =>
@@ -255,16 +256,20 @@ export default function PostPage({ onNavigate = () => {} }) {
         })
       );
       
-      console.log('✅ Post accepted:', response.data);
+      console.log('✅ Post accepted successfully:', response.data);
     } catch (error) {
-      console.error('Error accepting post:', error);
-      // Revert on error
-      alert('Failed to accept post. Please try again.');
+      console.error('❌ Error accepting post:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      // Show more detailed error
+      const errorMsg = error.response?.data?.error || error.message || 'Failed to accept post. Please try again.';
+      alert(errorMsg);
     }
   }
 
   async function toggleReject(id) {
     try {
+      console.log('🔄 Attempting to reject post:', id);
       const response = await rejectPostAPI(id);
       
       setPosts((prev) =>
@@ -278,11 +283,14 @@ export default function PostPage({ onNavigate = () => {} }) {
         })
       );
       
-      console.log('❌ Post rejected:', response.data);
+      console.log('✅ Post rejected successfully:', response.data);
     } catch (error) {
-      console.error('Error rejecting post:', error);
-      // Revert on error
-      alert('Failed to reject post. Please try again.');
+      console.error('❌ Error rejecting post:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      // Show more detailed error
+      const errorMsg = error.response?.data?.error || error.message || 'Failed to reject post. Please try again.';
+      alert(errorMsg);
     }
   }
 
