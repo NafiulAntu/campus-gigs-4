@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ChatWindow from "../../Chat/ChatWindow";
-import { collection, query, where, getDocs, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, limit, onSnapshot, doc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '../../../config/firebase';
 import { searchUsers } from '../../../services/api';
 import { getOrCreateConversation } from '../../../utils/messagingUtils';
@@ -17,7 +17,9 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, conversationId: null });
   const chatMenuRef = useRef(null);
+  const contextMenuRef = useRef(null);
 
   // Handle initial conversation from clicking message button on profile
   useEffect(() => {
@@ -338,6 +340,50 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
     }
   };
 
+  // Handle delete conversation
+  const handleDeleteConversation = async (conversationId) => {
+    if (!window.confirm('Are you sure you want to delete this conversation?')) return;
+    
+    try {
+      await deleteDoc(doc(db, 'conversations', conversationId));
+      
+      // Close chat if it's the deleted conversation
+      if (selectedChat?.conversationId === conversationId) {
+        setSelectedChat(null);
+      }
+      
+      setContextMenu({ show: false, x: 0, y: 0, conversationId: null });
+    } catch (error) {
+      console.error('Error deleting conversation:', error);
+      alert('Failed to delete conversation.');
+    }
+  };
+
+  // Handle right-click on conversation
+  const handleContextMenu = (e, conversationId) => {
+    e.preventDefault();
+    setContextMenu({
+      show: true,
+      x: e.clientX,
+      y: e.clientY,
+      conversationId
+    });
+  };
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
+        setContextMenu({ show: false, x: 0, y: 0, conversationId: null });
+      }
+    };
+
+    if (contextMenu.show) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [contextMenu.show]);
+
   return (
     <div className="min-h-screen bg-black">
       <div className="max-w-full mx-auto h-screen flex">
@@ -455,6 +501,7 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
                       <div
                         key={conv.id}
                         onClick={() => setSelectedChat(conv)}
+                        onContextMenu={(e) => handleContextMenu(e, conv.conversationId)}
                         className={`group p-4 mb-2 rounded-xl cursor-pointer transition-all ${
                           selectedChat?.id === conv.id 
                             ? "bg-[#89CFF0]/[0.12] border border-[#89CFF0]/[0.35] shadow-lg shadow-[#89CFF0]/[0.15]" 
@@ -709,6 +756,28 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
           </div>
         )}
       </div>
+
+      {/* Context Menu */}
+      {contextMenu.show && (
+        <div
+          ref={contextMenuRef}
+          style={{
+            position: 'fixed',
+            top: `${contextMenu.y}px`,
+            left: `${contextMenu.x}px`,
+            zIndex: 9999
+          }}
+          className="bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl overflow-hidden min-w-[180px]"
+        >
+          <button
+            onClick={() => handleDeleteConversation(contextMenu.conversationId)}
+            className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-3 text-sm font-medium"
+          >
+            <i className="fi fi-br-trash text-base"></i>
+            Delete Conversation
+          </button>
+        </div>
+      )}
     </div>
   );
 }
