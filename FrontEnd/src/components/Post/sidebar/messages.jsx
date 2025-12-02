@@ -19,15 +19,45 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
 
   // Handle initial conversation from clicking message button on profile
   useEffect(() => {
-    if (initialConversation) {
-      console.log('Opening conversation:', initialConversation);
-      setSelectedChat({
-        conversationId: initialConversation.conversationId,
-        receiverId: initialConversation.userId,
-        receiverName: initialConversation.userName,
-        receiverPhoto: initialConversation.userPhoto
-      });
-    }
+    const handleInitialConversation = async () => {
+      if (initialConversation) {
+        console.log('Opening conversation:', initialConversation);
+        
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+          console.log('❌ No authenticated user');
+          return;
+        }
+
+        try {
+          // Get current user's info
+          const currentUserData = JSON.parse(localStorage.getItem('user') || '{}');
+          const currentUserName = currentUserData.full_name || currentUserData.username || currentUser.displayName || 'User';
+          const currentUserPhoto = currentUserData.profile_picture || currentUser.photoURL || null;
+
+          // Create or get conversation
+          const conversationId = await getOrCreateConversation(
+            currentUser.uid,
+            initialConversation.firebase_uid || initialConversation.id,
+            initialConversation.full_name || initialConversation.userName || initialConversation.username || 'User',
+            initialConversation.profile_picture || initialConversation.userPhoto || null,
+            currentUserName,
+            currentUserPhoto
+          );
+
+          setSelectedChat({
+            conversationId,
+            receiverId: initialConversation.firebase_uid || initialConversation.id,
+            receiverName: initialConversation.full_name || initialConversation.userName || initialConversation.username,
+            receiverPhoto: initialConversation.profile_picture || initialConversation.userPhoto
+          });
+        } catch (error) {
+          console.error('Error opening conversation:', error);
+        }
+      }
+    };
+
+    handleInitialConversation();
   }, [initialConversation]);
 
   useEffect(() => {

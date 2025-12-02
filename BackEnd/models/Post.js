@@ -21,6 +21,7 @@ class Post {
         u.username,
         u.profile_picture,
         u.email,
+        u.firebase_uid,
         COALESCE((SELECT COUNT(*) FROM post_likes WHERE post_id = p.id AND user_id = $1), 0) > 0 as user_liked,
         COALESCE((SELECT COUNT(*) FROM post_shares WHERE post_id = p.id AND user_id = $1), 0) > 0 as user_shared,
         COALESCE((SELECT COUNT(*) FROM post_likes WHERE post_id = p.id), 0) as likes_count,
@@ -38,7 +39,8 @@ class Post {
             'full_name', ou.full_name,
             'username', ou.username,
             'profile_picture', ou.profile_picture,
-            'posted_by', op.posted_by
+            'posted_by', op.posted_by,
+            'firebase_uid', ou.firebase_uid
           ) FROM posts op
           JOIN users ou ON op.posted_by = ou.id
           WHERE op.id = p.repost_of)

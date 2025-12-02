@@ -1036,6 +1036,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                                 if (!isCurrentUserPost) {
                                   setSelectedConversation({
                                     id: p.posted_by,
+                                    firebase_uid: p.firebase_uid,
                                     full_name: p.full_name,
                                     username: p.username,
                                     profile_picture: p.profile_picture
