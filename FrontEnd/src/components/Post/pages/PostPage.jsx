@@ -8,7 +8,7 @@ import Communities from "../sidebar/communities";
 import Premium from "../components/Premium";
 import Payments from "../sidebar/payments";
 import UserProfile from "./UserProfile";
-import { getAllPosts, createPost, updatePost, deletePost as deletePostAPI, toggleLike as toggleLikeAPI, toggleShare as toggleShareAPI } from "../../../services/api";
+import { getAllPosts, createPost, updatePost, deletePost as deletePostAPI, toggleLike as toggleLikeAPI, toggleShare as toggleShareAPI, acceptPost as acceptPostAPI, rejectPost as rejectPostAPI } from "../../../services/api";
 
 const Switcher8 = ({ isChecked, onChange }) => {
   return (
@@ -240,32 +240,50 @@ export default function PostPage({ onNavigate = () => {} }) {
     }
   };
 
-  function toggleAccept(id) {
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p;
-        const nextAccepted = !p.accepted;
-        return {
-          ...p,
-          accepted: nextAccepted,
-          rejected: nextAccepted ? false : p.rejected,
-        };
-      })
-    );
+  async function toggleAccept(id) {
+    try {
+      const response = await acceptPostAPI(id);
+      
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          return {
+            ...p,
+            accepted: true,
+            rejected: false,
+          };
+        })
+      );
+      
+      console.log('✅ Post accepted:', response.data);
+    } catch (error) {
+      console.error('Error accepting post:', error);
+      // Revert on error
+      alert('Failed to accept post. Please try again.');
+    }
   }
 
-  function toggleReject(id) {
-    setPosts((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p;
-        const nextRejected = !p.rejected;
-        return {
-          ...p,
-          rejected: nextRejected,
-          accepted: nextRejected ? false : p.accepted,
-        };
-      })
-    );
+  async function toggleReject(id) {
+    try {
+      const response = await rejectPostAPI(id);
+      
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          return {
+            ...p,
+            rejected: true,
+            accepted: false,
+          };
+        })
+      );
+      
+      console.log('❌ Post rejected:', response.data);
+    } catch (error) {
+      console.error('Error rejecting post:', error);
+      // Revert on error
+      alert('Failed to reject post. Please try again.');
+    }
   }
 
   function toggleReactPost(id) {

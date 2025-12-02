@@ -14,6 +14,8 @@ router.delete('/:postId', protect, postController.deletePost);
 // Post interaction routes
 router.post('/:postId/like', protect, postController.toggleLike);
 router.post('/:postId/share', protect, postController.toggleShare);
+router.post('/:postId/accept', protect, postController.acceptPost);
+router.post('/:postId/reject', protect, postController.rejectPost);
 router.post('/:postId/comment', protect, postController.addComment);
 router.get('/:postId/comments', protect, postController.getComments);
 

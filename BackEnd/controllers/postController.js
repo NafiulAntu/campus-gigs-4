@@ -326,3 +326,109 @@ exports.getComments = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch comments' });
   }
 };
+
+// Accept a post
+exports.acceptPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user.id;
+
+    console.log(`✅ acceptPost: postId=${postId}, userId=${userId}`);
+
+    // Get the post to check author
+    const post = await Post.getById(postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    console.log(`📊 Post info: posted_by=${post.posted_by}, isOwnPost=${post.posted_by === userId}`);
+
+    // Send notification if not own post
+    if (post.posted_by !== userId) {
+      try {
+        const io = req.app.get('io');
+        const userName = req.user.full_name || req.user.username || 'Someone';
+        console.log(`🔔 Sending accept notification: from userId=${userId} (${userName}) to userId=${post.posted_by}`);
+        
+        const { createAndSendNotification } = require('./notificationController');
+        await createAndSendNotification({
+          userId: post.posted_by,
+          type: 'accept',
+          title: 'Post Accepted! 🎉',
+          message: `${userName} accepted your post`,
+          data: { postId, acceptedBy: userId },
+          actorId: userId,
+          link: `/post/${postId}`,
+          io
+        });
+        console.log('✅ Accept notification sent successfully');
+      } catch (notifError) {
+        console.error('⚠️ Failed to send accept notification:', notifError.message);
+      }
+    } else {
+      console.log('⏩ Skipping notification: own post');
+    }
+
+    res.status(200).json({ 
+      message: 'Post accepted',
+      accepted: true
+    });
+  } catch (error) {
+    console.error('Error accepting post:', error);
+    res.status(500).json({ error: 'Failed to accept post' });
+  }
+};
+
+// Reject a post
+exports.rejectPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user.id;
+
+    console.log(`❌ rejectPost: postId=${postId}, userId=${userId}`);
+
+    // Get the post to check author
+    const post = await Post.getById(postId);
+    
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    console.log(`📊 Post info: posted_by=${post.posted_by}, isOwnPost=${post.posted_by === userId}`);
+
+    // Send notification if not own post
+    if (post.posted_by !== userId) {
+      try {
+        const io = req.app.get('io');
+        const userName = req.user.full_name || req.user.username || 'Someone';
+        console.log(`🔔 Sending reject notification: from userId=${userId} (${userName}) to userId=${post.posted_by}`);
+        
+        const { createAndSendNotification } = require('./notificationController');
+        await createAndSendNotification({
+          userId: post.posted_by,
+          type: 'reject',
+          title: 'Post Response',
+          message: `${userName} rejected your post`,
+          data: { postId, rejectedBy: userId },
+          actorId: userId,
+          link: `/post/${postId}`,
+          io
+        });
+        console.log('✅ Reject notification sent successfully');
+      } catch (notifError) {
+        console.error('⚠️ Failed to send reject notification:', notifError.message);
+      }
+    } else {
+      console.log('⏩ Skipping notification: own post');
+    }
+
+    res.status(200).json({ 
+      message: 'Post rejected',
+      rejected: true
+    });
+  } catch (error) {
+    console.error('Error rejecting post:', error);
+    res.status(500).json({ error: 'Failed to reject post' });
+  }
+};
