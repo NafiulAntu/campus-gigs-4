@@ -4,10 +4,12 @@ import { collection, query, where, getDocs, orderBy, limit, onSnapshot } from 'f
 import { db, auth } from '../../../config/firebase';
 import { searchUsers } from '../../../services/api';
 import { getOrCreateConversation } from '../../../utils/messagingUtils';
+import { cleanupDuplicateConversations } from '../../../utils/cleanupDuplicateConversations';
 
 export default function Messages({ onBack, initialConversation = null, onViewProfile }) {
   const [selectedChat, setSelectedChat] = useState(null);
   const [conversations, setConversations] = useState([]);
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [loading, setLoading] = useState(true);
   const [messageText, setMessageText] = useState("");
   const [showChatMenu, setShowChatMenu] = useState(false);
@@ -311,6 +313,28 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
     } catch (error) {
       console.error('Error starting conversation:', error);
       alert('Failed to start conversation. Please try again.');
+    }
+  };
+
+  // Cleanup duplicate conversations
+  const handleCleanupDuplicates = async () => {
+    if (!window.confirm('This will remove duplicate conversations. Continue?')) {
+      return;
+    }
+    
+    setIsCleaningUp(true);
+    try {
+      const result = await cleanupDuplicateConversations();
+      if (result.success) {
+        alert(`Cleanup complete! Removed ${result.duplicatesRemoved} duplicate conversations.`);
+      } else {
+        alert(`Cleanup failed: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+      alert('Cleanup failed. Please try again.');
+    } finally {
+      setIsCleaningUp(false);
     }
   };
 

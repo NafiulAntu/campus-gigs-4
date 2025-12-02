@@ -6,7 +6,8 @@ import {
   getDocs,
   query,
   where,
-  serverTimestamp 
+  serverTimestamp,
+  runTransaction
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -64,13 +65,40 @@ export async function getOrCreateConversation(
       .sort()
       .join('_');
 
-    // Check if conversation already exists
-    const conversationRef = doc(db, 'conversations', conversationId);
-    const conversationDoc = await getDoc(conversationRef);
+    console.log('🔍 Checking for conversation:', conversationId);
 
-    if (!conversationDoc.exists()) {
-      // Create new conversation with both users' information
-      await setDoc(conversationRef, {
+    // First check if any conversation exists between these users (could have different ID format)
+    const conversationsRef = collection(db, 'conversations');
+    const q1 = query(
+      conversationsRef,
+      where('participants', 'array-contains', currentUserId)
+    );
+
+    const snapshot = await getDocs(q1);
+    const existingConv = snapshot.docs.find(doc => {
+      const data = doc.data();
+      return data.participants?.includes(otherUserId);
+    });
+
+    if (existingConv) {
+      console.log('✅ Found existing conversation:', existingConv.id);
+      return existingConv.id;
+    }
+
+    // Use transaction to prevent race conditions
+    console.log('📝 Creating new conversation with transaction');
+    const conversationRef = doc(db, 'conversations', conversationId);
+    
+    await runTransaction(db, async (transaction) => {
+      const conversationDoc = await transaction.get(conversationRef);
+      
+      if (conversationDoc.exists()) {
+        console.log('✅ Conversation exists (found in transaction)');
+        return;
+      }
+
+      // Create new conversation
+      transaction.set(conversationRef, {
         conversationId,
         participants: [currentUserId, otherUserId],
         participantInfo: {
@@ -95,7 +123,9 @@ export async function getOrCreateConversation(
           [otherUserId]: 0
         }
       });
-    }
+      
+      console.log('✅ New conversation created in transaction');
+    });
 
     return conversationId;
 
