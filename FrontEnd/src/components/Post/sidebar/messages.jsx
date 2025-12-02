@@ -17,9 +17,7 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, conversationId: null });
   const chatMenuRef = useRef(null);
-  const contextMenuRef = useRef(null);
 
   // Handle initial conversation from clicking message button on profile
   useEffect(() => {
@@ -351,38 +349,11 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
       if (selectedChat?.conversationId === conversationId) {
         setSelectedChat(null);
       }
-      
-      setContextMenu({ show: false, x: 0, y: 0, conversationId: null });
     } catch (error) {
       console.error('Error deleting conversation:', error);
       alert('Failed to delete conversation.');
     }
   };
-
-  // Handle right-click on conversation
-  const handleContextMenu = (e, conversationId) => {
-    e.preventDefault();
-    setContextMenu({
-      show: true,
-      x: e.clientX,
-      y: e.clientY,
-      conversationId
-    });
-  };
-
-  // Close context menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target)) {
-        setContextMenu({ show: false, x: 0, y: 0, conversationId: null });
-      }
-    };
-
-    if (contextMenu.show) {
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
-  }, [contextMenu.show]);
 
   return (
     <div className="min-h-screen bg-black">
@@ -500,15 +471,13 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
                     {conversations.map((conv) => (
                       <div
                         key={conv.id}
-                        onClick={() => setSelectedChat(conv)}
-                        onContextMenu={(e) => handleContextMenu(e, conv.conversationId)}
-                        className={`group p-4 mb-2 rounded-xl cursor-pointer transition-all ${
+                        className={`group p-4 mb-2 rounded-xl transition-all relative ${
                           selectedChat?.id === conv.id 
                             ? "bg-[#89CFF0]/[0.12] border border-[#89CFF0]/[0.35] shadow-lg shadow-[#89CFF0]/[0.15]" 
                             : "bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.05] hover:border-white/[0.1]"
                         }`}
                       >
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-start gap-3" onClick={() => setSelectedChat(conv)}>
                           <div className="relative">
                             {conv.photo ? (
                               <img 
@@ -543,6 +512,16 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
                               )}
                             </div>
                           </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteConversation(conv.conversationId);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 p-2 rounded-lg hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-all"
+                            title="Delete conversation"
+                          >
+                            <i className="fi fi-br-trash text-base"></i>
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -756,28 +735,6 @@ export default function Messages({ onBack, initialConversation = null, onViewPro
           </div>
         )}
       </div>
-
-      {/* Context Menu */}
-      {contextMenu.show && (
-        <div
-          ref={contextMenuRef}
-          style={{
-            position: 'fixed',
-            top: `${contextMenu.y}px`,
-            left: `${contextMenu.x}px`,
-            zIndex: 9999
-          }}
-          className="bg-[#1a1a1a] border border-white/10 rounded-lg shadow-2xl overflow-hidden min-w-[180px]"
-        >
-          <button
-            onClick={() => handleDeleteConversation(contextMenu.conversationId)}
-            className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-3 text-sm font-medium"
-          >
-            <i className="fi fi-br-trash text-base"></i>
-            Delete Conversation
-          </button>
-        </div>
-      )}
     </div>
   );
 }
