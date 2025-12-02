@@ -447,70 +447,124 @@ export default function Payments({ onBack }) {
                 Withdraw Funds
               </h2>
               <div className="space-y-5">
-                <div className="p-4 bg-primary-teal/10 border border-primary-teal/20 rounded-lg">
-                  <p className="text-white font-semibold mb-1">
+                <div className="p-4 bg-gradient-to-br from-primary-teal/10 to-primary-teal/5 border border-primary-teal/30 rounded-lg">
+                  <p className="text-gray-300 font-medium mb-1 text-sm">
                     Available Balance
                   </p>
                   <p className="text-3xl font-bold text-primary-teal">
-                    $1,245.50
+                    ৳{balance.toFixed(2)}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
+                  <label className="block text-sm font-semibold text-gray-300 mb-2">
                     Withdrawal Amount
                   </label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white text-lg">
-                      $
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg font-semibold">
+                      ৳
                     </span>
                     <input
                       type="number"
                       placeholder="0.00"
-                      className="w-full pl-8 pr-4 py-3 bg-white/[0.04] border border-white/10 rounded-lg text-white placeholder:text-text-muted focus:outline-none focus:border-primary-teal transition-colors"
+                      className="w-full pl-10 pr-4 py-3 bg-white/[0.04] border border-white/10 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-primary-teal transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
-                  <p className="text-xs text-text-muted mt-1">
-                    Minimum withdrawal: $50.00
+                  <p className="text-xs text-gray-400 mt-1">
+                    Minimum withdrawal: ৳500.00
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-2">
+                  <label className="block text-sm font-semibold text-gray-300 mb-3">
                     Withdraw To
                   </label>
-                  <select className="w-full px-4 py-3 bg-white/[0.04] border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary-teal transition-colors">
-                    <option>Visa ending in 4242</option>
-                    <option>PayPal Account</option>
-                  </select>
+                  <div className="grid grid-cols-1 gap-3">
+                    {/* Mobile Banking */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Mobile Banking</p>
+                      
+                      {/* bKash */}
+                      <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-pink-500/40 transition-all group">
+                        <input type="radio" name="withdrawMethod" className="w-4 h-4 text-pink-500 bg-transparent border-gray-500 focus:ring-pink-500" />
+                        <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
+                          <img 
+                            src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" 
+                            alt="bKash" 
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <span className="text-gray-200 font-medium group-hover:text-pink-400 transition-colors">bKash</span>
+                      </label>
+
+                      {/* Nagad */}
+                      <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-orange-500/40 transition-all group">
+                        <input type="radio" name="withdrawMethod" className="w-4 h-4 text-orange-500 bg-transparent border-gray-500 focus:ring-orange-500" />
+                        <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
+                          <img 
+                            src="https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png" 
+                            alt="Nagad" 
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <span className="text-gray-200 font-medium group-hover:text-orange-400 transition-colors">Nagad</span>
+                      </label>
+
+                      {/* Rocket */}
+                      <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-purple-500/40 transition-all group">
+                        <input type="radio" name="withdrawMethod" className="w-4 h-4 text-purple-500 bg-transparent border-gray-500 focus:ring-purple-500" />
+                        <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
+                          <img 
+                            src="https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg" 
+                            alt="Rocket" 
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <span className="text-gray-200 font-medium group-hover:text-purple-400 transition-colors">Rocket (DBBL)</span>
+                      </label>
+                    </div>
+
+                    {/* Bank Transfer */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Bank Transfer</p>
+                      
+                      <label className="flex items-center gap-3 p-3 bg-white/[0.04] border border-white/10 rounded-lg cursor-pointer hover:border-green-500/40 transition-all group">
+                        <input type="radio" name="withdrawMethod" className="w-4 h-4 text-green-500 bg-transparent border-gray-500 focus:ring-green-500" />
+                        <div className="h-8 w-8 rounded flex items-center justify-center flex-shrink-0">
+                          <i className="fi fi-br-bank text-2xl text-green-400"></i>
+                        </div>
+                        <span className="text-gray-200 font-medium group-hover:text-green-400 transition-colors">Bank Account</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-4 bg-white/[0.04] rounded-lg">
+                <div className="p-4 bg-white/[0.04] rounded-lg border border-white/10">
                   <div className="flex justify-between mb-2">
-                    <span className="text-text-muted">Amount</span>
-                    <span className="text-white">$100.00</span>
+                    <span className="text-gray-400">Amount</span>
+                    <span className="text-gray-200">৳100.00</span>
                   </div>
                   <div className="flex justify-between mb-2">
-                    <span className="text-text-muted">Processing Fee (2%)</span>
-                    <span className="text-white">$2.00</span>
+                    <span className="text-gray-400">Processing Fee (2%)</span>
+                    <span className="text-gray-200">৳2.00</span>
                   </div>
                   <div className="border-t border-white/10 pt-2 mt-2">
                     <div className="flex justify-between">
-                      <span className="font-semibold text-white">
+                      <span className="font-semibold text-gray-200">
                         You'll Receive
                       </span>
                       <span className="font-bold text-primary-teal">
-                        $98.00
+                        ৳98.00
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <button className="w-full bg-gradient-to-r from-primary-teal to-blue-500 text-white py-3 px-6 rounded-lg font-bold hover:opacity-90 transition-opacity">
+                <button className="w-full bg-gradient-to-r from-primary-teal to-teal-600 text-white py-3 px-6 rounded-lg font-bold hover:from-primary-teal/90 hover:to-teal-600/90 transition-all shadow-lg shadow-primary-teal/20">
                   Withdraw Funds
                 </button>
 
-                <p className="text-xs text-text-muted text-center">
+                <p className="text-xs text-gray-400 text-center">
                   Funds typically arrive within 2-5 business days
                 </p>
               </div>
