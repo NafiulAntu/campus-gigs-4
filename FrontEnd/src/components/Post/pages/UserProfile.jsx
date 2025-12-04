@@ -75,21 +75,21 @@ function RepostComposer({ originalPost, onSubmit, onCancel }) {
               </div>
             )}
             <div>
-              <p className="text-white font-semibold text-sm">{originalPost.full_name}</p>
-              <p className="text-gray-500 text-xs">@{originalPost.username}</p>
+              <p className="font-semibold text-white">{originalPost.full_name}</p>
+              <p className="text-xs text-gray-400">@{originalPost.username}</p>
             </div>
           </div>
-          {originalPost.content && (
-            <p className="text-gray-300 text-sm">{originalPost.content}</p>
-          )}
+
+          <p className="text-gray-200 mb-3">{originalPost.content}</p>
+
+          {/* Original Post Media Preview */}
           {originalPost.media_urls && originalPost.media_urls.length > 0 && (
-            <div className="mt-2 flex gap-2">
-              {originalPost.media_urls.slice(0, 2).map((url, i) => {
-                const isImage = url?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-                if (isImage) {
+            <div className="flex gap-2">
+              {originalPost.media_urls.slice(0, 2).map((url, index) => {
+                if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
                   return (
                     <img
-                      key={i}
+                      key={index}
                       src={url}
                       alt=""
                       className="w-20 h-20 object-cover rounded-lg"
@@ -635,9 +635,12 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                     )}
                   </button>
                   <button
-                    onClick={() => setShowSendMoney(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all"
-                    title="Send Money"
+                    onClick={() => {
+                      console.log('Send money button clicked', { userId, user, showSendMoney });
+                      setShowSendMoney(true);
+                    }}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 font-semibold rounded-full border border-emerald-500/40 hover:shadow-lg hover:scale-105 transition-all"
+                    title="Send money"
                   >
                     <i className="fas fa-money-bill-wave"></i>
                   </button>
@@ -1251,19 +1254,18 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
         </div>
       )}
 
-      {/* Send Money Modal */}
+      {/* Send Money Panel */}
       <SendMoney 
         isOpen={showSendMoney}
         onClose={() => setShowSendMoney(false)}
         receiverInfo={{
-          id: userId,
+          user_id: userId,
           full_name: user?.full_name || 'Unknown',
           username: user?.username || 'unknown',
           profile_picture: user?.profile_picture || profileData?.profilePicUrl
         }}
         onSuccess={(transaction) => {
           console.log('Transaction successful:', transaction);
-          // You can add a success notification here
         }}
       />
     </div>

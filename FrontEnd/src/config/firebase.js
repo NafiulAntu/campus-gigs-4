@@ -19,7 +19,8 @@ const firebaseConfig = {
 
 // VAPID Key for Push Notifications
 // Get this from: Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
-export const VAPID_KEY = "YOUR_VAPID_KEY_HERE"; // TODO: Replace with actual VAPID key
+// Note: This is a placeholder. FCM notifications will not work until you add a valid VAPID key.
+export const VAPID_KEY = null; // Set to null to disable FCM until configured
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

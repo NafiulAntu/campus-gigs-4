@@ -53,6 +53,12 @@ export const requestNotificationPermission = async () => {
  */
 const setupFCMToken = async () => {
   try {
+    // Check if VAPID key is configured
+    if (!VAPID_KEY) {
+      console.warn('⚠️ VAPID_KEY not configured. FCM notifications disabled.');
+      return;
+    }
+    
     // Register service worker first
     await registerServiceWorker();
     
