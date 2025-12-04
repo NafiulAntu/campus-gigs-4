@@ -391,10 +391,15 @@ const Premium = ({ onBack }) => {
 
           <button 
             onClick={() => handleUpgrade('30days')}
-            disabled={loading}
-            className="upgrade-btn premium"
+            disabled={loading || (subscription && subscription.subscription?.plan_type === 'monthly')}
+            className={`upgrade-btn premium ${subscription?.subscription?.plan_type === 'monthly' ? 'completed' : ''}`}
           >
-            {loading ? (
+            {subscription?.subscription?.plan_type === 'monthly' ? (
+              <>
+                <i className="fi fi-br-check-circle"></i>
+                COMPLETED
+              </>
+            ) : loading ? (
               <>
                 <i className="fi fi-rr-spinner animate-spin"></i>
                 Processing...
@@ -434,10 +439,15 @@ const Premium = ({ onBack }) => {
 
           <button 
             onClick={() => handleUpgrade('15days')}
-            disabled={loading}
-            className="upgrade-btn starter"
+            disabled={loading || (subscription && subscription.subscription?.plan_type === '15days')}
+            className={`upgrade-btn starter ${subscription?.subscription?.plan_type === '15days' ? 'completed' : ''}`}
           >
-            {loading ? (
+            {subscription?.subscription?.plan_type === '15days' ? (
+              <>
+                <i className="fi fi-br-check-circle"></i>
+                COMPLETED
+              </>
+            ) : loading ? (
               <>
                 <i className="fi fi-rr-spinner animate-spin"></i>
                 Processing...

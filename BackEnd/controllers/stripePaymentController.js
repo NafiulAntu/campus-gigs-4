@@ -207,7 +207,7 @@ async function handleSuccessfulPayment(session) {
         plan_type: plan_type,
         start_date: startDate,
         end_date: endDate,
-        status: 'active',
+        status: 'completed',
         transaction_id
       });
 

@@ -358,6 +358,17 @@
   cursor: not-allowed;
 }
 
+.upgrade-btn.completed {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  cursor: default;
+  pointer-events: none;
+}
+
+.upgrade-btn.completed:hover {
+  transform: none;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
