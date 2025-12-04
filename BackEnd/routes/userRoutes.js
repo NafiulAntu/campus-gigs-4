@@ -8,6 +8,9 @@ router.get('/users', userController.getAllUsers);           // GET /api/users
 router.get('/users/search', protect, userController.searchUsers);    // GET /api/users/search?q=query
 router.get('/users/firebase/:firebaseUid', protect, userController.getUserByFirebaseUid); // GET /api/users/firebase/:firebaseUid
 
+// Get current user (must come before /:id route)
+router.get('/users/me', protect, userController.getCurrentUser);     // GET /api/users/me
+
 // Follow system routes (protected)
 router.post('/users/:id/follow', protect, userController.followUser);          // POST /api/users/:id/follow
 router.delete('/users/:id/follow', protect, userController.unfollowUser);       // DELETE /api/users/:id/follow

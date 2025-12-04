@@ -37,6 +37,34 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
+// Get current authenticated user
+exports.getCurrentUser = async (req, res) => {
+  try {
+    // req.user is set by the protect middleware
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+
+    // Sanitize null values before sending
+    const sanitizedUser = sanitizeNullValues(user);
+    
+    res.json(sanitizedUser);
+  } catch (error) {
+    console.error('Get current user error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error fetching current user',
+      error: error.message 
+    });
+  }
+};
+
 // Get single user by ID
 exports.getUserById = async (req, res) => {
   try {
