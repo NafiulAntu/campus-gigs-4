@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { createStripeCheckout } from '../../../services/api';
 import api from '../../../services/api';
 import '../styles/Premium.css';
 
@@ -7,6 +8,7 @@ const Premium = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [error, setError] = useState('');
+  const [paymentGateway, setPaymentGateway] = useState('stripe'); // stripe, sslcommerz, mock
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,12 +29,27 @@ const Premium = ({ onBack }) => {
     setError('');
 
     try {
-      const response = await api.post('/payments/initiate', { plan_type: planType });
+      let response;
       
-      if (response.data.success && response.data.gateway_url) {
-        // Redirect to SSLCommerz payment gateway
-        window.location.href = response.data.gateway_url;
-      } else {
+      // Choose payment gateway
+      if (paymentGateway === 'stripe') {
+        response = await createStripeCheckout({ plan_type: planType });
+        if (response.data.success && response.data.url) {
+          window.location.href = response.data.url; // Redirect to Stripe Checkout
+        }
+      } else if (paymentGateway === 'sslcommerz') {
+        response = await api.post('/payments/initiate', { plan_type: planType });
+        if (response.data.success && response.data.gateway_url) {
+          window.location.href = response.data.gateway_url; // Redirect to SSLCommerz
+        }
+      } else if (paymentGateway === 'mock') {
+        response = await api.post('/mock-payment/initiate', { plan_type: planType });
+        if (response.data.success && response.data.gateway_url) {
+          window.location.href = response.data.gateway_url; // Redirect to Mock Payment
+        }
+      }
+      
+      if (!response.data.success) {
         setError('Failed to initiate payment');
       }
     } catch (err) {
@@ -192,6 +209,57 @@ const Premium = ({ onBack }) => {
           </div>
 
       {error && <div className="error-message">{error}</div>}
+
+      {/* Payment Gateway Selector */}
+      <div className="mb-8 bg-slate-900/50 rounded-xl p-6 border border-white/10">
+        <label className="block text-sm font-semibold text-gray-300 mb-3">Select Payment Method</label>
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            onClick={() => setPaymentGateway('stripe')}
+            className={`p-4 rounded-xl border-2 transition-all ${
+              paymentGateway === 'stripe'
+                ? 'border-cyan-500 bg-cyan-500/10'
+                : 'border-slate-700 bg-slate-900/30 hover:border-slate-600'
+            }`}
+          >
+            <div className="text-center">
+              <i className="fas fa-credit-card text-2xl text-cyan-400 mb-2"></i>
+              <div className="text-white text-sm font-medium">Stripe</div>
+              <div className="text-xs text-gray-400 mt-1">International Cards</div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => setPaymentGateway('sslcommerz')}
+            className={`p-4 rounded-xl border-2 transition-all ${
+              paymentGateway === 'sslcommerz'
+                ? 'border-emerald-500 bg-emerald-500/10'
+                : 'border-slate-700 bg-slate-900/30 hover:border-slate-600'
+            }`}
+          >
+            <div className="text-center">
+              <i className="fas fa-shield-alt text-2xl text-emerald-400 mb-2"></i>
+              <div className="text-white text-sm font-medium">SSLCommerz</div>
+              <div className="text-xs text-gray-400 mt-1">bKash, Nagad, Cards</div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => setPaymentGateway('mock')}
+            className={`p-4 rounded-xl border-2 transition-all ${
+              paymentGateway === 'mock'
+                ? 'border-purple-500 bg-purple-500/10'
+                : 'border-slate-700 bg-slate-900/30 hover:border-slate-600'
+            }`}
+          >
+            <div className="text-center">
+              <i className="fas fa-flask text-2xl text-purple-400 mb-2"></i>
+              <div className="text-white text-sm font-medium">Demo</div>
+              <div className="text-xs text-gray-400 mt-1">Test Payment</div>
+            </div>
+          </button>
+        </div>
+      </div>
 
       <div className="pricing-cards">
         {/* Free Plan */}

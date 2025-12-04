@@ -21,4 +21,7 @@ router.get('/balance/current', transactionController.getBalance);
 // Add balance (for testing/admin)
 router.post('/balance/add', transactionController.addBalance);
 
+// Withdraw funds
+router.post('/withdraw', transactionController.withdrawFunds);
+
 module.exports = router;

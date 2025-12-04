@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getTransactions, getBalance } from "../../../services/api";
+import api from "../../../services/api";
 
 export default function Payments({ onBack }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -9,6 +10,11 @@ export default function Payments({ onBack }) {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [showWithdrawMethods, setShowWithdrawMethods] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState(null);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawAccount, setWithdrawAccount] = useState('');
+  const [withdrawProcessing, setWithdrawProcessing] = useState(false);
+  const [withdrawError, setWithdrawError] = useState('');
+  const [withdrawSuccess, setWithdrawSuccess] = useState('');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -39,6 +45,72 @@ export default function Payments({ onBack }) {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const handleWithdrawAmountChange = (e) => {
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setWithdrawAmount(value);
+    setWithdrawError('');
+    setWithdrawSuccess('');
+  };
+
+  const handleWithdraw = async () => {
+    // Clear previous messages
+    setWithdrawError('');
+    setWithdrawSuccess('');
+
+    // Validation
+    const amount = parseFloat(withdrawAmount);
+    
+    if (!amount || amount <= 0) {
+      setWithdrawError('Please enter a valid amount');
+      return;
+    }
+
+    if (amount < 500) {
+      setWithdrawError('Minimum withdrawal amount is ৳500');
+      return;
+    }
+
+    if (amount > balance) {
+      setWithdrawError('Insufficient balance');
+      return;
+    }
+
+    if (!selectedMethod) {
+      setWithdrawError('Please select a payment method');
+      return;
+    }
+
+    if (!withdrawAccount.trim()) {
+      setWithdrawError('Please enter your account number');
+      return;
+    }
+
+    try {
+      setWithdrawProcessing(true);
+      
+      const response = await api.post('/transactions/withdraw', {
+        amount: amount,
+        payment_method: selectedMethod,
+        account_number: withdrawAccount
+      });
+
+      if (response.data.success) {
+        setWithdrawSuccess(`Withdrawal of ৳${amount.toFixed(2)} initiated successfully! Transaction ID: ${response.data.transaction.id}`);
+        // Refresh balance and transactions
+        await fetchData();
+        // Reset form
+        setWithdrawAmount('');
+        setWithdrawAccount('');
+        setSelectedMethod(null);
+        setShowWithdrawMethods(false);
+      }
+    } catch (error) {
+      setWithdrawError(error.response?.data?.message || 'Failed to process withdrawal. Please try again.');
+    } finally {
+      setWithdrawProcessing(false);
+    }
   };
 
   const recentTransactions = transactions.slice(0, 5);
@@ -469,7 +541,10 @@ export default function Payments({ onBack }) {
                     <input
                       type="number"
                       placeholder="0.00"
-                      className="w-full pl-10 pr-4 py-3 bg-white/[0.04] border border-white/10 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-primary-teal transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      value={withdrawAmount}
+                      onChange={handleWithdrawAmountChange}
+                      disabled={withdrawProcessing}
+                      className="w-full pl-10 pr-4 py-3 bg-white/[0.04] border border-white/10 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-primary-teal transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                   <p className="text-xs text-gray-400 mt-1">
@@ -532,7 +607,10 @@ export default function Payments({ onBack }) {
                               <input
                                 type="tel"
                                 placeholder="bKash Account Number (e.g., 01XXXXXXXXX)"
-                                className="w-full px-4 py-2 bg-white/[0.04] border border-pink-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-pink-500 transition-colors"
+                                value={selectedMethod === 'bkash' ? withdrawAccount : ''}
+                                onChange={(e) => setWithdrawAccount(e.target.value)}
+                                disabled={withdrawProcessing}
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-pink-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-pink-500 transition-colors disabled:opacity-50"
                               />
                               <p className="text-xs text-gray-400">Enter your 11-digit bKash account number</p>
                             </div>
@@ -564,7 +642,10 @@ export default function Payments({ onBack }) {
                               <input
                                 type="tel"
                                 placeholder="Nagad Account Number (e.g., 01XXXXXXXXX)"
-                                className="w-full px-4 py-2 bg-white/[0.04] border border-orange-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
+                                value={selectedMethod === 'nagad' ? withdrawAccount : ''}
+                                onChange={(e) => setWithdrawAccount(e.target.value)}
+                                disabled={withdrawProcessing}
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-orange-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-orange-500 transition-colors disabled:opacity-50"
                               />
                               <p className="text-xs text-gray-400">Enter your 11-digit Nagad account number</p>
                             </div>
@@ -596,7 +677,10 @@ export default function Payments({ onBack }) {
                               <input
                                 type="tel"
                                 placeholder="Rocket Account Number (e.g., 01XXXXXXXXX)"
-                                className="w-full px-4 py-2 bg-white/[0.04] border border-purple-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+                                value={selectedMethod === 'rocket' ? withdrawAccount : ''}
+                                onChange={(e) => setWithdrawAccount(e.target.value)}
+                                disabled={withdrawProcessing}
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-purple-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-50"
                               />
                               <p className="text-xs text-gray-400">Enter your 11-digit Rocket account number</p>
                             </div>
@@ -628,22 +712,28 @@ export default function Payments({ onBack }) {
                               <input
                                 type="text"
                                 placeholder="Bank Name"
-                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                                disabled={withdrawProcessing}
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors disabled:opacity-50"
                               />
                               <input
                                 type="text"
                                 placeholder="Account Number"
-                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                                value={selectedMethod === 'bank' ? withdrawAccount : ''}
+                                onChange={(e) => setWithdrawAccount(e.target.value)}
+                                disabled={withdrawProcessing}
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors disabled:opacity-50"
                               />
                               <input
                                 type="text"
                                 placeholder="Account Holder Name"
-                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                                disabled={withdrawProcessing}
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors disabled:opacity-50"
                               />
                               <input
                                 type="text"
                                 placeholder="Branch Name"
-                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors"
+                                disabled={withdrawProcessing}
+                                className="w-full px-4 py-2 bg-white/[0.04] border border-green-500/30 rounded-lg text-gray-200 placeholder:text-gray-500 focus:outline-none focus:border-green-500 transition-colors disabled:opacity-50"
                               />
                               <p className="text-xs text-gray-400">Enter your complete bank account details</p>
                             </div>
@@ -657,11 +747,11 @@ export default function Payments({ onBack }) {
                 <div className="p-4 bg-white/[0.04] rounded-lg border border-white/10">
                   <div className="flex justify-between mb-2">
                     <span className="text-gray-400">Amount</span>
-                    <span className="text-gray-200">৳100.00</span>
+                    <span className="text-gray-200">৳{withdrawAmount || '0.00'}</span>
                   </div>
                   <div className="flex justify-between mb-2">
                     <span className="text-gray-400">Processing Fee (2%)</span>
-                    <span className="text-gray-200">৳2.00</span>
+                    <span className="text-gray-200">৳{withdrawAmount ? (parseFloat(withdrawAmount) * 0.02).toFixed(2) : '0.00'}</span>
                   </div>
                   <div className="border-t border-white/10 pt-2 mt-2">
                     <div className="flex justify-between">
@@ -669,14 +759,48 @@ export default function Payments({ onBack }) {
                         You'll Receive
                       </span>
                       <span className="font-bold text-primary-teal">
-                        ৳98.00
+                        ৳{withdrawAmount ? (parseFloat(withdrawAmount) * 0.98).toFixed(2) : '0.00'}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <button className="w-full bg-gradient-to-r from-primary-teal to-teal-600 text-white py-3 px-6 rounded-lg font-bold hover:from-primary-teal/90 hover:to-teal-600/90 transition-all shadow-lg shadow-primary-teal/20">
-                  Withdraw Funds
+                {/* Error Message */}
+                {withdrawError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    <p className="text-red-400 text-sm flex items-center gap-2">
+                      <i className="fi fi-rr-exclamation text-base"></i>
+                      {withdrawError}
+                    </p>
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {withdrawSuccess && (
+                  <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                    <p className="text-green-400 text-sm flex items-center gap-2">
+                      <i className="fi fi-rr-check-circle text-base"></i>
+                      {withdrawSuccess}
+                    </p>
+                  </div>
+                )}
+
+                <button 
+                  onClick={handleWithdraw}
+                  disabled={withdrawProcessing || !withdrawAmount || parseFloat(withdrawAmount) < 500}
+                  className="w-full bg-gradient-to-r from-primary-teal to-teal-600 text-white py-3 px-6 rounded-lg font-bold hover:from-primary-teal/90 hover:to-teal-600/90 transition-all shadow-lg shadow-primary-teal/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2"
+                >
+                  {withdrawProcessing ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    'Withdraw Funds'
+                  )}
                 </button>
 
                 <p className="text-xs text-gray-400 text-center">

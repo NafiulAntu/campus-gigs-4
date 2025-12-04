@@ -244,4 +244,112 @@ exports.addBalance = async (req, res) => {
   }
 };
 
+// Withdraw funds
+exports.withdrawFunds = async (req, res) => {
+  const t = await sequelize.transaction();
+  
+  try {
+    const userId = req.user.id;
+    const { amount, payment_method, account_number } = req.body;
+
+    // Validation
+    if (!amount || !payment_method || !account_number) {
+      await t.rollback();
+      return res.status(400).json({ 
+        success: false,
+        message: 'Amount, payment method, and account number are required' 
+      });
+    }
+
+    const amountNum = parseFloat(amount);
+    if (amountNum <= 0) {
+      await t.rollback();
+      return res.status(400).json({ 
+        success: false,
+        message: 'Amount must be greater than 0' 
+      });
+    }
+
+    if (amountNum < 500) {
+      await t.rollback();
+      return res.status(400).json({ 
+        success: false,
+        message: 'Minimum withdrawal amount is ৳500' 
+      });
+    }
+
+    // Check user balance
+    const balanceResult = await pool.query(
+      'SELECT balance FROM users WHERE id = $1',
+      [userId]
+    );
+    const currentBalance = parseFloat(balanceResult.rows[0]?.balance || 0);
+
+    if (currentBalance < amountNum) {
+      await t.rollback();
+      return res.status(400).json({ 
+        success: false,
+        message: 'Insufficient balance',
+        current_balance: currentBalance,
+        required: amountNum
+      });
+    }
+
+    // Calculate processing fee (2%)
+    const processingFee = amountNum * 0.02;
+    const netAmount = amountNum - processingFee;
+
+    // Create withdrawal transaction
+    const transactionResult = await pool.query(
+      `INSERT INTO user_transactions 
+       (sender_id, receiver_id, amount, transaction_type, payment_method, status, notes, created_at)
+       VALUES ($1, NULL, $2, 'withdrawal', $3, 'pending', $4, CURRENT_TIMESTAMP)
+       RETURNING *`,
+      [
+        userId,
+        amountNum,
+        payment_method,
+        `Withdrawal to ${payment_method} - ${account_number} (Net: ৳${netAmount.toFixed(2)} after 2% fee)`
+      ]
+    );
+
+    // Deduct amount from user balance
+    await pool.query(
+      'UPDATE users SET balance = balance - $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [amountNum, userId]
+    );
+
+    // Get updated balance
+    const updatedBalanceResult = await pool.query(
+      'SELECT balance FROM users WHERE id = $1',
+      [userId]
+    );
+
+    await t.commit();
+
+    res.json({
+      success: true,
+      message: 'Withdrawal initiated successfully',
+      transaction: {
+        id: transactionResult.rows[0].id,
+        amount: amountNum,
+        processing_fee: processingFee,
+        net_amount: netAmount,
+        payment_method,
+        status: 'pending',
+        created_at: transactionResult.rows[0].created_at
+      },
+      balance: parseFloat(updatedBalanceResult.rows[0]?.balance || 0)
+    });
+
+  } catch (error) {
+    await t.rollback();
+    console.error('Withdrawal error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to process withdrawal. Please try again.' 
+    });
+  }
+};
+
 module.exports = exports;
