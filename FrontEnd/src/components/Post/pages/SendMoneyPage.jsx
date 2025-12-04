@@ -64,6 +64,7 @@ export default function SendMoneyPage() {
     try {
       setReceiverLoading(true);
       const response = await getUserById(receiverId);
+      console.log('Receiver info loaded:', response.data);
       setReceiverInfo(response.data);
     } catch (err) {
       console.error('Error fetching receiver info:', err);
@@ -91,6 +92,7 @@ export default function SendMoneyPage() {
     if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
       setAmount(value);
       setError('');
+      setSuccess('');
     }
   };
 
@@ -216,33 +218,39 @@ export default function SendMoneyPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Sidebar - Receiver & Balance Info */}
           <div className="lg:col-span-1 space-y-4">
             {/* Receiver Card */}
             {receiverInfo && (
-              <div className="rounded-2xl bg-slate-900/50 border border-white/5 p-4 backdrop-blur-sm">
-                <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Sending to</div>
+              <div className="rounded-2xl bg-slate-900/50 border border-white/5 p-5 backdrop-blur-sm hover:border-white/10 transition-all duration-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <i className="fi fi-rr-paper-plane text-cyan-400 text-sm"></i>
+                  <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Sending to</div>
+                </div>
                 <div className="flex items-center gap-3">
-                  <div className="relative">
-                    {receiverInfo.profile_picture ? (
+                  <div className="relative group">
+                    {(receiverInfo.profile_picture || receiverInfo.profilePicUrl) ? (
                       <img
-                        src={receiverInfo.profile_picture}
-                        alt={receiverInfo.full_name}
-                        className="w-12 h-12 rounded-xl object-cover border-2 border-cyan-500/20"
+                        src={receiverInfo.profile_picture || receiverInfo.profilePicUrl}
+                        alt={receiverInfo.full_name || receiverInfo.name}
+                        className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-500/30 shadow-lg group-hover:border-cyan-500/50 transition-all"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
                       />
-                    ) : (
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center border-2 border-cyan-500/20">
-                        <span className="text-white text-lg font-bold">
-                          {receiverInfo.full_name?.charAt(0).toUpperCase() || 'U'}
-                        </span>
-                      </div>
-                    )}
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-slate-900"></div>
+                    ) : null}
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center border-2 border-cyan-500/30 shadow-lg" style={{ display: (receiverInfo.profile_picture || receiverInfo.profilePicUrl) ? 'none' : 'flex' }}>
+                      <span className="text-white text-2xl font-bold">
+                        {(receiverInfo.full_name || receiverInfo.name || 'U').charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-[3px] border-slate-900 shadow-lg"></div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-semibold text-lg truncate">{receiverInfo.full_name}</h3>
+                    <h3 className="text-white font-semibold text-lg truncate">{receiverInfo.full_name || receiverInfo.name}</h3>
                     <p className="text-gray-400 text-sm">@{receiverInfo.username}</p>
                   </div>
                 </div>
@@ -250,7 +258,7 @@ export default function SendMoneyPage() {
             )}
 
             {/* Balance Card */}
-            <div className="rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/20 p-4 backdrop-blur-sm">
+            <div className="rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/20 p-5 backdrop-blur-sm hover:border-cyan-500/30 transition-all duration-200 shadow-lg shadow-cyan-500/5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Available Balance</span>
                 <button
@@ -301,11 +309,11 @@ export default function SendMoneyPage() {
                       onClick={() => setPaymentMethod(method.id)}
                       className={`relative p-3 rounded-xl border-2 transition-all duration-200 ${
                         paymentMethod === method.id
-                          ? `border-[${method.color}] bg-transparent shadow-lg shadow-${method.id}-500/20`
+                          ? 'border-emerald-500 bg-emerald-500/5 shadow-lg shadow-emerald-500/20'
                           : 'border-white/5 bg-transparent hover:border-white/10'
                       }`}
                     >
-                      <div className="text-center">
+                      <div className="text-center relative">
                         <div className={`flex items-center justify-center h-12 ${paymentMethod === method.id ? 'opacity-100' : 'opacity-70'}`}>
                           <img 
                             src={method.logo} 
@@ -314,10 +322,6 @@ export default function SendMoneyPage() {
                           />
                         </div>
                       </div>
-                      {paymentMethod === method.id && (
-                        <div className="absolute top-2 right-2 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center">
-                        </div>
-                      )}
                     </button>
                   ))}
                 </div>
@@ -333,7 +337,7 @@ export default function SendMoneyPage() {
                     value={amount}
                     onChange={handleAmountChange}
                     placeholder="0.00"
-                    className="w-full pl-11 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white text-xl font-bold placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-800/50 border border-white/10 rounded-xl text-white text-xl font-bold placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:bg-slate-800/70 transition-all"
                   />
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
@@ -341,7 +345,7 @@ export default function SendMoneyPage() {
                     <button
                       key={quickAmount}
                       onClick={() => setAmount(quickAmount.toString())}
-                      className="px-4 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 hover:border-cyan-500/30 rounded-lg text-sm text-gray-300 hover:text-white transition-all"
+                      className="px-4 py-2 bg-slate-800/50 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-500/50 rounded-lg text-sm text-gray-300 hover:text-cyan-400 font-medium transition-all hover:scale-105 active:scale-95"
                     >
                       +৳{quickAmount}
                     </button>
@@ -358,7 +362,7 @@ export default function SendMoneyPage() {
                   placeholder="Add a message..."
                   maxLength={100}
                   rows={3}
-                  className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all resize-none"
+                  className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:bg-slate-800/70 transition-all resize-none"
                 />
                 <div className="text-xs text-gray-500 text-right mt-1">{notes.length}/100</div>
               </div>
@@ -382,7 +386,7 @@ export default function SendMoneyPage() {
               <button
                 onClick={validateAndShowConfirm}
                 disabled={loading || !amount || !receiverInfo}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25 disabled:shadow-none"
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25 disabled:shadow-none hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
