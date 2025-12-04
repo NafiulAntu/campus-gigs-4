@@ -110,12 +110,12 @@ export default function SendMoneyPage() {
     }
 
     if (numAmount < MIN_AMOUNT) {
-      setError(`Minimum amount is ₹${MIN_AMOUNT}`);
+      setError(`Minimum amount is ৳${MIN_AMOUNT}`);
       return;
     }
 
     if (numAmount > MAX_AMOUNT) {
-      setError(`Maximum amount is ₹${MAX_AMOUNT.toLocaleString()}`);
+      setError(`Maximum amount is ৳${MAX_AMOUNT.toLocaleString()}`);
       return;
     }
 
@@ -265,7 +265,7 @@ export default function SendMoneyPage() {
                 <div className="h-8 bg-white/5 rounded-lg animate-pulse"></div>
               ) : (
                 <div className="text-2xl font-bold text-white">
-                  ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  ৳{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
               )}
             </div>
@@ -281,7 +281,7 @@ export default function SendMoneyPage() {
                 <div className="flex-1">
                   <h4 className="text-sm font-semibold text-blue-300 mb-1">Transaction Info</h4>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    Transfers are instant and secure. You can send between ₹{MIN_AMOUNT} - ₹{MAX_AMOUNT.toLocaleString()}.
+                    Transfers are instant and secure. You can send between ৳{MIN_AMOUNT} - ৳{MAX_AMOUNT.toLocaleString()}.
                   </p>
                 </div>
               </div>
@@ -327,7 +327,7 @@ export default function SendMoneyPage() {
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-300 mb-3">Amount</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-400">₹</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-400">৳</span>
                   <input
                     type="text"
                     value={amount}
@@ -343,7 +343,7 @@ export default function SendMoneyPage() {
                       onClick={() => setAmount(quickAmount.toString())}
                       className="px-4 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 hover:border-cyan-500/30 rounded-lg text-sm text-gray-300 hover:text-white transition-all"
                     >
-                      +₹{quickAmount}
+                      +৳{quickAmount}
                     </button>
                   ))}
                 </div>
@@ -421,7 +421,7 @@ export default function SendMoneyPage() {
               {/* Amount */}
               <div className="text-center py-4">
                 <div className="text-4xl font-bold text-white mb-1">
-                  ₹{parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  ৳{parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
                 <div className="text-sm text-gray-400">via {selectedMethod.name}</div>
               </div>
@@ -441,7 +441,7 @@ export default function SendMoneyPage() {
                 <div className="flex justify-between pt-3 border-t border-white/5">
                   <span className="text-gray-400 text-sm">New Balance</span>
                   <span className="text-cyan-400 text-sm font-semibold">
-                    ₹{(balance - parseFloat(amount)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    ৳{(balance - parseFloat(amount)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
