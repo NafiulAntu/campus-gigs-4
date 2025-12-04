@@ -299,3 +299,36 @@ export async function getTotalUnreadCount(userId) {
     return 0;
   }
 }
+
+/**
+ * Diagnose messaging issues for a user
+ * @param {object} user - User object
+ * @returns {Promise<object>} - Diagnosis result with canSendMessages, issues, and solutions
+ */
+export async function diagnoseMessagingIssue(user) {
+  const issues = [];
+  const solutions = [];
+
+  // Check if user has firebase_uid
+  if (!user || !user.firebase_uid) {
+    issues.push('User does not have Firebase UID');
+    solutions.push('User needs to log in with Firebase authentication');
+    return { canSendMessages: false, issues, solutions };
+  }
+
+  // Check Firestore connection
+  try {
+    const isConnected = await testFirestoreConnection();
+    if (!isConnected) {
+      issues.push('Cannot connect to Firestore');
+      solutions.push('Check Firebase configuration and internet connection');
+      return { canSendMessages: false, issues, solutions };
+    }
+  } catch (error) {
+    issues.push('Firestore connection error: ' + error.message);
+    solutions.push('Verify Firebase is properly initialized');
+    return { canSendMessages: false, issues, solutions };
+  }
+
+  return { canSendMessages: true, issues: [], solutions: [] };
+}

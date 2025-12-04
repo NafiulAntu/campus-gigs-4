@@ -13,7 +13,7 @@ import {
   toggleLike as toggleLikeAPI,
   toggleShare as toggleShareAPI
 } from "../../../services/api";
-import { getOrCreateConversation } from "../../../utils/messagingUtils";
+import { getOrCreateConversation, diagnoseMessagingIssue } from "../../../utils/messagingUtils";
 import { auth } from "../../../config/firebase";
 
 // Repost Composer Component
@@ -186,7 +186,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
         currentUserPhoto
       );
 
-      // Navigate to messages with conversation selected
+      // Navigate to post page with messages view and conversation info
       const receiverInfo = {
         conversationId,
         userId: otherUserFirebaseUid,
@@ -195,11 +195,15 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       };
       
       if (onMessageClick) {
+        // If callback provided, use it (this will handle view change within PostPage)
         onMessageClick(conversationId, receiverInfo);
       } else {
-        // Fallback: navigate to messages page
-        navigate('/messages', { 
-          state: receiverInfo
+        // Otherwise navigate to post page (will default to interface view)
+        navigate('/post', { 
+          state: { 
+            view: 'messages',
+            ...receiverInfo
+          }
         });
       }
 

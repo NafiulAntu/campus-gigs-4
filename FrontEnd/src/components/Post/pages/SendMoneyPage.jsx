@@ -251,7 +251,12 @@ export default function SendMoneyPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-white font-semibold text-lg truncate">{receiverInfo.full_name || receiverInfo.name}</h3>
-                    <p className="text-gray-400 text-sm">@{receiverInfo.username}</p>
+                    {receiverInfo.username && (
+                      <p className="text-gray-400 text-sm">@{receiverInfo.username}</p>
+                    )}
+                    {!receiverInfo.username && receiverInfo.email && (
+                      <p className="text-gray-400 text-sm">{receiverInfo.email}</p>
+                    )}
                   </div>
                 </div>
               </div>
