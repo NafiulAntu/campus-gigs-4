@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { getTransactions, getBalance } from "../../../services/api";
+import { getTransactions, getBalance, getPaymentHistory } from "../../../services/api";
 import api from "../../../services/api";
 
 export default function Payments({ onBack }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [transactions, setTransactions] = useState([]);
+  const [paymentTransactions, setPaymentTransactions] = useState([]);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -28,12 +29,14 @@ export default function Payments({ onBack }) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [transactionsRes, balanceRes] = await Promise.all([
+      const [transactionsRes, balanceRes, paymentHistoryRes] = await Promise.all([
         getTransactions(50),
-        getBalance()
+        getBalance(),
+        getPaymentHistory()
       ]);
 
       setTransactions(transactionsRes.data.transactions || []);
+      setPaymentTransactions(paymentHistoryRes.data || []);
       setBalance(balanceRes.data.balance || 0);
     } catch (error) {
       console.error('Failed to fetch payment data:', error);
@@ -114,6 +117,15 @@ export default function Payments({ onBack }) {
   };
 
   const recentTransactions = transactions.slice(0, 5);
+  
+  // Merge payment transactions (subscriptions) with user transactions for Recent Activity
+  const allRecentActivity = [
+    ...transactions.map(t => ({ ...t, type: 'user_transaction' })),
+    ...paymentTransactions.filter(p => p.subscription_id).map(p => ({ ...p, type: 'payment_transaction' }))
+  ]
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, 5);
+  
   const thisMonthTransactions = transactions.filter(t => {
     const date = new Date(t.created_at);
     const now = new Date();
@@ -238,10 +250,48 @@ export default function Payments({ onBack }) {
                 Recent Activity
               </h2>
               <div className="space-y-3">
-                {recentTransactions.length === 0 ? (
+                {allRecentActivity.length === 0 ? (
                   <p className="text-text-muted text-center py-8">No recent transactions</p>
                 ) : (
-                  recentTransactions.map((txn) => {
+                  allRecentActivity.map((txn) => {
+                    // Handle payment transactions (subscriptions)
+                    if (txn.type === 'payment_transaction') {
+                      const planName = txn.subscription_id ? 
+                        (txn.amount >= 1500 ? 'Yearly Premium' : 
+                         txn.amount >= 150 ? '30 Days Premium' : 
+                         '15 Days Premium') : 'Premium';
+                      
+                      return (
+                        <div
+                          key={`payment-${txn.id}`}
+                          className="flex items-center justify-between p-3 bg-white/[0.04] rounded-lg border border-primary-teal/20"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary-teal to-blue-500 flex items-center justify-center">
+                              <i className="fi fi-br-crown text-white"></i>
+                            </div>
+                            <div>
+                              <p className="font-medium text-white flex items-center gap-2">
+                                Premium Subscription
+                                {txn.status === 'success' && (
+                                  <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs font-semibold">
+                                    Completed
+                                  </span>
+                                )}
+                              </p>
+                              <p className="text-sm text-text-muted">
+                                {planName} • {formatDate(txn.created_at)}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="font-bold text-red-400">
+                            -৳{parseFloat(txn.amount).toFixed(2)}
+                          </span>
+                        </div>
+                      );
+                    }
+                    
+                    // Handle user transactions (P2P transfers)
                     const isReceived = txn.receiver_id === currentUserId;
                     const otherUser = isReceived 
                       ? { name: txn.sender_name, username: txn.sender_username }
@@ -249,7 +299,7 @@ export default function Payments({ onBack }) {
                     
                     return (
                       <div
-                        key={txn.id}
+                        key={`user-${txn.id}`}
                         className="flex items-center justify-between p-3 bg-white/[0.04] rounded-lg"
                       >
                         <div className="flex items-center gap-3">
