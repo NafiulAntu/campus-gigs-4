@@ -5,6 +5,7 @@ const Subscription = require('../models/Subscription');
 const PaymentTransaction = require('../models/PaymentTransaction');
 const User = require('../models/User');
 const { v4: uuidv4 } = require('uuid');
+const pool = require('../config/db');
 
 // SSLCommerz configuration
 const store_id = process.env.SSLCOMMERZ_STORE_ID;
@@ -291,5 +292,31 @@ exports.getTransactionHistory = async (req, res) => {
   } catch (error) {
     console.error('Get transaction history error:', error);
     res.status(500).json({ error: 'Failed to fetch transaction history' });
+  }
+};
+
+// Get user's recent activity (optimized with database view)
+exports.getRecentActivity = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const limit = parseInt(req.query.limit) || 5;
+
+    // Use the database view/function for optimized queries
+    const result = await pool.query(
+      'SELECT * FROM get_user_recent_activity($1, $2)',
+      [userId, limit]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get recent activity error:', error);
+    
+    // Fallback to manual query if view doesn't exist
+    try {
+      const transactions = await PaymentTransaction.getUserTransactions(userId, limit);
+      res.json(transactions);
+    } catch (fallbackError) {
+      res.status(500).json({ error: 'Failed to fetch recent activity' });
+    }
   }
 };
