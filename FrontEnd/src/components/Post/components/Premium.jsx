@@ -135,22 +135,32 @@ const Premium = ({ onBack }) => {
         <div className="subscription-details">
           <div className="detail-card">
             <h3>Current Plan</h3>
-            <p className="plan-type">{subscription.subscription.plan_type === 'monthly' ? 'Monthly' : 'Yearly'}</p>
-            <p className="price">৳{subscription.subscription.plan_type === 'monthly' ? '299' : '2,999'}/
-              {subscription.subscription.plan_type === 'monthly' ? 'month' : 'year'}
+            <p className="plan-type">
+              {subscription.subscription.plan_name || 'Premium Plan'}
+            </p>
+            <p className="price">
+              ৳{subscription.subscription.amount || 
+                (subscription.subscription.plan_type === 'yearly' ? '1,500' : '150')}
             </p>
           </div>
 
-          <div className="detail-card">
-            <h3>Status</h3>
-            <p className={`status ${subscription.subscription.status}`}>
-              {subscription.subscription.status.toUpperCase()}
-            </p>
+          <div className="detail-card status-card">
+            <h3>Subscription Status</h3>
+            <div className={`status-badge ${subscription.subscription.status}`}>
+              {subscription.subscription.status === 'active' ? '✓ ACTIVE' : 
+               subscription.subscription.status === 'completed' ? '✓ COMPLETED' :
+               subscription.subscription.status.toUpperCase()}
+            </div>
             <p className="expiry">
               {subscription.subscription.days_remaining > 0 
                 ? `${subscription.subscription.days_remaining} days remaining`
                 : 'Expired'}
             </p>
+            {subscription.subscription.expiry_date && (
+              <p className="expiry-date" style={{ fontSize: '0.875rem', marginTop: '0.5rem', opacity: 0.8 }}>
+                Valid until {new Date(subscription.subscription.expiry_date).toLocaleDateString()}
+              </p>
+            )}
           </div>
 
           <div className="detail-card">
