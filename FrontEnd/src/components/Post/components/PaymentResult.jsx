@@ -82,18 +82,18 @@ const PaymentSuccess = () => {
         console.log('🔄 Refreshing user data...');
         await refreshUserData();
         
-        // Redirect to Premium section after 2 seconds
-        console.log('➡️ Will redirect to /premium in 2 seconds');
+        // Redirect to Premium section after 5 seconds (give time to see success message)
+        console.log('➡️ Will redirect to /premium in 5 seconds');
         setTimeout(() => {
           navigate('/premium');
-        }, 2000);
+        }, 5000);
       } else {
         // Even if verification fails, refresh user data and redirect to Premium
         console.log('⚠️ Payment already processed or session expired, refreshing user data...');
         await refreshUserData();
         setTimeout(() => {
           navigate('/premium');
-        }, 2000);
+        }, 5000);
       }
     } catch (err) {
       console.error('Failed to verify Stripe session:', err);
@@ -102,10 +102,7 @@ const PaymentSuccess = () => {
       await refreshUserData();
       setTimeout(() => {
         navigate('/premium');
-      }, 2000);
-      setTimeout(() => {
-        navigate('/post');
-      }, 2000);
+      }, 5000);
     } finally {
       setLoading(false);
       setVerifyingStripe(false);
@@ -144,7 +141,7 @@ const PaymentSuccess = () => {
     // Don't show error, just redirect to Premium (payment likely already processed)
     setTimeout(() => {
       navigate('/premium');
-    }, 1000);
+    }, 3000);
     
     return (
       <div className="payment-result-container">
@@ -153,7 +150,7 @@ const PaymentSuccess = () => {
             <div className="success-icon">✓</div>
           </div>
           <h1>Thank You!</h1>
-          <p className="subtitle">Redirecting you to Premium...</p>
+          <p className="subtitle">Redirecting you to Premium in 3 seconds...</p>
         </div>
       </div>
     );
@@ -260,7 +257,7 @@ const PaymentSuccess = () => {
 
         <div className="action-buttons">
           <button onClick={() => navigate('/premium')} className="btn-primary">
-            View Subscription
+            View My Premium
           </button>
           <button onClick={() => navigate('/post')} className="btn-secondary">
             Go to Posts
@@ -268,7 +265,7 @@ const PaymentSuccess = () => {
         </div>
         
         <p className="redirect-notice" style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#9ca3af' }}>
-          Redirecting to Premium in 2 seconds...
+          Automatically redirecting to Premium section in 5 seconds...
         </p>
       </div>
     </div>
