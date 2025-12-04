@@ -40,6 +40,11 @@ const PaymentSuccess = () => {
           status: 'completed'
         });
         setStripeError(null);
+        
+        // Redirect to Post section after 3 seconds
+        setTimeout(() => {
+          navigate('/post');
+        }, 3000);
       } else {
         setStripeError(response.data.message || 'Payment verification failed');
       }
@@ -130,13 +135,17 @@ const PaymentSuccess = () => {
         </div>
 
         <div className="action-buttons">
-          <button onClick={() => navigate('/premium')} className="btn-primary">
+          <button onClick={() => navigate('/post')} className="btn-primary">
+            Go to Posts
+          </button>
+          <button onClick={() => navigate('/premium')} className="btn-secondary">
             View Subscription
           </button>
-          <button onClick={() => navigate('/home')} className="btn-secondary">
-            Go to Home
-          </button>
         </div>
+        
+        <p className="redirect-notice" style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#9ca3af' }}>
+          Redirecting to Posts in 3 seconds...
+        </p>
       </div>
     </div>
   );
