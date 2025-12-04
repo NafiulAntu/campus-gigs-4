@@ -49,6 +49,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
+const stripeRoutes = require('./routes/stripeRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
@@ -61,6 +62,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/stripe', stripeRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Campus Gigs API', status: 'running' });

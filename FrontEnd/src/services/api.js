@@ -141,5 +141,9 @@ export const getTransactionById = (transactionId) => API.get(`/transactions/${tr
 export const getBalance = () => API.get('/transactions/balance/current');
 export const addBalance = (amount) => API.post('/transactions/balance/add', { amount });
 
+// Stripe Payment API
+export const createStripeCheckout = (data) => API.post('/stripe/create-checkout-session', data);
+export const verifyStripeSession = (sessionId) => API.get(`/stripe/verify-session?session_id=${sessionId}`);
+
 // Export API instance as default for direct usage
 export default API;
