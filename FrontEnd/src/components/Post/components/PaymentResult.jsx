@@ -12,17 +12,24 @@ const PaymentSuccess = () => {
   const [stripeError, setStripeError] = useState(null);
   const navigate = useNavigate();
 
+  console.log('🎉 PaymentSuccess component mounted');
+
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
     const transactionId = searchParams.get('transaction');
     
+    console.log('🔍 Payment params:', { sessionId, transactionId });
+    
     if (sessionId) {
       // Stripe payment - verify session
+      console.log('💳 Verifying Stripe session...');
       verifyStripeSession(sessionId);
     } else if (transactionId) {
       // Mock payment - fetch transaction
+      console.log('💰 Fetching mock transaction...');
       fetchTransactionDetails(transactionId);
     } else {
+      console.log('⚠️ No payment params found');
       setLoading(false);
     }
   }, [searchParams]);
@@ -55,11 +62,14 @@ const PaymentSuccess = () => {
 
   const verifyStripeSession = async (sessionId) => {
     setVerifyingStripe(true);
+    console.log('🔄 Starting Stripe verification for session:', sessionId);
     try {
       const response = await api.get(`/stripe/verify-session?session_id=${sessionId}`);
+      console.log('📊 Stripe verification response:', response.data);
       
       if (response.data.success) {
         // Payment verified and subscription activated
+        console.log('✅ Payment verified successfully!');
         setTransaction({
           amount: response.data.amount,
           payment_method: 'Stripe',
@@ -69,15 +79,17 @@ const PaymentSuccess = () => {
         setStripeError(null);
         
         // Refresh user data to update premium status
+        console.log('🔄 Refreshing user data...');
         await refreshUserData();
         
         // Redirect to Premium section after 2 seconds
+        console.log('➡️ Will redirect to /premium in 2 seconds');
         setTimeout(() => {
           navigate('/premium');
         }, 2000);
       } else {
         // Even if verification fails, refresh user data and redirect to Premium
-        console.log('Payment already processed or session expired, refreshing user data...');
+        console.log('⚠️ Payment already processed or session expired, refreshing user data...');
         await refreshUserData();
         setTimeout(() => {
           navigate('/premium');

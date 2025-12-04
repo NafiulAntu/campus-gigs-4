@@ -113,7 +113,20 @@ const Premium = ({ onBack }) => {
     }
   };
 
+  // Show loading state while checking subscription
+  if (subscription === null) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (subscription?.is_premium) {
+    console.log('✅ Premium view - Showing subscription details:', subscription);
     return (
       <div className="fixed inset-0 bg-black overflow-hidden flex flex-col">
         {/* Header */}
@@ -223,6 +236,7 @@ const Premium = ({ onBack }) => {
     );
   }
 
+  console.log('❌ Not premium - Showing upgrade cards');
   return (
     <div className="fixed inset-0 bg-black overflow-hidden flex flex-col">
       {/* Header */}
