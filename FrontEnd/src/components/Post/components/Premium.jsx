@@ -25,10 +25,18 @@ const Premium = ({ onBack }) => {
 
   const checkSubscriptionStatus = async () => {
     try {
+      console.log('🔍 Checking subscription status...');
       const response = await api.get('/subscription/status');
+      console.log('📊 Subscription data received:', response.data);
       setSubscription(response.data);
+      
+      if (response.data?.is_premium) {
+        console.log('✅ User is premium!', response.data.subscription);
+      } else {
+        console.log('❌ User is not premium');
+      }
     } catch (err) {
-      console.error('Failed to fetch subscription:', err);
+      console.error('❌ Failed to fetch subscription:', err);
     }
   };
 
@@ -112,7 +120,7 @@ const Premium = ({ onBack }) => {
         <div className="flex-shrink-0 bg-black/95 backdrop-blur-sm border-b border-white/10">
           <div className="flex items-center gap-4 px-4 py-3">
             <button
-              onClick={onBack}
+              onClick={() => onBack ? onBack() : navigate('/post')}
               className="h-9 w-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
             >
               <i className="fi fi-br-arrow-left text-white text-xl"></i>
@@ -221,7 +229,7 @@ const Premium = ({ onBack }) => {
       <div className="flex-shrink-0 bg-black/95 backdrop-blur-sm border-b border-white/10">
         <div className="flex items-center gap-4 px-4 py-3">
           <button
-            onClick={onBack}
+            onClick={() => onBack ? onBack() : navigate('/post')}
             className="h-9 w-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
           >
             <i className="fi fi-br-arrow-left text-white text-xl"></i>
