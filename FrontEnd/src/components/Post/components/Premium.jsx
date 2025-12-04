@@ -28,6 +28,8 @@ const Premium = ({ onBack }) => {
       console.log('🔍 Checking subscription status...');
       const response = await api.get('/subscription/status');
       console.log('📊 Subscription data received:', response.data);
+      console.log('📊 Plan type:', response.data?.subscription?.plan_type);
+      console.log('📊 Is premium:', response.data?.is_premium);
       setSubscription(response.data);
       
       if (response.data?.is_premium) {
@@ -391,10 +393,10 @@ const Premium = ({ onBack }) => {
 
           <button 
             onClick={() => handleUpgrade('30days')}
-            disabled={loading || (subscription && subscription.subscription?.plan_type === 'monthly')}
-            className={`upgrade-btn premium ${subscription?.subscription?.plan_type === 'monthly' ? 'completed' : ''}`}
+            disabled={loading || (subscription && subscription.subscription?.plan_type === '30days')}
+            className={`upgrade-btn premium ${subscription?.subscription?.plan_type === '30days' ? 'completed' : ''}`}
           >
-            {subscription?.subscription?.plan_type === 'monthly' ? (
+            {subscription?.subscription?.plan_type === '30days' ? (
               <>
                 <i className="fi fi-br-check-circle"></i>
                 COMPLETED
