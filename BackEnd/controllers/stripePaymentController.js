@@ -33,14 +33,38 @@ exports.createCheckoutSession = async (req, res) => {
     const { plan_type } = req.body;
     const userId = req.user.id;
 
+    console.log('Creating Stripe checkout for user:', userId, 'plan:', plan_type);
+
+    if (!plan_type) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Plan type is required' 
+      });
+    }
+
     if (!['15days', '30days', 'yearly'].includes(plan_type)) {
-      return res.status(400).json({ error: 'Invalid plan type' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid plan type. Must be 15days, 30days, or yearly' 
+      });
+    }
+
+    // Check if Stripe is configured
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('Stripe secret key not configured');
+      return res.status(500).json({ 
+        success: false,
+        error: 'Payment system not configured. Please contact support.' 
+      });
     }
 
     // Get user details
     const user = await User.findByPk(userId);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
     }
 
     // Check existing subscription
@@ -49,23 +73,27 @@ exports.createCheckoutSession = async (req, res) => {
     });
 
     if (existingSubscription && new Date(existingSubscription.end_date) > new Date()) {
-      return res.status(400).json({ error: 'You already have an active subscription' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'You already have an active subscription' 
+      });
     }
 
     const amountBDT = PRICING_BDT[plan_type];
     const amountUSD = Math.round(amountBDT * BDT_TO_USD * 100); // in cents
 
+    console.log('Creating session - Amount BDT:', amountBDT, 'Amount USD cents:', amountUSD);
+
     // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card', 'cashapp', 'link'], // Add more as needed
+      payment_method_types: ['card'],
       line_items: [
         {
           price_data: {
-            currency: 'usd', // Stripe recommends USD for better conversion
+            currency: 'usd',
             product_data: {
               name: `Campus Gigs Premium - ${plan_type}`,
               description: `${PLAN_DAYS[plan_type]} days premium subscription`,
-              images: ['https://your-domain.com/logo.png'], // Add your logo
             },
             unit_amount: amountUSD,
           },
@@ -74,7 +102,7 @@ exports.createCheckoutSession = async (req, res) => {
       ],
       mode: 'payment',
       success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment/cancelled`,
+      cancel_url: `${process.env.FRONTEND_URL}/premium`,
       customer_email: user.email,
       metadata: {
         user_id: userId.toString(),
@@ -82,6 +110,8 @@ exports.createCheckoutSession = async (req, res) => {
         amount_bdt: amountBDT.toString()
       }
     });
+
+    console.log('Stripe session created:', session.id);
 
     // Create pending transaction
     await PaymentTransaction.create({
@@ -95,15 +125,18 @@ exports.createCheckoutSession = async (req, res) => {
     res.json({
       success: true,
       sessionId: session.id,
-      url: session.url, // Redirect user to this URL
+      url: session.url,
       transaction_id: session.id
     });
 
   } catch (error) {
     console.error('Stripe checkout error:', error);
+    console.error('Error details:', error.message);
     res.status(500).json({ 
+      success: false,
       error: 'Failed to create checkout session',
-      message: error.message 
+      message: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

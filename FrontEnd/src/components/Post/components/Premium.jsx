@@ -33,28 +33,43 @@ const Premium = ({ onBack }) => {
       
       // Choose payment gateway
       if (paymentGateway === 'stripe') {
+        console.log('Initiating Stripe payment for plan:', planType);
         response = await createStripeCheckout({ plan_type: planType });
+        console.log('Stripe response:', response.data);
+        
         if (response.data.success && response.data.url) {
           window.location.href = response.data.url; // Redirect to Stripe Checkout
+          return; // Don't set loading to false, we're redirecting
+        } else {
+          setError(response.data.error || 'Failed to create Stripe checkout session');
         }
       } else if (paymentGateway === 'sslcommerz') {
         response = await api.post('/payments/initiate', { plan_type: planType });
         if (response.data.success && response.data.gateway_url) {
           window.location.href = response.data.gateway_url; // Redirect to SSLCommerz
+          return;
+        } else {
+          setError('Failed to initiate SSLCommerz payment');
         }
       } else if (paymentGateway === 'mock') {
         response = await api.post('/mock-payment/initiate', { plan_type: planType });
         if (response.data.success && response.data.gateway_url) {
           window.location.href = response.data.gateway_url; // Redirect to Mock Payment
+          return;
+        } else {
+          setError('Failed to initiate mock payment');
         }
-      }
-      
-      if (!response.data.success) {
-        setError('Failed to initiate payment');
       }
     } catch (err) {
       console.error('Payment initiation error:', err);
-      setError(err.response?.data?.error || 'Failed to start payment process');
+      console.error('Error response:', err.response?.data);
+      
+      const errorMessage = err.response?.data?.error 
+        || err.response?.data?.message 
+        || err.message 
+        || 'Failed to start payment process';
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
