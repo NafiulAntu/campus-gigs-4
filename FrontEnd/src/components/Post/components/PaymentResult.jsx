@@ -6,6 +6,7 @@ import '../styles/PaymentResult.css';
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const [transaction, setTransaction] = useState(null);
+  const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [verifyingStripe, setVerifyingStripe] = useState(false);
   const [stripeError, setStripeError] = useState(null);
@@ -40,6 +41,12 @@ const PaymentSuccess = () => {
         };
         localStorage.setItem('user', JSON.stringify(updatedUser));
         console.log('✅ User data refreshed with premium status:', updatedUser.is_premium);
+      }
+      
+      // Also fetch subscription details
+      const subResponse = await api.get('/subscription/status');
+      if (subResponse.data && subResponse.data.is_premium) {
+        setSubscription(subResponse.data.subscription);
       }
     } catch (error) {
       console.error('Failed to refresh user data:', error);
@@ -144,8 +151,68 @@ const PaymentSuccess = () => {
           <div className="success-icon">✓</div>
         </div>
         
-        <h1>Payment Successful!</h1>
+        <h1>🎉 Premium Activated!</h1>
         <p className="subtitle">Welcome to Campus Gigs Premium</p>
+
+        {subscription && (
+          <div className="premium-status-card" style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            margin: '1.5rem 0',
+            color: 'white'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💎</div>
+              <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>
+                {subscription.plan_name}
+              </h3>
+              <div style={{ 
+                display: 'inline-block',
+                padding: '0.25rem 0.75rem',
+                background: 'rgba(255, 255, 255, 0.2)',
+                borderRadius: '20px',
+                fontSize: '0.875rem',
+                fontWeight: 'bold'
+              }}>
+                {subscription.status.toUpperCase()}
+              </div>
+            </div>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: '1fr 1fr', 
+              gap: '1rem',
+              marginTop: '1rem',
+              fontSize: '0.875rem'
+            }}>
+              <div>
+                <div style={{ opacity: 0.8 }}>Start Date</div>
+                <div style={{ fontWeight: 'bold' }}>
+                  {new Date(subscription.start_date).toLocaleDateString()}
+                </div>
+              </div>
+              <div>
+                <div style={{ opacity: 0.8 }}>Expires On</div>
+                <div style={{ fontWeight: 'bold' }}>
+                  {new Date(subscription.expiry_date).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+            
+            {subscription.days_remaining && (
+              <div style={{ 
+                textAlign: 'center', 
+                marginTop: '1rem',
+                padding: '0.75rem',
+                background: 'rgba(255, 255, 255, 0.15)',
+                borderRadius: '8px'
+              }}>
+                <strong>{subscription.days_remaining}</strong> days remaining
+              </div>
+            )}
+          </div>
+        )}
 
         {transaction && (
           <div className="transaction-details">
@@ -165,12 +232,14 @@ const PaymentSuccess = () => {
         )}
 
         <div className="features-unlocked">
-          <h3>🎉 Features Unlocked:</h3>
+          <h3>✨ Premium Features Active:</h3>
           <ul>
             <li>✓ Unlimited posts</li>
             <li>✓ Priority placement</li>
             <li>✓ Advanced analytics</li>
             <li>✓ Premium badge</li>
+            <li>✓ Read receipts</li>
+            <li>✓ Priority support</li>
           </ul>
         </div>
 
