@@ -64,10 +64,8 @@ export default function SendMoneyPage() {
     try {
       setReceiverLoading(true);
       const response = await getUserById(receiverId);
-      console.log('Receiver info loaded:', response.data);
       setReceiverInfo(response.data);
     } catch (err) {
-      console.error('Error fetching receiver info:', err);
       setError('Failed to load receiver information');
     } finally {
       setReceiverLoading(false);
@@ -80,7 +78,6 @@ export default function SendMoneyPage() {
       const response = await getBalance();
       setBalance(response.data.balance || 0);
     } catch (err) {
-      console.error('Error fetching balance:', err);
       setBalance(0);
     } finally {
       setBalanceLoading(false);
@@ -149,7 +146,6 @@ export default function SendMoneyPage() {
         navigate('/post');
       }, 2000);
     } catch (err) {
-      console.error('Send money error:', err);
       const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to send money. Please try again.';
       setError(errorMsg);
       setShowConfirm(false);
