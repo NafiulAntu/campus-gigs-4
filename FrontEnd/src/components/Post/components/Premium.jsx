@@ -8,7 +8,7 @@ const Premium = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [error, setError] = useState('');
-  const [paymentGateway, setPaymentGateway] = useState('stripe'); // stripe, sslcommerz, mock
+  const [paymentGateway, setPaymentGateway] = useState('mock'); // stripe, sslcommerz, mock
   const navigate = useNavigate();
 
   useEffect(() => {
