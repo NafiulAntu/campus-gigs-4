@@ -1,5 +1,6 @@
 const SSLCommerzPayment = require('sslcommerz-lts');
 const sequelize = require('../config/sequelize');
+const { Op } = require('sequelize');
 const Subscription = require('../models/Subscription');
 const PaymentTransaction = require('../models/PaymentTransaction');
 const User = require('../models/User');
@@ -34,13 +35,23 @@ exports.initiatePayment = async (req, res) => {
       return res.status(400).json({ error: 'Invalid plan type' });
     }
 
-    // Check if user already has active subscription
+    // Check if user already has active or completed subscription
     const existingSubscription = await Subscription.findOne({
-      where: { user_id: userId, status: 'active' }
+      where: { 
+        user_id: userId, 
+        status: { [Op.in]: ['active', 'completed'] }
+      }
     });
 
     if (existingSubscription && new Date(existingSubscription.end_date) > new Date()) {
-      return res.status(400).json({ error: 'You already have an active subscription' });
+      return res.status(400).json({ 
+        error: 'You already have an active Premium subscription',
+        subscription: {
+          plan_type: existingSubscription.plan_type,
+          expiry_date: existingSubscription.end_date,
+          days_remaining: Math.ceil((new Date(existingSubscription.end_date) - new Date()) / (1000 * 60 * 60 * 24))
+        }
+      });
     }
 
     const amount = PRICING[plan_type];
@@ -140,17 +151,20 @@ exports.paymentSuccess = async (req, res) => {
       const planDays = PLAN_DAYS[planType];
       endDate.setDate(endDate.getDate() + planDays);
 
-      // Cancel existing active subscriptions
+      // Cancel any existing active subscriptions
       await Subscription.update(
         { status: 'cancelled' },
-        { where: { user_id: userId, status: 'active' }, transaction: t }
+        { where: { 
+          user_id: userId, 
+          status: { [sequelize.Op.in]: ['active', 'completed'] }
+        }, transaction: t }
       );
 
       // Create new subscription
       const subscription = await Subscription.create({
         user_id: userId,
         plan_type: planType,
-        status: 'active',
+        status: 'completed',
         start_date: startDate,
         end_date: endDate,
         auto_renew: true

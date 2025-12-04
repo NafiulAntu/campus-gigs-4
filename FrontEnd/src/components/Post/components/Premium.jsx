@@ -80,12 +80,21 @@ const Premium = ({ onBack }) => {
       console.error('Payment initiation error:', err);
       console.error('Error response:', err.response?.data);
       
-      const errorMessage = err.response?.data?.error 
-        || err.response?.data?.message 
-        || err.message 
-        || 'Failed to start payment process';
-      
-      setError(errorMessage);
+      // Check if user already has active subscription
+      if (err.response?.status === 400 && err.response?.data?.subscription) {
+        const sub = err.response.data.subscription;
+        setError(
+          `You already have an active ${sub.plan_type} Premium subscription! ` +
+          `It expires in ${sub.days_remaining} days on ${new Date(sub.expiry_date).toLocaleDateString()}.`
+        );
+      } else {
+        const errorMessage = err.response?.data?.error 
+          || err.response?.data?.message 
+          || err.message 
+          || 'Failed to start payment process';
+        
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

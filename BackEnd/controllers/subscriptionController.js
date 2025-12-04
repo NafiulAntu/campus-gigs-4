@@ -1,4 +1,5 @@
 const sequelize = require('../config/sequelize');
+const { Op } = require('sequelize');
 const Subscription = require('../models/Subscription');
 const User = require('../models/User');
 
@@ -19,16 +20,19 @@ exports.getSubscriptionStatus = async (req, res) => {
       });
     }
 
-    const isPremium = subscription.status === 'active' && new Date(subscription.end_date) > new Date();
+    const isPremium = (subscription.status === 'active' || subscription.status === 'completed') && new Date(subscription.end_date) > new Date();
 
     res.json({
       is_premium: isPremium,
       subscription: {
         id: subscription.id,
         plan_type: subscription.plan_type,
+        plan_name: subscription.plan_type === 'yearly' ? 'Premium Yearly' : 'Premium Monthly',
+        amount: subscription.plan_type === 'yearly' ? 1500 : 150,
         status: subscription.status,
         start_date: subscription.start_date,
         end_date: subscription.end_date,
+        expiry_date: subscription.end_date,
         auto_renew: subscription.auto_renew,
         days_remaining: Math.ceil((new Date(subscription.end_date) - new Date()) / (1000 * 60 * 60 * 24))
       }
@@ -45,7 +49,10 @@ exports.cancelSubscription = async (req, res) => {
     const userId = req.user.id;
 
     const subscription = await Subscription.findOne({
-      where: { user_id: userId, status: 'active' }
+      where: { 
+        user_id: userId, 
+        status: { [sequelize.Op.in]: ['active', 'completed'] }
+      }
     });
 
     if (!subscription) {
@@ -92,7 +99,10 @@ exports.reactivateSubscription = async (req, res) => {
     const userId = req.user.id;
 
     const subscription = await Subscription.findOne({
-      where: { user_id: userId, status: 'active' }
+      where: { 
+        user_id: userId, 
+        status: { [sequelize.Op.in]: ['active', 'completed'] }
+      }
     });
 
     if (!subscription) {

@@ -6,13 +6,12 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     plan_type VARCHAR(20) NOT NULL CHECK (plan_type IN ('monthly', 'yearly')),
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('active', 'expired', 'cancelled', 'pending')),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('active', 'expired', 'cancelled', 'pending', 'completed')),
     start_date TIMESTAMP NOT NULL,
     end_date TIMESTAMP NOT NULL,
     auto_renew BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, status) -- Only one active subscription per user
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create payment_transactions table
@@ -79,6 +78,11 @@ SELECT
 FROM users u
 INNER JOIN subscriptions s ON u.id = s.user_id
 WHERE s.status = 'active' AND s.end_date > CURRENT_TIMESTAMP;
+
+-- Create unique partial index to ensure only one active/completed subscription per user
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_active_subscription 
+ON subscriptions (user_id) 
+WHERE status IN ('active', 'completed');
 
 COMMENT ON TABLE subscriptions IS 'User premium subscriptions';
 COMMENT ON TABLE payment_transactions IS 'Payment transaction history';
