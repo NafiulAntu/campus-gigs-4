@@ -26,21 +26,21 @@ export default function SendMoneyPage() {
     { 
       id: 'bkash', 
       name: 'bKash', 
-      icon: 'fi-brands-bkash',
+      logo: 'https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png',
       color: '#E2136E',
       gradient: 'from-pink-600 to-pink-500'
     },
     { 
       id: 'nagad', 
       name: 'Nagad', 
-      icon: 'fi-brands-nagad',
+      logo: 'https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png',
       color: '#EC1C24',
       gradient: 'from-orange-600 to-orange-500'
     },
     { 
       id: 'rocket', 
       name: 'Rocket', 
-      icon: 'fi-brands-rocket',
+      logo: 'https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg',
       color: '#8B3090',
       gradient: 'from-purple-600 to-purple-500'
     }
@@ -160,7 +160,7 @@ export default function SendMoneyPage() {
 
   if (receiverLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-cyan-500 border-t-transparent"></div>
           <p className="text-gray-400 mt-4">Loading...</p>
@@ -171,7 +171,7 @@ export default function SendMoneyPage() {
 
   if (!receiverInfo && receiverId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
           <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <i className="fi fi-rr-cross-circle text-red-500 text-3xl"></i>
@@ -190,9 +190,9 @@ export default function SendMoneyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-black">
       {/* Header */}
-      <div className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/80 border-b border-white/5">
+      <div className="sticky top-0 z-40 backdrop-blur-xl bg-black/80 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
@@ -216,25 +216,25 @@ export default function SendMoneyPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid lg:grid-cols-5 gap-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Sidebar - Receiver & Balance Info */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-1 space-y-4">
             {/* Receiver Card */}
             {receiverInfo && (
-              <div className="rounded-2xl bg-slate-900/50 border border-white/5 p-6 backdrop-blur-sm">
-                <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-4">Sending to</div>
-                <div className="flex items-center gap-4">
+              <div className="rounded-2xl bg-slate-900/50 border border-white/5 p-4 backdrop-blur-sm">
+                <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-3">Sending to</div>
+                <div className="flex items-center gap-3">
                   <div className="relative">
                     {receiverInfo.profile_picture ? (
                       <img
                         src={receiverInfo.profile_picture}
                         alt={receiverInfo.full_name}
-                        className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-500/20"
+                        className="w-12 h-12 rounded-xl object-cover border-2 border-cyan-500/20"
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center border-2 border-cyan-500/20">
-                        <span className="text-white text-2xl font-bold">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center border-2 border-cyan-500/20">
+                        <span className="text-white text-lg font-bold">
                           {receiverInfo.full_name?.charAt(0).toUpperCase() || 'U'}
                         </span>
                       </div>
@@ -250,8 +250,8 @@ export default function SendMoneyPage() {
             )}
 
             {/* Balance Card */}
-            <div className="rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/20 p-6 backdrop-blur-sm">
-              <div className="flex items-center justify-between mb-3">
+            <div className="rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/20 p-4 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Available Balance</span>
                 <button
                   onClick={fetchBalance}
@@ -262,9 +262,9 @@ export default function SendMoneyPage() {
                 </button>
               </div>
               {balanceLoading ? (
-                <div className="h-10 bg-white/5 rounded-lg animate-pulse"></div>
+                <div className="h-8 bg-white/5 rounded-lg animate-pulse"></div>
               ) : (
-                <div className="text-3xl font-bold text-white">
+                <div className="text-2xl font-bold text-white">
                   ₹{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </div>
               )}
@@ -289,33 +289,33 @@ export default function SendMoneyPage() {
           </div>
 
           {/* Right Content - Transaction Form */}
-          <div className="lg:col-span-3">
-            <div className="rounded-2xl bg-slate-900/50 border border-white/5 p-8 backdrop-blur-sm">
+          <div className="lg:col-span-2">
+            <div className="rounded-2xl bg-slate-900/50 border border-white/5 p-6 backdrop-blur-sm">
               {/* Payment Methods */}
-              <div className="mb-8">
-                <label className="block text-sm font-semibold text-gray-300 mb-4">Payment Method</label>
-                <div className="grid grid-cols-3 gap-3">
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-300 mb-3">Payment Method</label>
+                <div className="grid grid-cols-3 gap-2">
                   {paymentMethods.map((method) => (
                     <button
                       key={method.id}
                       onClick={() => setPaymentMethod(method.id)}
-                      className={`relative p-4 rounded-xl border-2 transition-all duration-200 ${
+                      className={`relative p-3 rounded-xl border-2 transition-all duration-200 ${
                         paymentMethod === method.id
-                          ? `border-[${method.color}] bg-gradient-to-br ${method.gradient} shadow-lg shadow-${method.id}-500/20`
-                          : 'border-white/5 bg-slate-800/30 hover:border-white/10'
+                          ? `border-[${method.color}] bg-transparent shadow-lg shadow-${method.id}-500/20`
+                          : 'border-white/5 bg-transparent hover:border-white/10'
                       }`}
                     >
                       <div className="text-center">
-                        <div className={`text-2xl mb-2 ${paymentMethod === method.id ? 'text-white' : 'text-gray-400'}`}>
-                          <i className={`fi ${method.icon || 'fi-rr-wallet'}`}></i>
-                        </div>
-                        <div className={`text-xs font-semibold ${paymentMethod === method.id ? 'text-white' : 'text-gray-400'}`}>
-                          {method.name}
+                        <div className={`flex items-center justify-center h-12 ${paymentMethod === method.id ? 'opacity-100' : 'opacity-70'}`}>
+                          <img 
+                            src={method.logo} 
+                            alt={method.name}
+                            className="h-10 w-auto object-contain"
+                          />
                         </div>
                       </div>
                       {paymentMethod === method.id && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-white rounded-full flex items-center justify-center">
-                          <i className="fi fi-sr-check text-xs" style={{ color: method.color }}></i>
+                        <div className="absolute top-2 right-2 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center">
                         </div>
                       )}
                     </button>
@@ -327,16 +327,16 @@ export default function SendMoneyPage() {
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-300 mb-3">Amount</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-400">₹</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-400">₹</span>
                   <input
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
                     placeholder="0.00"
-                    className="w-full pl-12 pr-4 py-4 bg-slate-800/50 border border-white/10 rounded-xl text-white text-2xl font-bold placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                    className="w-full pl-11 pr-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white text-xl font-bold placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
                   />
                 </div>
-                <div className="flex flex-wrap gap-2 mt-3">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {quickAmounts.map((quickAmount) => (
                     <button
                       key={quickAmount}
@@ -350,8 +350,8 @@ export default function SendMoneyPage() {
               </div>
 
               {/* Notes */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-300 mb-3">Note (Optional)</label>
+              <div className="mb-5">
+                <label className="block text-sm font-semibold text-gray-300 mb-2">Note (Optional)</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -382,7 +382,7 @@ export default function SendMoneyPage() {
               <button
                 onClick={validateAndShowConfirm}
                 disabled={loading || !amount || !receiverInfo}
-                className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25 disabled:shadow-none"
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25 disabled:shadow-none"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">
