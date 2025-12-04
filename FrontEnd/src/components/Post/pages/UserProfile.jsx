@@ -190,8 +190,12 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
       const receiverInfo = {
         conversationId,
         userId: otherUserFirebaseUid,
+        firebase_uid: otherUserFirebaseUid,
         userName: user.full_name || user.username,
-        userPhoto: profileData?.profilePicUrl || user.profile_picture
+        full_name: user.full_name,
+        username: user.username,
+        userPhoto: profileData?.profilePicUrl || user.profile_picture,
+        profile_picture: profileData?.profilePicUrl || user.profile_picture
       };
       
       if (onMessageClick) {
