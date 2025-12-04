@@ -11,6 +11,6 @@ const { protect } = require('../middleware/authMiddleware');
 router.post('/initiate', protect, mockPaymentController.initiateMockPayment);
 
 // Complete mock payment (protected)
-router.post('/complete', protect, mockPaymentController.completeMockPayment);
+router.post('/complete', protect, mockPaymentController.processMockPayment);
 
 module.exports = router;
