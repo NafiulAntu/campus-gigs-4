@@ -235,19 +235,19 @@ export default function SendMoneyPage() {
                       <img
                         src={receiverInfo.profile_picture || receiverInfo.profilePicUrl}
                         alt={receiverInfo.full_name || receiverInfo.name}
-                        className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-500/30 shadow-lg group-hover:border-cyan-500/50 transition-all"
+                        className="w-16 h-16 rounded-full object-cover border-2 border-cyan-500/30 shadow-lg group-hover:border-cyan-500/50 transition-all"
                         onError={(e) => {
                           e.target.style.display = 'none';
                           e.target.nextSibling.style.display = 'flex';
                         }}
                       />
                     ) : null}
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center border-2 border-cyan-500/30 shadow-lg" style={{ display: (receiverInfo.profile_picture || receiverInfo.profilePicUrl) ? 'none' : 'flex' }}>
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center border-2 border-cyan-500/30 shadow-lg" style={{ display: (receiverInfo.profile_picture || receiverInfo.profilePicUrl) ? 'none' : 'flex' }}>
                       <span className="text-white text-2xl font-bold">
                         {(receiverInfo.full_name || receiverInfo.name || 'U').charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-[3px] border-slate-900 shadow-lg"></div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-slate-900 shadow-lg"></div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-white font-semibold text-lg truncate">{receiverInfo.full_name || receiverInfo.name}</h3>
@@ -360,11 +360,11 @@ export default function SendMoneyPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add a message..."
-                  maxLength={100}
+                  maxLength={50}
                   rows={3}
                   className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:bg-slate-800/70 transition-all resize-none"
                 />
-                <div className="text-xs text-gray-500 text-right mt-1">{notes.length}/100</div>
+                <div className="text-xs text-gray-500 text-right mt-1">{notes.length}/50</div>
               </div>
 
               {/* Error/Success Messages */}
