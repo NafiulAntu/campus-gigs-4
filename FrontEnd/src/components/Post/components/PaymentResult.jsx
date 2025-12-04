@@ -7,16 +7,50 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const [transaction, setTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [verifyingStripe, setVerifyingStripe] = useState(false);
+  const [stripeError, setStripeError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const sessionId = searchParams.get('session_id');
     const transactionId = searchParams.get('transaction');
-    if (transactionId) {
+    
+    if (sessionId) {
+      // Stripe payment - verify session
+      verifyStripeSession(sessionId);
+    } else if (transactionId) {
+      // Mock payment - fetch transaction
       fetchTransactionDetails(transactionId);
     } else {
       setLoading(false);
     }
   }, [searchParams]);
+
+  const verifyStripeSession = async (sessionId) => {
+    setVerifyingStripe(true);
+    try {
+      const response = await api.get(`/stripe/verify-session?session_id=${sessionId}`);
+      
+      if (response.data.success) {
+        // Payment verified and subscription activated
+        setTransaction({
+          amount: response.data.amount,
+          payment_method: 'Stripe',
+          transaction_id: sessionId.substring(0, 20) + '...',
+          status: 'completed'
+        });
+        setStripeError(null);
+      } else {
+        setStripeError(response.data.message || 'Payment verification failed');
+      }
+    } catch (err) {
+      console.error('Failed to verify Stripe session:', err);
+      setStripeError(err.response?.data?.message || 'Failed to verify payment');
+    } finally {
+      setLoading(false);
+      setVerifyingStripe(false);
+    }
+  };
 
   const fetchTransactionDetails = async (transactionId) => {
     try {
@@ -29,10 +63,31 @@ const PaymentSuccess = () => {
     }
   };
 
-  if (loading) {
+  if (loading || verifyingStripe) {
     return (
       <div className="payment-result-container">
-        <div className="loading-spinner">Loading...</div>
+        <div className="loading-spinner">
+          {verifyingStripe ? 'Verifying payment...' : 'Loading...'}
+        </div>
+      </div>
+    );
+  }
+
+  if (stripeError) {
+    return (
+      <div className="payment-result-container">
+        <div className="result-card error">
+          <div className="icon-wrapper">
+            <div className="error-icon">✗</div>
+          </div>
+          <h1>Payment Verification Failed</h1>
+          <p className="subtitle">{stripeError}</p>
+          <div className="action-buttons">
+            <button onClick={() => navigate('/premium')} className="btn-primary">
+              Back to Premium
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

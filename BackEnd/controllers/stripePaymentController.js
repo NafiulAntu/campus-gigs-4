@@ -268,26 +268,75 @@ async function handleFailedPayment(paymentIntent) {
 exports.verifySession = async (req, res) => {
   try {
     const { session_id } = req.query;
+    const userId = req.user.id;
+
+    console.log('Verifying session:', session_id, 'for user:', userId);
 
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
     if (session.payment_status === 'paid') {
+      // Check if subscription already activated
+      const existingSubscription = await Subscription.findOne({
+        where: { 
+          user_id: userId,
+          status: 'active'
+        }
+      });
+
+      if (!existingSubscription) {
+        // Extract plan details from metadata
+        const planName = session.metadata.plan_name || 'Premium Monthly';
+        const planDuration = parseInt(session.metadata.plan_duration) || 30;
+        const planPrice = session.amount_total / 100;
+
+        // Calculate expiry date
+        const startDate = new Date();
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + planDuration);
+
+        // Create subscription
+        await Subscription.create({
+          user_id: userId,
+          plan_name: planName,
+          start_date: startDate,
+          expiry_date: expiryDate,
+          status: 'active',
+          payment_method: 'stripe',
+          amount: planPrice,
+          stripe_session_id: session_id
+        });
+
+        // Update user premium status
+        await User.update(
+          { is_premium: true },
+          { where: { id: userId } }
+        );
+
+        console.log('✅ Premium subscription activated for user:', userId);
+      }
+
       res.json({
         success: true,
         status: 'completed',
         amount: session.amount_total / 100,
-        currency: session.currency
+        currency: session.currency,
+        message: 'Premium subscription activated successfully!'
       });
     } else {
       res.json({
         success: false,
-        status: session.payment_status
+        status: session.payment_status,
+        message: 'Payment not completed yet.'
       });
     }
 
   } catch (error) {
     console.error('Session verification error:', error);
-    res.status(500).json({ error: 'Failed to verify session' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to verify session',
+      message: error.message 
+    });
   }
 };
 
