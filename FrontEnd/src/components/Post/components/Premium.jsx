@@ -13,6 +13,14 @@ const Premium = ({ onBack }) => {
 
   useEffect(() => {
     checkSubscriptionStatus();
+    
+    // Refresh subscription status when user returns to this page
+    const handleFocus = () => {
+      checkSubscriptionStatus();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   const checkSubscriptionStatus = async () => {

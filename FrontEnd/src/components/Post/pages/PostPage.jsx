@@ -8,7 +8,7 @@ import Communities from "../sidebar/communities";
 import Premium from "../components/Premium";
 import Payments from "../sidebar/payments";
 import UserProfile from "./UserProfile";
-import { getAllPosts, createPost, updatePost, deletePost as deletePostAPI, toggleLike as toggleLikeAPI, toggleShare as toggleShareAPI, acceptPost as acceptPostAPI, rejectPost as rejectPostAPI } from "../../../services/api";
+import api, { getAllPosts, createPost, updatePost, deletePost as deletePostAPI, toggleLike as toggleLikeAPI, toggleShare as toggleShareAPI, acceptPost as acceptPostAPI, rejectPost as rejectPostAPI } from "../../../services/api";
 
 const Switcher8 = ({ isChecked, onChange }) => {
   return (
@@ -64,12 +64,34 @@ export default function PostPage({ onNavigate = () => {} }) {
   const [postIdToScroll, setPostIdToScroll] = useState(null);
   const menuRef = useRef(null);
 
-  // Load current user
+  // Load current user and refresh premium status from backend
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setCurrentUser(JSON.parse(userData));
-    }
+    const loadUserData = async () => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsedUser = JSON.parse(userData);
+        setCurrentUser(parsedUser);
+        
+        // Refresh user data from backend to get latest premium status
+        try {
+          const response = await api.get('/users/me');
+          if (response.data) {
+            const updatedUser = {
+              ...parsedUser,
+              ...response.data,
+              is_premium: response.data.is_premium
+            };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            setCurrentUser(updatedUser);
+            console.log('✅ User premium status refreshed:', updatedUser.is_premium);
+          }
+        } catch (error) {
+          console.error('Failed to refresh user data:', error);
+        }
+      }
+    };
+    
+    loadUserData();
   }, []);
 
   // Fetch posts from API

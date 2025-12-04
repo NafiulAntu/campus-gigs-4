@@ -26,6 +26,26 @@ const PaymentSuccess = () => {
     }
   }, [searchParams]);
 
+  const refreshUserData = async () => {
+    try {
+      // Fetch updated user data to get premium status
+      const userResponse = await api.get('/users/me');
+      if (userResponse.data) {
+        // Update localStorage with new user data including premium status
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const updatedUser = {
+          ...currentUser,
+          ...userResponse.data,
+          is_premium: userResponse.data.is_premium
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        console.log('✅ User data refreshed with premium status:', updatedUser.is_premium);
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+    }
+  };
+
   const verifyStripeSession = async (sessionId) => {
     setVerifyingStripe(true);
     try {
@@ -41,21 +61,26 @@ const PaymentSuccess = () => {
         });
         setStripeError(null);
         
+        // Refresh user data to update premium status
+        await refreshUserData();
+        
         // Redirect to Post section after 2 seconds
         setTimeout(() => {
           navigate('/post');
         }, 2000);
       } else {
-        // Even if verification fails, redirect to post (payment might already be processed)
-        console.log('Payment already processed or session expired, redirecting to post...');
+        // Even if verification fails, refresh user data and redirect
+        console.log('Payment already processed or session expired, refreshing user data...');
+        await refreshUserData();
         setTimeout(() => {
           navigate('/post');
         }, 2000);
       }
     } catch (err) {
       console.error('Failed to verify Stripe session:', err);
-      // On error, still redirect to post page (payment likely already processed)
-      console.log('Verification error, redirecting to post...');
+      // On error, still refresh user data and redirect
+      console.log('Verification error, refreshing user data and redirecting...');
+      await refreshUserData();
       setTimeout(() => {
         navigate('/post');
       }, 2000);
