@@ -220,6 +220,8 @@ export const onAuthChange = (callback) => {
  * Get user-friendly error messages
  */
 const getErrorMessage = (errorCode) => {
+  console.log('Firebase error code:', errorCode); // Debug log
+  
   const errorMessages = {
     'auth/email-already-in-use': 'This email is already registered',
     'auth/invalid-email': 'Invalid email address',
@@ -228,12 +230,16 @@ const getErrorMessage = (errorCode) => {
     'auth/user-disabled': 'This account has been disabled',
     'auth/user-not-found': 'No account found with this email',
     'auth/wrong-password': 'Incorrect password',
-    'auth/invalid-credential': 'Invalid email or password',
+    'auth/invalid-credential': 'Invalid email or password. Please check your credentials.',
     'auth/too-many-requests': 'Too many attempts. Please try again later',
     'auth/popup-closed-by-user': 'Sign in cancelled',
     'auth/cancelled-popup-request': 'Sign in cancelled',
-    'auth/account-exists-with-different-credential': 'Account exists with different sign-in method'
+    'auth/account-exists-with-different-credential': 'Account exists with different sign-in method',
+    'auth/network-request-failed': 'Network error. Please check your internet connection',
+    'auth/internal-error': 'Authentication service error. Please try again',
+    'auth/missing-password': 'Please enter your password',
+    'auth/invalid-login-credentials': 'Invalid email or password. Please try again.'
   };
   
-  return errorMessages[errorCode] || 'An error occurred. Please try again';
+  return errorMessages[errorCode] || `Authentication error (${errorCode}). Please try again`;
 };
