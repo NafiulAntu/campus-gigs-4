@@ -15,7 +15,6 @@ import {
 } from "../../../services/api";
 import { getOrCreateConversation } from "../../../utils/messagingUtils";
 import { auth } from "../../../config/firebase";
-import SendMoney from "./SendMoney";
 
 // Repost Composer Component
 function RepostComposer({ originalPost, onSubmit, onCancel }) {
@@ -144,7 +143,6 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentImages, setCurrentImages] = useState([]);
-  const [showSendMoney, setShowSendMoney] = useState(false);
   const [showImageControls, setShowImageControls] = useState(true);
   const [controlsTimeout, setControlsTimeout] = useState(null);
   const [repostModalOpen, setRepostModalOpen] = useState(false);
@@ -636,8 +634,7 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
                   </button>
                   <button
                     onClick={() => {
-                      console.log('Send money button clicked', { userId, user, showSendMoney });
-                      setShowSendMoney(true);
+                      navigate(`/send-money?to=${userId}`);
                     }}
                     className="flex items-center gap-2 px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-emerald-300 font-semibold rounded-full border border-emerald-500/40 hover:shadow-lg hover:scale-105 transition-all"
                     title="Send money"
@@ -1253,21 +1250,6 @@ export default function UserProfile({ userId, onBack, onMessageClick }) {
           </div>
         </div>
       )}
-
-      {/* Send Money Panel */}
-      <SendMoney 
-        isOpen={showSendMoney}
-        onClose={() => setShowSendMoney(false)}
-        receiverInfo={{
-          user_id: userId,
-          full_name: user?.full_name || 'Unknown',
-          username: user?.username || 'unknown',
-          profile_picture: user?.profile_picture || profileData?.profilePicUrl
-        }}
-        onSuccess={(transaction) => {
-          console.log('Transaction successful:', transaction);
-        }}
-      />
     </div>
   );
 }

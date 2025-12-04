@@ -159,8 +159,8 @@ export default function SendMoney({ isOpen, onClose, receiverInfo, onSuccess }) 
   const selectedMethod = paymentMethods.find(m => m.id === paymentMethod) || paymentMethods[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-slate-950">
-      <div className="w-full h-full flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-start">
+      <div className="w-full h-1/2 flex flex-col bg-slate-950 rounded-b-3xl border-b border-x border-white/10 shadow-2xl">
         {/* Top bar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-950/95">
             <div className="flex items-center gap-4">
@@ -182,9 +182,9 @@ export default function SendMoney({ isOpen, onClose, receiverInfo, onSuccess }) 
         </div>
 
         {/* Main content */}
-        <div className="flex-1 flex items-start justify-center pt-8">
+        <div className="flex items-start justify-center py-6">
           {/* Left: receiver + balance */}
-          <div className="hidden md:flex w-2/5 h-[420px] flex-col justify-start gap-6 px-8 border-r border-white/5 bg-slate-950 rounded-l-3xl pt-8">
+          <div className="hidden md:flex w-2/5 flex-col gap-6 px-8 border-r border-white/5 bg-slate-950 rounded-l-3xl">
             {/* Receiver card */}
             <div className="rounded-2xl border border-white/10 bg-slate-900 px-6 py-5">
               <div className="text-gray-400 text-[11px] font-semibold uppercase tracking-[0.2em] mb-3">Sending to</div>
@@ -234,8 +234,8 @@ export default function SendMoney({ isOpen, onClose, receiverInfo, onSuccess }) 
           </div>
 
           {/* Right: form */}
-          <div className="flex-1 flex items-start justify-center px-4 py-8 md:px-10">
-            <div className="w-full max-w-lg space-y-6 h-[420px] flex flex-col justify-start rounded-r-3xl bg-slate-950 pt-8">
+          <div className="flex-1 flex items-start justify-center px-4 md:px-10">
+            <div className="w-full max-w-lg space-y-4 flex flex-col rounded-r-3xl bg-slate-950">
               {/* Payment Method */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-300 uppercase tracking-[0.2em] flex items-center gap-2">

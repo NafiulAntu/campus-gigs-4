@@ -23,6 +23,7 @@ const Premium = lazy(() => import("./Post/components/Premium.jsx"));
 const PaymentSuccess = lazy(() => import("./Post/components/PaymentResult.jsx").then(m => ({ default: m.PaymentSuccess })));
 const PaymentFailed = lazy(() => import("./Post/components/PaymentResult.jsx").then(m => ({ default: m.PaymentFailed })));
 const PaymentCancelled = lazy(() => import("./Post/components/PaymentResult.jsx").then(m => ({ default: m.PaymentCancelled })));
+const SendMoneyPage = lazy(() => import("./Post/pages/SendMoneyPage.jsx"));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -92,7 +93,7 @@ export default function App() {
       }
     });
   }, []);
-  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/verify-otp", "/reset-password", "/terms", "/privacy", "/premium", "/payment/success", "/payment/failed", "/payment/cancelled"];
+  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/verify-otp", "/reset-password", "/terms", "/privacy", "/premium", "/payment/success", "/payment/failed", "/payment/cancelled", "/send-money"];
   const shouldHideFooter = hideFooterOn.includes(
     location.pathname.toLowerCase()
   );
@@ -117,6 +118,7 @@ export default function App() {
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/payment/failed" element={<PaymentFailed />} />
               <Route path="/payment/cancelled" element={<PaymentCancelled />} />
+              <Route path="/send-money" element={<SendMoneyPage />} />
               <Route path="/auth/callback" element={<CallbackHandler />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
