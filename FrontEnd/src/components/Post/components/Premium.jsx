@@ -203,10 +203,10 @@ const Premium = ({ onBack }) => {
             </div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-cyan-500/20 transition-all duration-300 group">
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-cyan-500/20 transition-all duration-300 group">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i className="fi fi-rr-crown text-white text-xl"></i>
+              <div className="w-12 h-12 backdrop-blur-xl bg-white/5 border border-cyan-500/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i className="fi fi-rr-crown text-cyan-400 text-xl"></i>
               </div>
               <h3 className="text-lg font-bold text-white">Current Plan</h3>
             </div>
@@ -219,10 +219,10 @@ const Premium = ({ onBack }) => {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-6 shadow-xl hover:shadow-emerald-500/30 transition-all duration-300 group">
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-emerald-500/30 transition-all duration-300 group">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i className="fi fi-rr-shield-check text-white text-xl"></i>
+              <div className="w-12 h-12 backdrop-blur-xl bg-white/5 border border-emerald-500/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i className="fi fi-rr-shield-check text-emerald-400 text-xl"></i>
               </div>
               <h3 className="text-lg font-bold text-white">Subscription Status</h3>
             </div>
@@ -250,10 +250,10 @@ const Premium = ({ onBack }) => {
             )}
           </div>
 
-          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group">
+          <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i className="fi fi-rr-refresh text-white text-xl"></i>
+              <div className="w-12 h-12 backdrop-blur-xl bg-white/5 border border-purple-500/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i className="fi fi-rr-refresh text-purple-400 text-xl"></i>
               </div>
               <h3 className="text-lg font-bold text-white">Auto-Renewal</h3>
             </div>
@@ -294,49 +294,49 @@ const Premium = ({ onBack }) => {
             <h2 className="text-3xl font-black text-white">Your Premium Features</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-green-500/20 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
-                <i className="fi fi-rr-infinity text-white text-xl"></i>
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-green-500/20 group">
+              <div className="w-12 h-12 backdrop-blur-xl bg-white/5 border border-green-500/30 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-infinity text-green-400 text-xl"></i>
               </div>
               <span className="text-green-400 text-2xl mb-2 block">✓</span>
               <span className="text-white font-bold text-lg block">Unlimited Posts</span>
               <p className="text-gray-400 text-sm mt-2">Create as many posts as you want</p>
             </div>
-            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/20 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
-                <i className="fi fi-rr-star text-white text-xl"></i>
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/20 group">
+              <div className="w-12 h-12 backdrop-blur-xl bg-white/5 border border-blue-500/30 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-star text-blue-400 text-xl"></i>
               </div>
               <span className="text-blue-400 text-2xl mb-2 block">✓</span>
               <span className="text-white font-bold text-lg block">Priority Placement</span>
               <p className="text-gray-400 text-sm mt-2">Your posts appear at the top</p>
             </div>
-            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
-                <i className="fi fi-rr-chart-line-up text-white text-xl"></i>
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 group">
+              <div className="w-12 h-12 backdrop-blur-xl bg-white/5 border border-purple-500/30 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-chart-line-up text-purple-400 text-xl"></i>
               </div>
               <span className="text-purple-400 text-2xl mb-2 block">✓</span>
               <span className="text-white font-bold text-lg block">Advanced Analytics</span>
               <p className="text-gray-400 text-sm mt-2">Track your post performance</p>
             </div>
-            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
-                <i className="fi fi-rr-badge-check text-white text-xl"></i>
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20 group">
+              <div className="w-12 h-12 backdrop-blur-xl bg-white/5 border border-orange-500/30 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-badge-check text-orange-400 text-xl"></i>
               </div>
               <span className="text-orange-400 text-2xl mb-2 block">✓</span>
               <span className="text-white font-bold text-lg block">Premium Badge</span>
               <p className="text-gray-400 text-sm mt-2">Stand out with verified badge</p>
             </div>
-            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-cyan-500/20 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-teal-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
-                <i className="fi fi-rr-eye text-white text-xl"></i>
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-cyan-500/20 group">
+              <div className="w-12 h-12 backdrop-blur-xl bg-white/5 border border-cyan-500/30 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-eye text-cyan-400 text-xl"></i>
               </div>
               <span className="text-cyan-400 text-2xl mb-2 block">✓</span>
               <span className="text-white font-bold text-lg block">Read Receipts</span>
               <p className="text-gray-400 text-sm mt-2">See who viewed your posts</p>
             </div>
-            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/20 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
-                <i className="fi fi-rr-thumbtack text-white text-xl"></i>
+            <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/20 group">
+              <div className="w-12 h-12 backdrop-blur-xl bg-white/5 border border-pink-500/30 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-thumbtack text-pink-400 text-xl"></i>
               </div>
               <span className="text-pink-400 text-2xl mb-2 block">✓</span>
               <span className="text-white font-bold text-lg block">Pin Posts</span>
