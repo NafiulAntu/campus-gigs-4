@@ -103,14 +103,29 @@ const Premium = ({ onBack }) => {
   };
 
   const handleCancelSubscription = async () => {
-    if (!window.confirm('Are you sure you want to cancel auto-renewal?')) return;
+    if (!window.confirm('⚠️ Cancel subscription now?\n\nYour premium access will end immediately and you can purchase a new subscription anytime.\n\nNote: Payment history will be preserved.')) return;
 
     try {
+      setLoading(true);
       const response = await api.post('/subscription/cancel');
-      alert(response.data.message);
+      alert('✅ ' + response.data.message);
       checkSubscriptionStatus();
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to cancel subscription');
+      alert('❌ ' + (err.response?.data?.error || 'Failed to cancel subscription'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTurnOffAutoRenew = async () => {
+    if (!window.confirm('Turn off auto-renewal?\n\nYou will keep premium access until the end date, but it won\'t renew automatically.')) return;
+
+    try {
+      const response = await api.post('/subscription/turn-off-auto-renew');
+      alert('✅ ' + response.data.message);
+      checkSubscriptionStatus();
+    } catch (err) {
+      alert('❌ ' + (err.response?.data?.error || 'Failed to turn off auto-renew'));
     }
   };
 
@@ -265,8 +280,8 @@ const Premium = ({ onBack }) => {
             </p>
             {subscription.subscription.auto_renew ? (
               <button 
-                onClick={handleCancelSubscription} 
-                className="w-full bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/30 hover:border-red-500/50 text-red-400 font-bold py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/20 flex items-center justify-center gap-2"
+                onClick={handleTurnOffAutoRenew} 
+                className="w-full bg-orange-500/20 hover:bg-orange-500/30 border-2 border-orange-500/30 hover:border-orange-500/50 text-orange-400 font-bold py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/20 flex items-center justify-center gap-2"
               >
                 <i className="fi fi-rr-cross-circle"></i>
                 Turn Off Auto-Renewal
@@ -324,6 +339,37 @@ const Premium = ({ onBack }) => {
               <span className="text-pink-400 text-2xl mb-3 block font-bold">✓</span>
               <span className="text-gray-100 font-bold text-lg block mb-2">Pin Posts</span>
               <p className="text-gray-400 text-sm">Keep important posts at top</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Cancel Subscription Section */}
+        <div className="border border-red-500/20 rounded-3xl p-8 bg-gradient-to-br from-red-500/5 to-transparent backdrop-blur-sm mt-6">
+          <div className="flex items-start gap-4 mb-6">
+            <i className="fi fi-rr-exclamation text-red-400 text-2xl mt-1"></i>
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-gray-200 mb-2">Cancel Subscription</h3>
+              <p className="text-gray-400 text-sm mb-6">
+                Want to try a different plan or take a break? Cancel your current subscription to purchase a new one. 
+                Your payment history will be preserved in Recent Activity.
+              </p>
+              <button 
+                onClick={handleCancelSubscription}
+                disabled={loading}
+                className="bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/30 hover:border-red-500/50 text-red-400 font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <i className="fi fi-rr-spinner animate-spin"></i>
+                    Cancelling...
+                  </>
+                ) : (
+                  <>
+                    <i className="fi fi-rr-trash"></i>
+                    Cancel Subscription Now
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -479,10 +525,10 @@ const Premium = ({ onBack }) => {
 
           <button 
             onClick={() => handleUpgrade('30days')}
-            disabled={loading || (subscription && subscription.subscription?.plan_type === '30days')}
-            className={`upgrade-btn premium ${subscription?.subscription?.plan_type === '30days' ? 'completed' : ''}`}
+            disabled={loading || (subscription && subscription.subscription?.plan_duration === '30days')}
+            className={`upgrade-btn premium ${subscription?.subscription?.plan_duration === '30days' ? 'completed' : ''}`}
           >
-            {subscription?.subscription?.plan_type === '30days' ? (
+            {subscription?.subscription?.plan_duration === '30days' ? (
               <>
                 <i className="fi fi-br-check-circle"></i>
                 COMPLETED
@@ -527,10 +573,10 @@ const Premium = ({ onBack }) => {
 
           <button 
             onClick={() => handleUpgrade('15days')}
-            disabled={loading || (subscription && subscription.subscription?.plan_type === '15days')}
-            className={`upgrade-btn starter ${subscription?.subscription?.plan_type === '15days' ? 'completed' : ''}`}
+            disabled={loading || (subscription && subscription.subscription?.plan_duration === '15days')}
+            className={`upgrade-btn starter ${subscription?.subscription?.plan_duration === '15days' ? 'completed' : ''}`}
           >
-            {subscription?.subscription?.plan_type === '15days' ? (
+            {subscription?.subscription?.plan_duration === '15days' ? (
               <>
                 <i className="fi fi-br-check-circle"></i>
                 COMPLETED

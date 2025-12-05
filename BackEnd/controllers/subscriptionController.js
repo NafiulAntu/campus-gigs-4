@@ -22,13 +22,25 @@ exports.getSubscriptionStatus = async (req, res) => {
 
     const isPremium = (subscription.status === 'active' || subscription.status === 'completed') && new Date(subscription.end_date) > new Date();
 
+    // Map plan_duration to display names and prices
+    const planInfo = {
+      '15days': { name: '15 Days Premium', amount: 99 },
+      '30days': { name: '30 Days Premium', amount: 150 },
+      'yearly': { name: 'Premium Yearly', amount: 1500 }
+    };
+
+    // Use plan_duration if available, fallback to plan_type
+    const planDuration = subscription.plan_duration || (subscription.plan_type === 'yearly' ? 'yearly' : '30days');
+    const currentPlan = planInfo[planDuration] || planInfo['30days'];
+
     res.json({
       is_premium: isPremium,
       subscription: {
         id: subscription.id,
         plan_type: subscription.plan_type,
-        plan_name: subscription.plan_type === 'yearly' ? 'Premium Yearly' : 'Premium Monthly',
-        amount: subscription.plan_type === 'yearly' ? 1500 : 150,
+        plan_duration: planDuration,
+        plan_name: currentPlan.name,
+        amount: currentPlan.amount,
         status: subscription.status,
         start_date: subscription.start_date,
         end_date: subscription.end_date,
@@ -43,8 +55,60 @@ exports.getSubscriptionStatus = async (req, res) => {
   }
 };
 
-// Cancel subscription (turn off auto-renew)
+// Cancel subscription immediately
 exports.cancelSubscription = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const subscription = await Subscription.findOne({
+      where: { 
+        user_id: userId, 
+        status: { [sequelize.Op.in]: ['active', 'completed'] }
+      }
+    });
+
+    if (!subscription) {
+      return res.status(404).json({ error: 'No active subscription found' });
+    }
+
+    await sequelize.transaction(async (t) => {
+      // Cancel subscription immediately
+      await Subscription.update(
+        { status: 'cancelled', auto_renew: false },
+        { where: { id: subscription.id }, transaction: t }
+      );
+
+      // Remove user premium status
+      await User.updatePremiumStatus(userId, false, null);
+
+      // Send notification after commit
+      t.afterCommit(async () => {
+        try {
+          const { createNotification } = require('../utils/simpleNotificationHelpers');
+          await createNotification({
+            userId,
+            type: 'system',
+            content: 'Your premium subscription has been cancelled. You can purchase a new subscription anytime.',
+            metadata: { subscription_id: subscription.id }
+          });
+        } catch (notifError) {
+          console.error('Notification error:', notifError);
+        }
+      });
+    });
+
+    res.json({
+      success: true,
+      message: 'Subscription cancelled successfully. You can purchase a new subscription anytime.'
+    });
+  } catch (error) {
+    console.error('Cancel subscription error:', error);
+    res.status(500).json({ error: 'Failed to cancel subscription' });
+  }
+};
+
+// Turn off auto-renew (keep subscription until end date)
+exports.turnOffAutoRenew = async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -73,7 +137,7 @@ exports.cancelSubscription = async (req, res) => {
           await createNotification({
             userId,
             type: 'system',
-            content: 'Your subscription auto-renewal has been cancelled. You can still use premium features until the end date.',
+            content: 'Your subscription auto-renewal has been turned off. You can still use premium features until the end date.',
             metadata: { subscription_id: subscription.id }
           });
         } catch (notifError) {
@@ -84,12 +148,12 @@ exports.cancelSubscription = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Auto-renewal cancelled. Premium access will continue until end date.',
+      message: 'Auto-renewal turned off. Premium access will continue until end date.',
       end_date: subscription.end_date
     });
   } catch (error) {
-    console.error('Cancel subscription error:', error);
-    res.status(500).json({ error: 'Failed to cancel subscription' });
+    console.error('Turn off auto-renew error:', error);
+    res.status(500).json({ error: 'Failed to turn off auto-renew' });
   }
 };
 

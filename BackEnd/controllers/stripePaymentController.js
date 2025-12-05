@@ -211,10 +211,11 @@ async function handleSuccessfulPayment(session) {
         // Determine plan_type for database (monthly or yearly)
         const dbPlanType = plan_type === 'yearly' ? 'yearly' : 'monthly';
 
-        // Create subscription
+        // Create subscription with plan_duration
         const subscription = await Subscription.create({
           user_id: userId,
           plan_type: dbPlanType,
+          plan_duration: plan_type, // Store original plan (15days/30days/yearly)
           start_date: startDate,
           end_date: endDate,
           status: 'active',
@@ -338,10 +339,11 @@ exports.verifySession = async (req, res) => {
         // Use Sequelize transaction for atomicity
         const sequelize = require('../config/sequelize');
         await sequelize.transaction(async (t) => {
-          // Create subscription
+          // Create subscription with plan_duration
           const subscription = await Subscription.create({
             user_id: userId,
             plan_type: dbPlanType,
+            plan_duration: planType, // Store original plan (15days/30days/yearly)
             start_date: startDate,
             end_date: endDate,
             status: 'active',
