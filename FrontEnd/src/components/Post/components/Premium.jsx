@@ -185,10 +185,9 @@ const Premium = ({ onBack }) => {
 
           <div className="premium-container relative z-10 max-w-6xl mx-auto px-4 py-8">
             {/* Premium Header with Animation */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-cyan-500 via-blue-600 to-purple-600 rounded-3xl p-10 mb-8 shadow-2xl">
-              <div className="absolute inset-0 bg-white/5"></div>
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24"></div>
+            <div className="relative overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-10 mb-8 shadow-2xl">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl translate-y-24 -translate-x-24"></div>
               
               <div className="relative z-10 text-center">
                 <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full mb-4 animate-bounce">
