@@ -19,8 +19,8 @@ export default function SendMoneyPage() {
   const [balanceLoading, setBalanceLoading] = useState(true);
   const [receiverLoading, setReceiverLoading] = useState(true);
 
-  const MIN_AMOUNT = 10;
-  const MAX_AMOUNT = 50000;
+  const MIN_AMOUNT = 50;
+  const MAX_AMOUNT = 5000;
 
   const paymentMethods = [
     { 
@@ -260,13 +260,13 @@ export default function SendMoneyPage() {
       `}</style>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        <div className="grid lg:grid-cols-3 gap-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 relative z-10">
+        <div className="grid lg:grid-cols-3 gap-4">
           {/* Left Sidebar - Receiver & Balance Info */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-1 space-y-3">
             {/* Receiver Card */}
             {receiverInfo && (
-              <div className="rounded-2xl bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border border-white/10 p-5 backdrop-blur-xl hover:border-cyan-500/30 transition-all duration-300 shadow-xl hover:shadow-cyan-500/10 group">
+              <div className="rounded-2xl bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border border-white/10 p-4 backdrop-blur-xl hover:border-cyan-500/30 transition-all duration-300 shadow-xl hover:shadow-cyan-500/10 group">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-4">
@@ -308,7 +308,7 @@ export default function SendMoneyPage() {
             )}
 
             {/* Balance Card */}
-            <div className="rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/30 p-6 backdrop-blur-xl hover:border-cyan-500/50 transition-all duration-300 shadow-2xl shadow-cyan-500/20 relative overflow-hidden group">
+            <div className="rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/30 p-4 backdrop-blur-xl hover:border-cyan-500/50 transition-all duration-300 shadow-2xl shadow-cyan-500/20 relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
               <div className="relative">
@@ -336,7 +336,7 @@ export default function SendMoneyPage() {
             </div>
 
             {/* Info Card */}
-            <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/30 p-5 backdrop-blur-xl shadow-lg hover:shadow-blue-500/20 transition-all duration-300 group">
+            <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/30 p-4 backdrop-blur-xl shadow-lg hover:shadow-blue-500/20 transition-all duration-300 group">
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
                   <i className="fi fi-rr-info text-blue-400 text-2xl"></i>
@@ -356,13 +356,13 @@ export default function SendMoneyPage() {
 
           {/* Right Content - Transaction Form */}
           <div className="lg:col-span-2">
-            <div className="rounded-2xl bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 border border-white/10 p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+            <div className="rounded-2xl bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 border border-white/10 p-6 backdrop-blur-xl shadow-2xl relative overflow-hidden">
               {/* Decorative Elements */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -z-0"></div>
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl -z-0"></div>
               <div className="relative z-10">
               {/* Payment Methods */}
-              <div className="mb-8">
+              <div className="mb-5">
                 <div className="flex items-center gap-2 mb-4">
                   <i className="fi fi-rr-credit-card text-purple-400 text-xl"></i>
                   <label className="block text-sm font-bold text-white">Payment Method</label>
@@ -372,7 +372,7 @@ export default function SendMoneyPage() {
                     <button
                       key={method.id}
                       onClick={() => setPaymentMethod(method.id)}
-                      className={`relative p-4 rounded-xl border-2 transition-all duration-300 group ${
+                      className={`relative p-4 rounded-xl border transition-all duration-300 group ${
                         paymentMethod === method.id
                           ? 'border-emerald-500 bg-gradient-to-br from-emerald-500/10 to-green-500/10 shadow-xl shadow-emerald-500/30 scale-105'
                           : 'border-white/10 bg-slate-800/30 hover:border-white/20 hover:bg-slate-700/30'
@@ -395,7 +395,7 @@ export default function SendMoneyPage() {
               </div>
 
               {/* Amount Input */}
-              <div className="mb-8">
+              <div className="mb-5">
                 <div className="flex items-center gap-2 mb-4">
                   <i className="fi fi-rr-coins text-cyan-400 text-xl"></i>
                   <label className="block text-sm font-bold text-white">Amount</label>
@@ -409,7 +409,7 @@ export default function SendMoneyPage() {
                     value={amount}
                     onChange={handleAmountChange}
                     placeholder="0.00"
-                    className="w-full pl-12 pr-4 py-4 bg-slate-800/50 border-2 border-white/10 rounded-xl text-white text-2xl font-bold placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 focus:bg-slate-800/70 transition-all hover:border-white/20"
+                    className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border-2 border-white/10 rounded-xl text-white text-2xl font-bold placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 focus:bg-slate-800/70 transition-all hover:border-white/20"
                   />
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3">
@@ -426,7 +426,7 @@ export default function SendMoneyPage() {
               </div>
 
               {/* Notes */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <div className="flex items-center gap-2 mb-3">
                   <i className="fi fi-rr-edit text-orange-400 text-xl"></i>
                   <label className="block text-sm font-bold text-white">Note (Optional)</label>
@@ -436,7 +436,7 @@ export default function SendMoneyPage() {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Add a message... 💬"
                   maxLength={50}
-                  rows={3}
+                  rows={2}
                   className="w-full px-4 py-3 bg-slate-800/50 border-2 border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 focus:bg-slate-800/70 transition-all resize-none hover:border-white/20"
                 />
                 <div className="flex items-center justify-between mt-2">
@@ -464,7 +464,7 @@ export default function SendMoneyPage() {
               <button
                 onClick={validateAndShowConfirm}
                 disabled={loading || !amount || !receiverInfo}
-                className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-600 to-cyan-500 bg-size-200 hover:bg-pos-100 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-lg rounded-xl transition-all duration-500 shadow-2xl shadow-cyan-500/40 disabled:shadow-none hover:scale-[1.03] active:scale-[0.97] disabled:hover:scale-100 relative overflow-hidden group"
+                className="w-full py-3 bg-gradient-to-r from-cyan-500 via-blue-600 to-cyan-500 bg-size-200 hover:bg-pos-100 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-lg rounded-xl transition-all duration-500 shadow-2xl shadow-cyan-500/40 disabled:shadow-none hover:scale-[1.03] active:scale-[0.97] disabled:hover:scale-100 relative overflow-hidden group"
                 style={{ backgroundSize: '200% 100%', backgroundPosition: 'left' }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
