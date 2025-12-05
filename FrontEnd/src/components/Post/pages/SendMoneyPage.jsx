@@ -378,11 +378,6 @@ export default function SendMoneyPage() {
                           : 'border-white/10 bg-slate-800/30 hover:border-white/20 hover:bg-slate-700/30'
                       }`}
                     >
-                      {paymentMethod === method.id && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
-                          <i className="fi fi-rr-check text-white text-xs"></i>
-                        </div>
-                      )}
                       <div className="text-center relative">
                         <div className={`flex items-center justify-center h-12 transition-transform group-hover:scale-110 ${
                           paymentMethod === method.id ? 'opacity-100' : 'opacity-70'
