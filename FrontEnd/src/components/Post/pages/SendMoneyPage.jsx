@@ -188,45 +188,98 @@ export default function SendMoneyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-1/4 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"></div>
+        
+        {/* Floating Money Icons */}
+        <div className="absolute top-32 right-1/4 text-cyan-500/5 text-6xl animate-float">
+          <i className="fi fi-rr-dollar"></i>
+        </div>
+        <div className="absolute bottom-40 left-1/3 text-blue-500/5 text-5xl animate-float-delayed">
+          <i className="fi fi-rr-coins"></i>
+        </div>
+        <div className="absolute top-1/2 right-20 text-emerald-500/5 text-7xl animate-float-slow">
+          <i className="fi fi-rr-wallet"></i>
+        </div>
+      </div>
+
       {/* Header */}
-      <div className="sticky top-0 z-40 backdrop-blur-xl bg-black/80 border-b border-white/5">
+      <div className="sticky top-0 z-40 backdrop-blur-xl bg-gradient-to-r from-slate-950/95 via-slate-900/95 to-slate-950/95 border-b border-white/10 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/post')}
-                className="group h-10 w-10 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 flex items-center justify-center transition-all duration-200 border border-white/5"
+                className="group h-11 w-11 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-700/80 hover:from-slate-700/90 hover:to-slate-600/90 flex items-center justify-center transition-all duration-300 border border-white/10 shadow-lg hover:shadow-cyan-500/20 hover:scale-105"
               >
-                <i className="fi fi-br-arrow-left text-white text-lg group-hover:-translate-x-0.5 transition-transform"></i>
+                <i className="fi fi-br-arrow-left text-white text-lg group-hover:-translate-x-1 transition-transform"></i>
               </button>
               <div>
-                <h1 className="text-xl font-bold text-white">Send Money</h1>
-                <p className="text-xs text-gray-400">Quick & Secure Transfer</p>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <i className="fi fi-rr-paper-plane text-white text-sm"></i>
+                  </div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Send Money</h1>
+                </div>
+                <p className="text-xs text-gray-400 ml-10">Quick & Secure Transfer</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/5">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-emerald-300 text-xs font-medium">Secure</span>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-green-500/10 shadow-lg shadow-emerald-500/10">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50" />
+              <span className="text-emerald-300 text-xs font-semibold">Secure SSL</span>
+              <i className="fi fi-rr-shield-check text-emerald-400 text-sm"></i>
             </div>
           </div>
         </div>
       </div>
 
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        @keyframes float-delayed {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-30px) rotate(-5deg); }
+        }
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-15px) rotate(3deg); }
+        }
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+          animation: float-delayed 8s ease-in-out infinite;
+        }
+        .animate-float-slow {
+          animation: float-slow 10s ease-in-out infinite;
+        }
+      `}</style>
+
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Sidebar - Receiver & Balance Info */}
           <div className="lg:col-span-1 space-y-4">
             {/* Receiver Card */}
             {receiverInfo && (
-              <div className="rounded-2xl bg-slate-900/50 border border-white/5 p-5 backdrop-blur-sm hover:border-white/10 transition-all duration-200">
-                <div className="flex items-center gap-2 mb-4">
-                  <i className="fi fi-rr-paper-plane text-cyan-400 text-sm"></i>
-                  <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Sending to</div>
+              <div className="rounded-2xl bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border border-white/10 p-5 backdrop-blur-xl hover:border-cyan-500/30 transition-all duration-300 shadow-xl hover:shadow-cyan-500/10 group">
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
+                      <i className="fi fi-rr-paper-plane text-white text-xs"></i>
+                    </div>
+                    <div className="text-gray-300 text-xs font-bold uppercase tracking-wider">Sending to</div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="relative group">
+                <div className="flex items-center gap-3 relative">
+                  <div className="relative">
                     {(receiverInfo.profile_picture || receiverInfo.profilePicUrl) ? (
                       <img
                         src={receiverInfo.profile_picture || receiverInfo.profilePicUrl}
@@ -243,10 +296,10 @@ export default function SendMoneyPage() {
                         {(receiverInfo.full_name || receiverInfo.name || 'U').charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-slate-900 shadow-lg"></div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full border-2 border-slate-900 shadow-lg animate-pulse"></div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-semibold text-lg truncate">{receiverInfo.full_name || receiverInfo.name}</h3>
+                    <h3 className="text-white font-bold text-lg truncate">{receiverInfo.full_name || receiverInfo.name}</h3>
                     {receiverInfo.username && (
                       <p className="text-gray-400 text-sm">@{receiverInfo.username}</p>
                     )}
@@ -255,42 +308,55 @@ export default function SendMoneyPage() {
                     )}
                   </div>
                 </div>
+                </div>
               </div>
             )}
 
             {/* Balance Card */}
-            <div className="rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/20 p-5 backdrop-blur-sm hover:border-cyan-500/30 transition-all duration-200 shadow-lg shadow-cyan-500/5">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Available Balance</span>
-                <button
-                  onClick={fetchBalance}
-                  disabled={balanceLoading}
-                  className="text-cyan-400 hover:text-cyan-300 transition-colors disabled:opacity-50"
-                >
-                  <i className={`fi fi-rr-refresh text-sm ${balanceLoading ? 'animate-spin' : ''}`}></i>
-                </button>
-              </div>
-              {balanceLoading ? (
-                <div className="h-8 bg-white/5 rounded-lg animate-pulse"></div>
-              ) : (
-                <div className="text-2xl font-bold text-white">
-                  ৳{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            <div className="rounded-2xl bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/30 p-6 backdrop-blur-xl hover:border-cyan-500/50 transition-all duration-300 shadow-2xl shadow-cyan-500/20 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl"></div>
+              <div className="relative">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-green-600 rounded-lg flex items-center justify-center">
+                      <i className="fi fi-rr-wallet text-white text-xs"></i>
+                    </div>
+                    <span className="text-gray-300 text-xs font-bold uppercase tracking-wider">Available Balance</span>
+                  </div>
+                  <button
+                    onClick={fetchBalance}
+                    disabled={balanceLoading}
+                    className="w-8 h-8 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 flex items-center justify-center text-cyan-400 hover:text-cyan-300 transition-all disabled:opacity-50 hover:scale-110 active:scale-95"
+                  >
+                    <i className={`fi fi-rr-refresh text-sm ${balanceLoading ? 'animate-spin' : ''}`}></i>
+                  </button>
                 </div>
-              )}
+                {balanceLoading ? (
+                  <div className="h-10 bg-white/5 rounded-xl animate-pulse"></div>
+                ) : (
+                  <div className="text-3xl font-black bg-gradient-to-r from-white via-cyan-100 to-white bg-clip-text text-transparent">
+                    ৳{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Info Card */}
-            <div className="rounded-2xl bg-blue-500/5 border border-blue-500/20 p-4">
+            <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/30 p-5 backdrop-blur-xl shadow-lg hover:shadow-blue-500/20 transition-all duration-300 group">
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <i className="fi fi-rr-info text-blue-400 text-sm"></i>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <i className="fi fi-rr-info text-white"></i>
                   </div>
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-blue-300 mb-1">Transaction Info</h4>
+                  <h4 className="text-sm font-bold text-blue-300 mb-2 flex items-center gap-2">
+                    <i className="fi fi-rr-shield-check text-blue-400 text-xs"></i>
+                    Transaction Info
+                  </h4>
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    Transfers are instant and secure. You can send between ৳{MIN_AMOUNT} - ৳{MAX_AMOUNT.toLocaleString()}.
+                    Transfers are <span className="text-emerald-400 font-semibold">instant and secure</span>. You can send between <span className="text-cyan-400 font-semibold">৳{MIN_AMOUNT}</span> - <span className="text-cyan-400 font-semibold">৳{MAX_AMOUNT.toLocaleString()}</span>.
                   </p>
                 </div>
               </div>
@@ -299,23 +365,39 @@ export default function SendMoneyPage() {
 
           {/* Right Content - Transaction Form */}
           <div className="lg:col-span-2">
-            <div className="rounded-2xl bg-slate-900/50 border border-white/5 p-6 backdrop-blur-sm">
+            <div className="rounded-2xl bg-gradient-to-br from-slate-900/90 via-slate-800/90 to-slate-900/90 border border-white/10 p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+              {/* Decorative Elements */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -z-0"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl -z-0"></div>
+              <div className="relative z-10">
               {/* Payment Methods */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-300 mb-3">Payment Method</label>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                    <i className="fi fi-rr-credit-card text-white text-xs"></i>
+                  </div>
+                  <label className="block text-sm font-bold text-white">Payment Method</label>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
                   {paymentMethods.map((method) => (
                     <button
                       key={method.id}
                       onClick={() => setPaymentMethod(method.id)}
-                      className={`relative p-3 rounded-xl border-2 transition-all duration-200 ${
+                      className={`relative p-4 rounded-xl border-2 transition-all duration-300 group ${
                         paymentMethod === method.id
-                          ? 'border-emerald-500 bg-emerald-500/5 shadow-lg shadow-emerald-500/20'
-                          : 'border-white/5 bg-transparent hover:border-white/10'
+                          ? 'border-emerald-500 bg-gradient-to-br from-emerald-500/10 to-green-500/10 shadow-xl shadow-emerald-500/30 scale-105'
+                          : 'border-white/10 bg-slate-800/30 hover:border-white/20 hover:bg-slate-700/30'
                       }`}
                     >
+                      {paymentMethod === method.id && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
+                          <i className="fi fi-rr-check text-white text-xs"></i>
+                        </div>
+                      )}
                       <div className="text-center relative">
-                        <div className={`flex items-center justify-center h-12 ${paymentMethod === method.id ? 'opacity-100' : 'opacity-70'}`}>
+                        <div className={`flex items-center justify-center h-12 transition-transform group-hover:scale-110 ${
+                          paymentMethod === method.id ? 'opacity-100' : 'opacity-70'
+                        }`}>
                           <img 
                             src={method.logo} 
                             alt={method.name}
@@ -329,43 +411,58 @@ export default function SendMoneyPage() {
               </div>
 
               {/* Amount Input */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-300 mb-3">Amount</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-gray-400">৳</span>
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
+                    <i className="fi fi-rr-coins text-white text-xs"></i>
+                  </div>
+                  <label className="block text-sm font-bold text-white">Amount</label>
+                </div>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <span className="text-2xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">৳</span>
+                  </div>
                   <input
                     type="text"
                     value={amount}
                     onChange={handleAmountChange}
                     placeholder="0.00"
-                    className="w-full pl-11 pr-4 py-3.5 bg-slate-800/50 border border-white/10 rounded-xl text-white text-xl font-bold placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:bg-slate-800/70 transition-all"
+                    className="w-full pl-12 pr-4 py-4 bg-slate-800/50 border-2 border-white/10 rounded-xl text-white text-2xl font-bold placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 focus:bg-slate-800/70 transition-all hover:border-white/20"
                   />
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {quickAmounts.map((quickAmount) => (
                     <button
                       key={quickAmount}
                       onClick={() => setAmount(quickAmount.toString())}
-                      className="px-4 py-2 bg-slate-800/50 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-500/50 rounded-lg text-sm text-gray-300 hover:text-cyan-400 font-medium transition-all hover:scale-105 active:scale-95"
+                      className="px-5 py-2.5 bg-gradient-to-br from-slate-800/60 to-slate-700/60 hover:from-cyan-500/20 hover:to-blue-500/20 border border-white/10 hover:border-cyan-500/50 rounded-xl text-sm text-gray-300 hover:text-cyan-400 font-semibold transition-all hover:scale-110 active:scale-95 shadow-lg hover:shadow-cyan-500/20"
                     >
-                      +৳{quickAmount}
+                      <i className="fi fi-rr-plus text-xs mr-1"></i>৳{quickAmount}
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Notes */}
-              <div className="mb-5">
-                <label className="block text-sm font-semibold text-gray-300 mb-2">Note (Optional)</label>
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+                    <i className="fi fi-rr-edit text-white text-xs"></i>
+                  </div>
+                  <label className="block text-sm font-bold text-white">Note (Optional)</label>
+                </div>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Add a message..."
+                  placeholder="Add a message... 💬"
                   maxLength={50}
                   rows={3}
-                  className="w-full px-4 py-3 bg-slate-800/50 border border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:bg-slate-800/70 transition-all resize-none"
+                  className="w-full px-4 py-3 bg-slate-800/50 border-2 border-white/10 rounded-xl text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 focus:bg-slate-800/70 transition-all resize-none hover:border-white/20"
                 />
-                <div className="text-xs text-gray-500 text-right mt-1">{notes.length}/50</div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-gray-500">✨ Add a personal touch</span>
+                  <span className="text-xs text-gray-500 font-medium">{notes.length}/50</span>
+                </div>
               </div>
 
               {/* Error/Success Messages */}
@@ -387,20 +484,24 @@ export default function SendMoneyPage() {
               <button
                 onClick={validateAndShowConfirm}
                 disabled={loading || !amount || !receiverInfo}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-cyan-500/25 disabled:shadow-none hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100"
+                className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-600 to-cyan-500 bg-size-200 hover:bg-pos-100 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-bold text-lg rounded-xl transition-all duration-500 shadow-2xl shadow-cyan-500/40 disabled:shadow-none hover:scale-[1.03] active:scale-[0.97] disabled:hover:scale-100 relative overflow-hidden group"
+                style={{ backgroundSize: '200% 100%', backgroundPosition: 'left' }}
               >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                 {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <i className="fi fi-rr-spinner animate-spin"></i>
+                  <span className="flex items-center justify-center gap-3 relative z-10">
+                    <i className="fi fi-rr-spinner animate-spin text-xl"></i>
                     Processing...
                   </span>
                 ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    <i className="fi fi-rr-paper-plane"></i>
+                  <span className="flex items-center justify-center gap-3 relative z-10">
+                    <i className="fi fi-rr-paper-plane text-xl"></i>
                     Send Money
+                    <i className="fi fi-rr-arrow-right text-lg group-hover:translate-x-1 transition-transform"></i>
                   </span>
                 )}
               </button>
+              </div>
             </div>
           </div>
         </div>
@@ -408,72 +509,94 @@ export default function SendMoneyPage() {
 
       {/* Confirmation Modal */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-slate-900 rounded-2xl border border-white/10 max-w-md w-full shadow-2xl">
-            <div className="p-6 border-b border-white/5">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-cyan-500/10 flex items-center justify-center">
-                  <i className="fi fi-rr-shield-check text-cyan-400 text-xl"></i>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Confirm Transaction</h3>
-                  <p className="text-sm text-gray-400">Review before sending</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {/* Amount */}
-              <div className="text-center py-4">
-                <div className="text-4xl font-bold text-white mb-1">
-                  ৳{parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                </div>
-                <div className="text-sm text-gray-400">via {selectedMethod.name}</div>
-              </div>
-
-              {/* Details */}
-              <div className="space-y-3 bg-slate-800/30 rounded-xl p-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">To</span>
-                  <span className="text-white text-sm font-medium">{receiverInfo?.full_name}</span>
-                </div>
-                {notes && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Note</span>
-                    <span className="text-white text-sm max-w-[200px] truncate">{notes}</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fadeIn">
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl border border-white/20 max-w-md w-full shadow-2xl shadow-cyan-500/20 animate-scaleIn relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5"></div>
+            <div className="relative z-10">
+              <div className="p-6 border-b border-white/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
+                    <i className="fi fi-rr-shield-check text-white text-2xl"></i>
                   </div>
-                )}
-                <div className="flex justify-between pt-3 border-t border-white/5">
-                  <span className="text-gray-400 text-sm">New Balance</span>
-                  <span className="text-cyan-400 text-sm font-semibold">
-                    ৳{(balance - parseFloat(amount)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </span>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Confirm Transaction</h3>
+                    <p className="text-sm text-gray-400">Review details before sending</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-6 border-t border-white/5 flex gap-3">
-              <button
-                onClick={() => setShowConfirm(false)}
-                disabled={loading}
-                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white font-medium rounded-xl transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSend}
-                disabled={loading}
-                className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-all"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <i className="fi fi-rr-spinner animate-spin"></i>
-                    Sending...
-                  </span>
-                ) : (
-                  'Confirm'
-                )}
-              </button>
+              <div className="p-6 space-y-4">
+                {/* Amount */}
+                <div className="text-center py-6 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-2xl border border-cyan-500/20">
+                  <div className="text-5xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+                    ৳{parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                    <span>via</span>
+                    <div className="flex items-center gap-1 px-3 py-1 bg-slate-800/50 rounded-lg">
+                      <i className="fi fi-rr-credit-card text-xs text-emerald-400"></i>
+                      <span className="font-semibold text-white">{selectedMethod.name}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details */}
+                <div className="space-y-3 bg-slate-800/50 rounded-xl p-5 border border-white/5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm flex items-center gap-2">
+                      <i className="fi fi-rr-user text-xs"></i>
+                      To
+                    </span>
+                    <span className="text-white text-sm font-semibold">{receiverInfo?.full_name}</span>
+                  </div>
+                  {notes && (
+                    <div className="flex justify-between items-start">
+                      <span className="text-gray-400 text-sm flex items-center gap-2">
+                        <i className="fi fi-rr-comment-alt text-xs"></i>
+                        Note
+                      </span>
+                      <span className="text-white text-sm max-w-[200px] text-right">{notes}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                    <span className="text-gray-400 text-sm flex items-center gap-2">
+                      <i className="fi fi-rr-wallet text-xs"></i>
+                      New Balance
+                    </span>
+                    <span className="text-emerald-400 text-base font-bold">
+                      ৳{(balance - parseFloat(amount)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-white/10 flex gap-3">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  disabled={loading}
+                  className="flex-1 py-3.5 bg-slate-800/80 hover:bg-slate-700/80 disabled:opacity-50 text-white font-semibold rounded-xl transition-all hover:scale-105 active:scale-95 border border-white/10"
+                >
+                  <i className="fi fi-rr-cross mr-2"></i>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSend}
+                  disabled={loading}
+                  className="flex-1 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 text-white font-bold rounded-xl transition-all shadow-lg shadow-cyan-500/30 hover:scale-105 active:scale-95 hover:shadow-xl hover:shadow-cyan-500/40"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <i className="fi fi-rr-spinner animate-spin"></i>
+                      Sending...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <i className="fi fi-rr-check"></i>
+                      Confirm & Send
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
