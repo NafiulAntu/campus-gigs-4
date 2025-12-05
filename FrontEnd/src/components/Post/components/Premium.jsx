@@ -157,87 +157,191 @@ const Premium = ({ onBack }) => {
         </div>
         
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="premium-container">
-            <div className="premium-header">
-              <h1>🎉 You're Premium!</h1>
-              <p>Enjoying all the exclusive features</p>
+        <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative">
+          {/* Decorative Background Elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-20 left-10 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute top-40 right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
+            
+            {/* Floating Crown Icons */}
+            <div className="absolute top-32 right-1/4 text-yellow-500/5 text-6xl animate-float">
+              <i className="fi fi-rr-crown"></i>
+            </div>
+            <div className="absolute bottom-40 left-1/4 text-cyan-500/5 text-5xl" style={{animation: 'float 8s ease-in-out infinite'}}>
+              <i className="fi fi-rr-diamond"></i>
+            </div>
+            <div className="absolute top-1/2 right-20 text-purple-500/5 text-7xl" style={{animation: 'float 10s ease-in-out infinite'}}>
+              <i className="fi fi-rr-star"></i>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes float {
+              0%, 100% { transform: translateY(0px) rotate(0deg); }
+              50% { transform: translateY(-20px) rotate(5deg); }
+            }
+          `}</style>
+
+          <div className="premium-container relative z-10 max-w-6xl mx-auto px-4 py-8">
+            {/* Premium Header with Animation */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-cyan-500 via-blue-600 to-purple-600 rounded-3xl p-10 mb-8 shadow-2xl">
+              <div className="absolute inset-0 bg-white/5"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24"></div>
+              
+              <div className="relative z-10 text-center">
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full mb-4 animate-bounce">
+                  <i className="fi fi-br-crown text-yellow-300 text-5xl"></i>
+                </div>
+                <h1 className="text-5xl font-black text-white mb-3 drop-shadow-lg">🎉 You're Premium!</h1>
+                <p className="text-xl text-white/90 font-medium">Enjoying all the exclusive features</p>
+                <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm rounded-full">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-white font-semibold text-sm">ACTIVE SUBSCRIPTION</span>
+                </div>
+              </div>
             </div>
 
-        <div className="subscription-details">
-          <div className="detail-card">
-            <h3>Current Plan</h3>
-            <p className="plan-type">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-cyan-500/20 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i className="fi fi-rr-crown text-white text-xl"></i>
+              </div>
+              <h3 className="text-lg font-bold text-white">Current Plan</h3>
+            </div>
+            <p className="text-2xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-2">
               {subscription.subscription.plan_name || 'Premium Plan'}
             </p>
-            <p className="price">
+            <p className="text-3xl font-bold text-white">
               ৳{subscription.subscription.amount || 
                 (subscription.subscription.plan_type === 'yearly' ? '1,500' : '150')}
             </p>
           </div>
 
-          <div className="detail-card status-card">
-            <h3>Subscription Status</h3>
-            <div className={`status-badge ${subscription.subscription.status}`}>
-              {subscription.subscription.status === 'active' ? '✓ ACTIVE' : 
-               subscription.subscription.status === 'completed' ? '✓ COMPLETED' :
-               subscription.subscription.status.toUpperCase()}
+          <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-2xl p-6 shadow-xl hover:shadow-emerald-500/30 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i className="fi fi-rr-shield-check text-white text-xl"></i>
+              </div>
+              <h3 className="text-lg font-bold text-white">Subscription Status</h3>
             </div>
-            <p className="expiry">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
+                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                <span className="text-emerald-300 font-bold text-lg">
+                  {subscription.subscription.status === 'active' ? '✓ ACTIVE' : 
+                   subscription.subscription.status === 'completed' ? '✓ COMPLETED' :
+                   subscription.subscription.status.toUpperCase()}
+                </span>
+              </div>
+            </div>
+            <p className="text-white/80 text-base mb-2 flex items-center gap-2">
+              <i className="fi fi-rr-clock text-emerald-400"></i>
               {subscription.subscription.days_remaining > 0 
                 ? `${subscription.subscription.days_remaining} days remaining`
                 : 'Expired'}
             </p>
             {subscription.subscription.expiry_date && (
-              <p className="expiry-date" style={{ fontSize: '0.875rem', marginTop: '0.5rem', opacity: 0.8 }}>
+              <p className="text-white/60 text-sm flex items-center gap-2">
+                <i className="fi fi-rr-calendar text-emerald-400 text-xs"></i>
                 Valid until {new Date(subscription.subscription.expiry_date).toLocaleDateString()}
               </p>
             )}
           </div>
 
-          <div className="detail-card">
-            <h3>Auto-Renewal</h3>
-            <p className={subscription.subscription.auto_renew ? 'enabled' : 'disabled'}>
-              {subscription.subscription.auto_renew ? '✓ Enabled' : '✗ Disabled'}
+          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i className="fi fi-rr-refresh text-white text-xl"></i>
+              </div>
+              <h3 className="text-lg font-bold text-white">Auto-Renewal</h3>
+            </div>
+            <p className={`text-2xl font-bold mb-4 flex items-center gap-2 ${
+              subscription.subscription.auto_renew ? 'text-green-400' : 'text-gray-400'
+            }`}>
+              {subscription.subscription.auto_renew ? (
+                <><i className="fi fi-sr-check-circle"></i> Enabled</>
+              ) : (
+                <><i className="fi fi-sr-cross-circle"></i> Disabled</>
+              )}
             </p>
             {subscription.subscription.auto_renew ? (
-              <button onClick={handleCancelSubscription} className="cancel-btn">
+              <button 
+                onClick={handleCancelSubscription} 
+                className="w-full bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/30 hover:border-red-500/50 text-red-400 font-bold py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/20 flex items-center justify-center gap-2"
+              >
+                <i className="fi fi-rr-cross-circle"></i>
                 Turn Off Auto-Renewal
               </button>
             ) : (
-              <button onClick={handleReactivate} className="reactivate-btn">
+              <button 
+                onClick={handleReactivate} 
+                className="w-full bg-green-500/20 hover:bg-green-500/30 border-2 border-green-500/30 hover:border-green-500/50 text-green-400 font-bold py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-green-500/20 flex items-center justify-center gap-2"
+              >
+                <i className="fi fi-rr-refresh"></i>
                 Turn On Auto-Renewal
               </button>
             )}
           </div>
         </div>
 
-        <div className="features-section">
-          <h2>Your Premium Features</h2>
-          <div className="features-grid">
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Unlimited Posts</span>
+        <div className="bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
+              <i className="fi fi-br-sparkles text-white text-2xl"></i>
             </div>
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Priority Placement</span>
+            <h2 className="text-3xl font-black text-white">Your Premium Features</h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-green-500/20 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-infinity text-white text-xl"></i>
+              </div>
+              <span className="text-green-400 text-2xl mb-2 block">✓</span>
+              <span className="text-white font-bold text-lg block">Unlimited Posts</span>
+              <p className="text-gray-400 text-sm mt-2">Create as many posts as you want</p>
             </div>
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Advanced Analytics</span>
+            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/20 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-star text-white text-xl"></i>
+              </div>
+              <span className="text-blue-400 text-2xl mb-2 block">✓</span>
+              <span className="text-white font-bold text-lg block">Priority Placement</span>
+              <p className="text-gray-400 text-sm mt-2">Your posts appear at the top</p>
             </div>
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Premium Badge</span>
+            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-chart-line-up text-white text-xl"></i>
+              </div>
+              <span className="text-purple-400 text-2xl mb-2 block">✓</span>
+              <span className="text-white font-bold text-lg block">Advanced Analytics</span>
+              <p className="text-gray-400 text-sm mt-2">Track your post performance</p>
             </div>
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Read Receipts</span>
+            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-badge-check text-white text-xl"></i>
+              </div>
+              <span className="text-orange-400 text-2xl mb-2 block">✓</span>
+              <span className="text-white font-bold text-lg block">Premium Badge</span>
+              <p className="text-gray-400 text-sm mt-2">Stand out with verified badge</p>
             </div>
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Pin Posts</span>
+            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-cyan-500/20 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-teal-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-eye text-white text-xl"></i>
+              </div>
+              <span className="text-cyan-400 text-2xl mb-2 block">✓</span>
+              <span className="text-white font-bold text-lg block">Read Receipts</span>
+              <p className="text-gray-400 text-sm mt-2">See who viewed your posts</p>
+            </div>
+            <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 border border-white/10 rounded-xl p-5 hover:scale-105 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/20 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-rr-thumbtack text-white text-xl"></i>
+              </div>
+              <span className="text-pink-400 text-2xl mb-2 block">✓</span>
+              <span className="text-white font-bold text-lg block">Pin Posts</span>
+              <p className="text-gray-400 text-sm mt-2">Keep important posts at top</p>
             </div>
           </div>
         </div>
