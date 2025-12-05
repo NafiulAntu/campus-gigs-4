@@ -308,7 +308,6 @@ export default function SendMoneyPage() {
                     )}
                   </div>
                 </div>
-                </div>
               </div>
             )}
 
