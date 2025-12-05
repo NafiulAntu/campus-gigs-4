@@ -159,53 +159,100 @@ const Premium = ({ onBack }) => {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="premium-container">
-            <div className="premium-header">
-              <h1>🎉 You're Premium!</h1>
-              <p>Enjoying all the exclusive features</p>
+            {/* Premium Header with Animation */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-primary-teal via-blue-500 to-purple-600 rounded-2xl p-8 mb-6 shadow-2xl">
+              <div className="absolute inset-0 bg-white/5"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24"></div>
+              
+              <div className="relative z-10 text-center">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-4 animate-bounce">
+                  <i className="fi fi-br-crown text-white text-4xl"></i>
+                </div>
+                <h1 className="text-4xl font-bold text-white mb-3 animate-fade-in">
+                  🎉 You're Premium!
+                </h1>
+                <p className="text-lg text-white/90 mb-6">
+                  Enjoying all the exclusive features
+                </p>
+                <div className="flex items-center justify-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 w-fit mx-auto">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-semibold text-white">Active Subscription</span>
+                </div>
+              </div>
             </div>
 
         <div className="subscription-details">
-          <div className="detail-card">
-            <h3>Current Plan</h3>
-            <p className="plan-type">
+          <div className="detail-card bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 hover:border-primary-teal/50 transition-all duration-300 hover:shadow-xl hover:scale-105">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-teal to-blue-500 rounded-lg flex items-center justify-center">
+                <i className="fi fi-rr-crown text-white text-lg"></i>
+              </div>
+              <h3 className="text-lg font-bold text-white">Current Plan</h3>
+            </div>
+            <p className="plan-type text-2xl font-bold bg-gradient-to-r from-primary-teal to-blue-400 bg-clip-text text-transparent mb-2">
               {subscription.subscription.plan_name || 'Premium Plan'}
             </p>
-            <p className="price">
+            <p className="price text-3xl font-extrabold text-white">
               ৳{subscription.subscription.amount || 
                 (subscription.subscription.plan_type === 'yearly' ? '1,500' : '150')}
             </p>
           </div>
 
-          <div className="detail-card status-card">
-            <h3>Subscription Status</h3>
-            <div className={`status-badge ${subscription.subscription.status}`}>
+          <div className="detail-card status-card bg-gradient-to-br from-green-500/20 to-emerald-600/10 backdrop-blur-sm border border-green-500/30 hover:border-green-400/50 transition-all duration-300 hover:shadow-xl hover:shadow-green-500/20">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                <i className="fi fi-rr-check text-white text-lg"></i>
+              </div>
+              <h3 className="text-lg font-bold text-white">Subscription Status</h3>
+            </div>
+            <div className={`status-badge ${subscription.subscription.status} inline-flex items-center gap-2 px-4 py-2 rounded-full font-bold text-lg mb-3`}>
+              <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
               {subscription.subscription.status === 'active' ? '✓ ACTIVE' : 
                subscription.subscription.status === 'completed' ? '✓ COMPLETED' :
                subscription.subscription.status.toUpperCase()}
             </div>
-            <p className="expiry">
+            <p className="expiry text-white/80 text-base font-medium">
               {subscription.subscription.days_remaining > 0 
-                ? `${subscription.subscription.days_remaining} days remaining`
-                : 'Expired'}
+                ? `⏰ ${subscription.subscription.days_remaining} days remaining`
+                : '⚠️ Expired'}
             </p>
             {subscription.subscription.expiry_date && (
-              <p className="expiry-date" style={{ fontSize: '0.875rem', marginTop: '0.5rem', opacity: 0.8 }}>
-                Valid until {new Date(subscription.subscription.expiry_date).toLocaleDateString()}
+              <p className="expiry-date text-sm text-white/60 mt-2 flex items-center gap-2">
+                <i className="fi fi-rr-calendar text-xs"></i>
+                Valid until {new Date(subscription.subscription.expiry_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               </p>
             )}
           </div>
 
-          <div className="detail-card">
-            <h3>Auto-Renewal</h3>
-            <p className={subscription.subscription.auto_renew ? 'enabled' : 'disabled'}>
-              {subscription.subscription.auto_renew ? '✓ Enabled' : '✗ Disabled'}
+          <div className="detail-card bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 hover:border-primary-teal/50 transition-all duration-300 hover:shadow-xl">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                <i className="fi fi-rr-refresh text-white text-lg"></i>
+              </div>
+              <h3 className="text-lg font-bold text-white">Auto-Renewal</h3>
+            </div>
+            <p className={`${subscription.subscription.auto_renew ? 'text-green-400' : 'text-gray-400'} text-xl font-bold mb-4 flex items-center gap-2`}>
+              {subscription.subscription.auto_renew ? (
+                <>
+                  <i className="fi fi-sr-check-circle"></i>
+                  Enabled
+                </>
+              ) : (
+                <>
+                  <i className="fi fi-sr-cross-circle"></i>
+                  Disabled
+                </>
+              )}
             </p>
             {subscription.subscription.auto_renew ? (
-              <button onClick={handleCancelSubscription} className="cancel-btn">
+              <button onClick={handleCancelSubscription} className="cancel-btn w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 hover:border-red-500/50 font-semibold py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/20">
+                <i className="fi fi-rr-cross-circle mr-2"></i>
                 Turn Off Auto-Renewal
               </button>
             ) : (
-              <button onClick={handleReactivate} className="reactivate-btn">
+              <button onClick={handleReactivate} className="reactivate-btn w-full bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30 hover:border-green-500/50 font-semibold py-3 px-4 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-green-500/20">
+                <i className="fi fi-rr-refresh mr-2"></i>
                 Turn On Auto-Renewal
               </button>
             )}
@@ -213,31 +260,60 @@ const Premium = ({ onBack }) => {
         </div>
 
         <div className="features-section">
-          <h2>Your Premium Features</h2>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
+              <i className="fi fi-br-sparkles text-white text-2xl"></i>
+            </div>
+            <h2 className="text-2xl font-bold text-white">Your Premium Features</h2>
+          </div>
           <div className="features-grid">
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Unlimited Posts</span>
+            <div className="feature-item active group hover:scale-105 transition-transform duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-br-infinity text-white text-xl"></i>
+              </div>
+              <span className="icon text-green-400 text-2xl mb-2">✓</span>
+              <span className="font-semibold text-white">Unlimited Posts</span>
+              <p className="text-sm text-gray-400 mt-1">Create as many posts as you want</p>
             </div>
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Priority Placement</span>
+            <div className="feature-item active group hover:scale-105 transition-transform duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-br-star text-white text-xl"></i>
+              </div>
+              <span className="icon text-blue-400 text-2xl mb-2">✓</span>
+              <span className="font-semibold text-white">Priority Placement</span>
+              <p className="text-sm text-gray-400 mt-1">Your posts appear at the top</p>
             </div>
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Advanced Analytics</span>
+            <div className="feature-item active group hover:scale-105 transition-transform duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-br-chart-line-up text-white text-xl"></i>
+              </div>
+              <span className="icon text-purple-400 text-2xl mb-2">✓</span>
+              <span className="font-semibold text-white">Advanced Analytics</span>
+              <p className="text-sm text-gray-400 mt-1">Track your post performance</p>
             </div>
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Premium Badge</span>
+            <div className="feature-item active group hover:scale-105 transition-transform duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-br-badge-check text-white text-xl"></i>
+              </div>
+              <span className="icon text-orange-400 text-2xl mb-2">✓</span>
+              <span className="font-semibold text-white">Premium Badge</span>
+              <p className="text-sm text-gray-400 mt-1">Stand out with verified badge</p>
             </div>
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Read Receipts</span>
+            <div className="feature-item active group hover:scale-105 transition-transform duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-teal-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-br-eye text-white text-xl"></i>
+              </div>
+              <span className="icon text-cyan-400 text-2xl mb-2">✓</span>
+              <span className="font-semibold text-white">Read Receipts</span>
+              <p className="text-sm text-gray-400 mt-1">See who viewed your posts</p>
             </div>
-            <div className="feature-item active">
-              <span className="icon">✓</span>
-              <span>Pin Posts</span>
+            <div className="feature-item active group hover:scale-105 transition-transform duration-300">
+              <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-rose-500 rounded-xl flex items-center justify-center mb-3 group-hover:rotate-12 transition-transform">
+                <i className="fi fi-br-headset text-white text-xl"></i>
+              </div>
+              <span className="icon text-pink-400 text-2xl mb-2">✓</span>
+              <span className="font-semibold text-white">Priority Support</span>
+              <p className="text-sm text-gray-400 mt-1">Get help faster from our team</p>
             </div>
           </div>
         </div>
@@ -269,9 +345,17 @@ const Premium = ({ onBack }) => {
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="premium-container">
-          <div className="premium-hero">
-            <h1>Upgrade to Premium</h1>
-            <p>Unlock powerful features to grow your presence on Campus Gigs</p>
+          <div className="premium-hero relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10"></div>
+            <div className="absolute top-10 right-10 w-32 h-32 bg-cyan-500/20 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-10 left-10 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl"></div>
+            <div className="relative z-10">
+              <div className="inline-block bg-gradient-to-r from-cyan-500 to-blue-500 p-4 rounded-2xl mb-4 animate-bounce">
+                <i className="fi fi-br-crown text-white text-3xl"></i>
+              </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-3">Upgrade to Premium</h1>
+              <p className="text-gray-300 text-lg">Unlock powerful features to grow your presence on Campus Gigs</p>
+            </div>
           </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -329,10 +413,12 @@ const Premium = ({ onBack }) => {
 
       <div className="pricing-cards">
         {/* Free Plan */}
-        <div className="pricing-card free-plan">
-          <div className="plan-badge">Free</div>
+        <div className="pricing-card free-plan group hover:scale-105 transition-all duration-300">
+          <div className="plan-badge bg-gradient-to-r from-gray-600 to-gray-700">
+            <i className="fi fi-br-circle-small"></i> Free
+          </div>
           <div className="plan-header">
-            <div className="plan-icon">
+            <div className="plan-icon bg-gradient-to-br from-gray-400 to-gray-600">
               <i className="fi fi-br-rocket"></i>
             </div>
             <h3>Free</h3>
@@ -361,23 +447,23 @@ const Premium = ({ onBack }) => {
         </div>
 
         {/* 30 Days Plan */}
-        <div className="pricing-card premium-plan featured">
-          <div className="plan-badge popular">
-            <i className="fi fi-br-crown"></i> Most Popular
+        <div className="pricing-card premium-plan featured group hover:scale-105 transition-all duration-300 shadow-2xl shadow-cyan-500/20">
+          <div className="plan-badge popular bg-gradient-to-r from-yellow-400 to-orange-500">
+            <i className="fi fi-br-crown animate-pulse"></i> Most Popular
           </div>
           <div className="plan-header">
-            <div className="plan-icon">
+            <div className="plan-icon bg-gradient-to-br from-cyan-400 to-blue-600">
               <i className="fi fi-br-diamond"></i>
             </div>
-            <h3>30 Days</h3>
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">30 Days</h3>
             <div className="price">
-              <span className="currency">৳</span>
-              <span className="amount">150</span>
-              <span className="period">/month</span>
+              <span className="currency text-cyan-400">৳</span>
+              <span className="amount text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">150</span>
+              <span className="period text-gray-400">/month</span>
             </div>
-            <div className="savings">
-              <i className="fi fi-br-piggy-bank"></i>
-              Save ৳99!
+            <div className="savings bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30">
+              <i className="fi fi-br-piggy-bank text-green-400"></i>
+              <span className="text-green-400 font-semibold">Save ৳99!</span>
             </div>
           </div>
 
@@ -394,21 +480,21 @@ const Premium = ({ onBack }) => {
           <button 
             onClick={() => handleUpgrade('30days')}
             disabled={loading || (subscription && subscription.subscription?.plan_type === '30days')}
-            className={`upgrade-btn premium ${subscription?.subscription?.plan_type === '30days' ? 'completed' : ''}`}
+            className={`upgrade-btn premium ${subscription?.subscription?.plan_type === '30days' ? 'completed' : ''} group-hover:shadow-xl group-hover:shadow-cyan-500/30 transition-all`}
           >
             {subscription?.subscription?.plan_type === '30days' ? (
               <>
-                <i className="fi fi-br-check-circle"></i>
+                <i className="fi fi-br-check-circle mr-2"></i>
                 COMPLETED
               </>
             ) : loading ? (
               <>
-                <i className="fi fi-rr-spinner animate-spin"></i>
+                <i className="fi fi-rr-spinner animate-spin mr-2"></i>
                 Processing...
               </>
             ) : (
               <>
-                <i className="fi fi-br-rocket-lunch"></i>
+                <i className="fi fi-br-rocket-lunch mr-2"></i>
                 Get Premium
               </>
             )}
@@ -416,17 +502,19 @@ const Premium = ({ onBack }) => {
         </div>
 
         {/* 15 Days Plan */}
-        <div className="pricing-card starter-plan">
-          <div className="plan-badge">Try Premium</div>
+        <div className="pricing-card starter-plan group hover:scale-105 transition-all duration-300">
+          <div className="plan-badge bg-gradient-to-r from-blue-600 to-indigo-600">
+            <i className="fi fi-br-sparkles"></i> Try Premium
+          </div>
           <div className="plan-header">
-            <div className="plan-icon">
+            <div className="plan-icon bg-gradient-to-br from-blue-400 to-indigo-600">
               <i className="fi fi-br-star"></i>
             </div>
-            <h3>15 Days</h3>
+            <h3 className="text-2xl font-bold text-white">15 Days</h3>
             <div className="price">
-              <span className="currency">৳</span>
-              <span className="amount">99</span>
-              <span className="period">/15 days</span>
+              <span className="currency text-blue-400">৳</span>
+              <span className="amount text-5xl font-bold text-white">99</span>
+              <span className="period text-gray-400">/15 days</span>
             </div>
           </div>
 
@@ -442,21 +530,21 @@ const Premium = ({ onBack }) => {
           <button 
             onClick={() => handleUpgrade('15days')}
             disabled={loading || (subscription && subscription.subscription?.plan_type === '15days')}
-            className={`upgrade-btn starter ${subscription?.subscription?.plan_type === '15days' ? 'completed' : ''}`}
+            className={`upgrade-btn starter ${subscription?.subscription?.plan_type === '15days' ? 'completed' : ''} group-hover:shadow-xl group-hover:shadow-blue-500/30 transition-all`}
           >
             {subscription?.subscription?.plan_type === '15days' ? (
               <>
-                <i className="fi fi-br-check-circle"></i>
+                <i className="fi fi-br-check-circle mr-2"></i>
                 COMPLETED
               </>
             ) : loading ? (
               <>
-                <i className="fi fi-rr-spinner animate-spin"></i>
+                <i className="fi fi-rr-spinner animate-spin mr-2"></i>
                 Processing...
               </>
             ) : (
               <>
-                <i className="fi fi-br-shopping-cart"></i>
+                <i className="fi fi-br-shopping-cart mr-2"></i>
                 Get 15 Days
               </>
             )}
@@ -464,75 +552,93 @@ const Premium = ({ onBack }) => {
         </div>
       </div>
 
-      <div className="payment-methods">
-        <div className="methods-header">
-          <h3>Payment Methods</h3>
+      <div className="payment-methods bg-gradient-to-br from-slate-900/50 to-slate-800/30 backdrop-blur-sm border border-white/5 rounded-2xl p-6 shadow-xl">
+        <div className="methods-header mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
+              <i className="fi fi-br-credit-card text-white"></i>
+            </div>
+            <h3 className="text-2xl font-bold text-white">Payment Methods</h3>
+          </div>
+          <p className="text-gray-400 text-sm mt-2">We support multiple secure payment options</p>
         </div>
-        <div className="methods">
-          <div className="method-item">
+        <div className="methods grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="method-item bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 hover:border-pink-500/30 rounded-xl p-4 transition-all duration-300 hover:scale-105 group">
             <img 
               src="https://freelogopng.com/images/all_img/1656234745bkash-app-logo-png.png" 
               alt="bKash" 
-              className="payment-logo"
+              className="payment-logo w-full h-16 object-contain group-hover:scale-110 transition-transform"
             />
           </div>
-          <div className="method-item">
+          <div className="method-item bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 hover:border-orange-500/30 rounded-xl p-4 transition-all duration-300 hover:scale-105 group">
             <img 
               src="https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png" 
               alt="Nagad" 
-              className="payment-logo"
+              className="payment-logo w-full h-16 object-contain group-hover:scale-110 transition-transform"
             />
           </div>
-          <div className="method-item">
+          <div className="method-item bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 hover:border-purple-500/30 rounded-xl p-4 transition-all duration-300 hover:scale-105 group">
             <img 
               src="https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg" 
               alt="Rocket" 
-              className="payment-logo"
+              className="payment-logo w-full h-16 object-contain group-hover:scale-110 transition-transform"
             />
           </div>
-          <div className="method-item">
+          <div className="method-item bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 hover:border-blue-500/30 rounded-xl p-4 transition-all duration-300 hover:scale-105 group">
             <img 
               src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" 
               alt="Visa" 
-              className="payment-logo"
+              className="payment-logo w-full h-16 object-contain group-hover:scale-110 transition-transform"
             />
           </div>
-          <div className="method-item">
+          <div className="method-item bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 hover:border-red-500/30 rounded-xl p-4 transition-all duration-300 hover:scale-105 group">
             <img 
               src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
               alt="Mastercard" 
-              className="payment-logo"
+              className="payment-logo w-full h-16 object-contain group-hover:scale-110 transition-transform"
             />
           </div>
         </div>
-        <div className="ssl-badge">
-          <p>Secured by <strong>SSLCommerz</strong></p>
+        <div className="ssl-badge mt-6 flex items-center justify-center gap-2 bg-green-500/10 border border-green-500/20 rounded-xl py-3 px-6">
+          <i className="fi fi-br-shield-check text-green-400 text-xl"></i>
+          <p className="text-gray-300">Secured by <strong className="text-green-400">SSLCommerz</strong></p>
         </div>
       </div>
 
-      <div className="faq-section">
-        <h3><i className="fi fi-br-interrogation"></i> Frequently Asked Questions</h3>
-        <div className="faq-grid">
-          <div className="faq-item">
-            <div className="faq-icon">
-              <i className="fi fi-br-time-past"></i>
-            </div>
-            <h4>Can I cancel anytime?</h4>
-            <p>Yes, you can turn off auto-renewal anytime. You'll keep premium access until the end of your billing period.</p>
+      <div className="faq-section bg-gradient-to-br from-slate-900/50 to-slate-800/30 backdrop-blur-sm border border-white/5 rounded-2xl p-6 shadow-xl mt-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-xl flex items-center justify-center">
+            <i className="fi fi-br-interrogation text-white"></i>
           </div>
-          <div className="faq-item">
-            <div className="faq-icon">
-              <i className="fi fi-br-credit-card"></i>
+          <h3 className="text-2xl font-bold text-white">Frequently Asked Questions</h3>
+        </div>
+        <div className="faq-grid space-y-4">
+          <div className="faq-item bg-slate-800/30 hover:bg-slate-700/30 border border-white/5 rounded-xl p-5 transition-all duration-300 hover:border-cyan-500/30 group">
+            <div className="faq-icon mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i className="fi fi-br-time-past text-white"></i>
+              </div>
             </div>
-            <h4>Payment methods?</h4>
-            <p>We accept bKash, Nagad, Rocket, all major credit/debit cards, and internet banking through SSLCommerz.</p>
+            <h4 className="text-lg font-bold text-white mb-2">Can I cancel anytime?</h4>
+            <p className="text-gray-400">Yes, you can turn off auto-renewal anytime. You'll keep premium access until the end of your billing period.</p>
           </div>
-          <div className="faq-item">
-            <div className="faq-icon">
-              <i className="fi fi-br-shield-check"></i>
+          <div className="faq-item bg-slate-800/30 hover:bg-slate-700/30 border border-white/5 rounded-xl p-5 transition-all duration-300 hover:border-green-500/30 group">
+            <div className="faq-icon mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i className="fi fi-br-credit-card text-white"></i>
+              </div>
             </div>
-            <h4>Is payment secure?</h4>
-            <p>Absolutely! We use SSLCommerz, Bangladesh's leading payment gateway with PCI DSS Level 1 certification.</p>
+            <h4 className="text-lg font-bold text-white mb-2">Payment methods?</h4>
+            <p className="text-gray-400">We accept bKash, Nagad, Rocket, all major credit/debit cards, and internet banking through SSLCommerz.</p>
+          </div>
+          <div className="faq-item bg-slate-800/30 hover:bg-slate-700/30 border border-white/5 rounded-xl p-5 transition-all duration-300 hover:border-blue-500/30 group">
+            <div className="faq-icon mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i className="fi fi-br-shield-check text-white"></i>
+              </div>
+            </div>
+            <h4 className="text-lg font-bold text-white mb-2">Is payment secure?</h4>
+            <p className="text-gray-400">Absolutely! We use SSLCommerz, Bangladesh's leading payment gateway with PCI DSS Level 1 certification.</p>
           </div>
         </div>
       </div>
