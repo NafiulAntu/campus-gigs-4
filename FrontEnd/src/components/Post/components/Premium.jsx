@@ -185,42 +185,42 @@ const Premium = ({ onBack }) => {
 
           <div className="premium-container relative z-10 max-w-6xl mx-auto px-4 py-8">
             {/* Premium Header with Animation */}
-            <div className="relative overflow-hidden backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-10 mb-8 shadow-2xl">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl translate-y-24 -translate-x-24"></div>
+            <div className="relative overflow-hidden backdrop-blur-xl bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-purple-500/10 border border-cyan-500/20 rounded-3xl p-12 mb-10 shadow-2xl">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400/10 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/10 rounded-full blur-3xl translate-y-24 -translate-x-24"></div>
               
               <div className="relative z-10 text-center">
-                <div className="inline-flex items-center justify-center w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full mb-4 animate-bounce">
-                  <i className="fi fi-br-crown text-yellow-300 text-5xl"></i>
+                <div className="inline-flex items-center justify-center w-28 h-28 bg-gradient-to-br from-yellow-400/20 to-orange-400/20 backdrop-blur-sm rounded-full mb-6 animate-bounce shadow-lg shadow-yellow-400/20">
+                  <i className="fi fi-br-crown text-yellow-400 text-6xl drop-shadow-lg"></i>
                 </div>
-                <h1 className="text-5xl font-black text-white mb-3 drop-shadow-lg">🎉 You're Premium!</h1>
-                <p className="text-xl text-white/90 font-medium">Enjoying all the exclusive features</p>
-                <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-white/20 backdrop-blur-sm rounded-full">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-white font-semibold text-sm">ACTIVE SUBSCRIPTION</span>
+                <h1 className="text-6xl font-black bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent mb-4 drop-shadow-2xl">🎉 You're Premium!</h1>
+                <p className="text-2xl text-gray-300 font-semibold tracking-wide">Enjoying all the exclusive features</p>
+                <div className="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500/20 to-green-500/20 backdrop-blur-sm rounded-full border border-emerald-400/30 shadow-lg shadow-emerald-500/20">
+                  <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50"></div>
+                  <span className="text-emerald-300 font-bold text-base tracking-wider">ACTIVE SUBSCRIPTION</span>
                 </div>
               </div>
             </div>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="border border-white/10 rounded-2xl p-6 hover:border-cyan-500/30 transition-all duration-300 group">
-            <div className="flex items-center gap-3 mb-4">
-              <i className="fi fi-rr-crown text-cyan-400 text-2xl"></i>
-              <h3 className="text-lg font-bold text-white">Current Plan</h3>
+        <div className="grid md:grid-cols-3 gap-6 mb-10">
+          <div className="border border-cyan-500/20 rounded-2xl p-7 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10 transition-all duration-300 group bg-gradient-to-br from-cyan-500/5 to-transparent">
+            <div className="flex items-center gap-4 mb-5">
+              <i className="fi fi-rr-crown text-cyan-400 text-3xl group-hover:scale-110 transition-transform"></i>
+              <h3 className="text-xl font-bold text-gray-200">Current Plan</h3>
             </div>
-            <p className="text-2xl font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-2">
+            <p className="text-2xl font-black bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent mb-3">
               {subscription.subscription.plan_name || 'Premium Plan'}
             </p>
-            <p className="text-3xl font-bold text-white">
+            <p className="text-4xl font-extrabold text-gray-100">
               ৳{subscription.subscription.amount || 
                 (subscription.subscription.plan_type === 'yearly' ? '1,500' : '150')}
             </p>
           </div>
 
-          <div className="border border-white/10 rounded-2xl p-6 hover:border-emerald-500/30 transition-all duration-300 group">
-            <div className="flex items-center gap-3 mb-4">
-              <i className="fi fi-rr-shield-check text-emerald-400 text-2xl"></i>
-              <h3 className="text-lg font-bold text-white">Subscription Status</h3>
+          <div className="border border-emerald-500/20 rounded-2xl p-7 hover:border-emerald-400/40 hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 group bg-gradient-to-br from-emerald-500/5 to-transparent">
+            <div className="flex items-center gap-4 mb-5">
+              <i className="fi fi-rr-shield-check text-emerald-400 text-3xl group-hover:scale-110 transition-transform"></i>
+              <h3 className="text-xl font-bold text-gray-200">Subscription Status</h3>
             </div>
             <div className="flex items-center gap-3 mb-3">
               <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
@@ -232,24 +232,24 @@ const Premium = ({ onBack }) => {
                 </span>
               </div>
             </div>
-            <p className="text-white/80 text-base mb-2 flex items-center gap-2">
+            <p className="text-gray-300 text-base mb-2 flex items-center gap-2">
               <i className="fi fi-rr-clock text-emerald-400"></i>
               {subscription.subscription.days_remaining > 0 
                 ? `${subscription.subscription.days_remaining} days remaining`
                 : 'Expired'}
             </p>
             {subscription.subscription.expiry_date && (
-              <p className="text-white/60 text-sm flex items-center gap-2">
+              <p className="text-gray-400 text-sm flex items-center gap-2">
                 <i className="fi fi-rr-calendar text-emerald-400 text-xs"></i>
                 Valid until {new Date(subscription.subscription.expiry_date).toLocaleDateString()}
               </p>
             )}
           </div>
 
-          <div className="border border-white/10 rounded-2xl p-6 hover:border-purple-500/30 transition-all duration-300 group">
-            <div className="flex items-center gap-3 mb-4">
-              <i className="fi fi-rr-refresh text-purple-400 text-2xl"></i>
-              <h3 className="text-lg font-bold text-white">Auto-Renewal</h3>
+          <div className="border border-purple-500/20 rounded-2xl p-7 hover:border-purple-400/40 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 group bg-gradient-to-br from-purple-500/5 to-transparent">
+            <div className="flex items-center gap-4 mb-5">
+              <i className="fi fi-rr-refresh text-purple-400 text-3xl group-hover:scale-110 transition-transform"></i>
+              <h3 className="text-xl font-bold text-gray-200">Auto-Renewal</h3>
             </div>
             <p className={`text-2xl font-bold mb-4 flex items-center gap-2 ${
               subscription.subscription.auto_renew ? 'text-green-400' : 'text-gray-400'
@@ -280,47 +280,47 @@ const Premium = ({ onBack }) => {
           </div>
         </div>
 
-        <div className="border border-white/10 rounded-2xl p-8">
-          <div className="flex items-center gap-3 mb-8">
-            <i className="fi fi-br-sparkles text-yellow-400 text-3xl"></i>
-            <h2 className="text-3xl font-black text-white">Your Premium Features</h2>
+        <div className="border border-white/20 rounded-3xl p-10 bg-gradient-to-br from-slate-800/20 to-transparent backdrop-blur-sm">
+          <div className="flex items-center gap-4 mb-10">
+            <i className="fi fi-br-sparkles text-yellow-400 text-4xl drop-shadow-lg"></i>
+            <h2 className="text-4xl font-black bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">Your Premium Features</h2>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="border border-white/10 rounded-xl p-5 hover:scale-105 hover:border-green-500/30 transition-all duration-300 group">
-              <i className="fi fi-rr-infinity text-green-400 text-3xl mb-3 block"></i>
-              <span className="text-green-400 text-2xl mb-2 block">✓</span>
-              <span className="text-white font-bold text-lg block">Unlimited Posts</span>
-              <p className="text-gray-400 text-sm mt-2">Create as many posts as you want</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="border border-green-500/20 rounded-2xl p-6 hover:scale-105 hover:border-green-400/40 hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300 group bg-gradient-to-br from-green-500/5 to-transparent">
+              <i className="fi fi-rr-infinity text-green-400 text-4xl mb-4 block group-hover:scale-110 transition-transform"></i>
+              <span className="text-green-400 text-3xl mb-3 block font-bold">✓</span>
+              <span className="text-gray-100 font-bold text-xl block mb-2">Unlimited Posts</span>
+              <p className="text-gray-400 text-base">Create as many posts as you want</p>
             </div>
-            <div className="border border-white/10 rounded-xl p-5 hover:scale-105 hover:border-blue-500/30 transition-all duration-300 group">
-              <i className="fi fi-rr-star text-blue-400 text-3xl mb-3 block"></i>
-              <span className="text-blue-400 text-2xl mb-2 block">✓</span>
-              <span className="text-white font-bold text-lg block">Priority Placement</span>
-              <p className="text-gray-400 text-sm mt-2">Your posts appear at the top</p>
+            <div className="border border-blue-500/20 rounded-2xl p-6 hover:scale-105 hover:border-blue-400/40 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 group bg-gradient-to-br from-blue-500/5 to-transparent">
+              <i className="fi fi-rr-star text-blue-400 text-4xl mb-4 block group-hover:scale-110 transition-transform"></i>
+              <span className="text-blue-400 text-3xl mb-3 block font-bold">✓</span>
+              <span className="text-gray-100 font-bold text-xl block mb-2">Priority Placement</span>
+              <p className="text-gray-400 text-base">Your posts appear at the top</p>
             </div>
-            <div className="border border-white/10 rounded-xl p-5 hover:scale-105 hover:border-purple-500/30 transition-all duration-300 group">
-              <i className="fi fi-rr-chart-line-up text-purple-400 text-3xl mb-3 block"></i>
-              <span className="text-purple-400 text-2xl mb-2 block">✓</span>
-              <span className="text-white font-bold text-lg block">Advanced Analytics</span>
-              <p className="text-gray-400 text-sm mt-2">Track your post performance</p>
+            <div className="border border-purple-500/20 rounded-2xl p-6 hover:scale-105 hover:border-purple-400/40 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300 group bg-gradient-to-br from-purple-500/5 to-transparent">
+              <i className="fi fi-rr-chart-line-up text-purple-400 text-4xl mb-4 block group-hover:scale-110 transition-transform"></i>
+              <span className="text-purple-400 text-3xl mb-3 block font-bold">✓</span>
+              <span className="text-gray-100 font-bold text-xl block mb-2">Advanced Analytics</span>
+              <p className="text-gray-400 text-base">Track your post performance</p>
             </div>
-            <div className="border border-white/10 rounded-xl p-5 hover:scale-105 hover:border-orange-500/30 transition-all duration-300 group">
-              <i className="fi fi-rr-badge-check text-orange-400 text-3xl mb-3 block"></i>
-              <span className="text-orange-400 text-2xl mb-2 block">✓</span>
-              <span className="text-white font-bold text-lg block">Premium Badge</span>
-              <p className="text-gray-400 text-sm mt-2">Stand out with verified badge</p>
+            <div className="border border-orange-500/20 rounded-2xl p-6 hover:scale-105 hover:border-orange-400/40 hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 group bg-gradient-to-br from-orange-500/5 to-transparent">
+              <i className="fi fi-rr-badge-check text-orange-400 text-4xl mb-4 block group-hover:scale-110 transition-transform"></i>
+              <span className="text-orange-400 text-3xl mb-3 block font-bold">✓</span>
+              <span className="text-gray-100 font-bold text-xl block mb-2">Premium Badge</span>
+              <p className="text-gray-400 text-base">Stand out with verified badge</p>
             </div>
-            <div className="border border-white/10 rounded-xl p-5 hover:scale-105 hover:border-cyan-500/30 transition-all duration-300 group">
-              <i className="fi fi-rr-eye text-cyan-400 text-3xl mb-3 block"></i>
-              <span className="text-cyan-400 text-2xl mb-2 block">✓</span>
-              <span className="text-white font-bold text-lg block">Read Receipts</span>
-              <p className="text-gray-400 text-sm mt-2">See who viewed your posts</p>
+            <div className="border border-cyan-500/20 rounded-2xl p-6 hover:scale-105 hover:border-cyan-400/40 hover:shadow-xl hover:shadow-cyan-500/10 transition-all duration-300 group bg-gradient-to-br from-cyan-500/5 to-transparent">
+              <i className="fi fi-rr-eye text-cyan-400 text-4xl mb-4 block group-hover:scale-110 transition-transform"></i>
+              <span className="text-cyan-400 text-3xl mb-3 block font-bold">✓</span>
+              <span className="text-gray-100 font-bold text-xl block mb-2">Read Receipts</span>
+              <p className="text-gray-400 text-base">See who viewed your posts</p>
             </div>
-            <div className="border border-white/10 rounded-xl p-5 hover:scale-105 hover:border-pink-500/30 transition-all duration-300 group">
-              <i className="fi fi-rr-thumbtack text-pink-400 text-3xl mb-3 block"></i>
-              <span className="text-pink-400 text-2xl mb-2 block">✓</span>
-              <span className="text-white font-bold text-lg block">Pin Posts</span>
-              <p className="text-gray-400 text-sm mt-2">Keep important posts at top</p>
+            <div className="border border-pink-500/20 rounded-2xl p-6 hover:scale-105 hover:border-pink-400/40 hover:shadow-xl hover:shadow-pink-500/10 transition-all duration-300 group bg-gradient-to-br from-pink-500/5 to-transparent">
+              <i className="fi fi-rr-thumbtack text-pink-400 text-4xl mb-4 block group-hover:scale-110 transition-transform"></i>
+              <span className="text-pink-400 text-3xl mb-3 block font-bold">✓</span>
+              <span className="text-gray-100 font-bold text-xl block mb-2">Pin Posts</span>
+              <p className="text-gray-400 text-base">Keep important posts at top</p>
             </div>
           </div>
         </div>
