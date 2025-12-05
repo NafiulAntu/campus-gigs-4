@@ -191,9 +191,12 @@ const Premium = ({ onBack }) => {
               
               <div className="relative z-10 text-center">
                 <div className="inline-flex items-center justify-center w-28 h-28 bg-gradient-to-br from-yellow-400/20 to-orange-400/20 backdrop-blur-sm rounded-full mb-6 animate-bounce shadow-lg shadow-yellow-400/20">
-                  <img src="https://cdn-icons-png.flaticon.com/512/3386/3386773.png" alt="Celebration" className="w-16 h-16 drop-shadow-lg" />
+                  <i className="fi fi-br-crown text-yellow-400 text-6xl drop-shadow-lg"></i>
                 </div>
-                <h1 className="text-6xl font-black bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent mb-4 drop-shadow-2xl">You're Premium!</h1>
+                <div className="flex items-center justify-center gap-4 mb-4">
+                  <h1 className="text-4xl font-black bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">You're Premium!</h1>
+                  <img src="https://cdn-icons-png.flaticon.com/512/3386/3386773.png" alt="Celebration" className="w-12 h-12 drop-shadow-lg" />
+                </div>
                 <p className="text-2xl text-gray-300 font-semibold tracking-wide">Enjoying all the exclusive features</p>
                 <div className="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500/20 to-green-500/20 backdrop-blur-sm rounded-full border border-emerald-400/30 shadow-lg shadow-emerald-500/20">
                   <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50"></div>
