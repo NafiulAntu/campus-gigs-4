@@ -119,7 +119,8 @@ exports.createCheckoutSession = async (req, res) => {
       transaction_id: session.id,
       amount: amountBDT,
       currency: 'BDT',
-      status: 'pending'
+      status: 'pending',
+      payment_method: 'stripe'
     });
 
     res.json({
@@ -186,33 +187,70 @@ async function handleSuccessfulPayment(session) {
   try {
     const { user_id, plan_type, amount_bdt } = session.metadata;
     const transaction_id = session.id;
+    const userId = parseInt(user_id);
 
-    // Update transaction
-    const transaction = await PaymentTransaction.findOne({
-      where: { transaction_id }
-    });
-
-    if (transaction) {
-      transaction.status = 'completed';
-      transaction.payment_method = session.payment_method_types?.[0] || 'card';
-      await transaction.save();
-
-      // Create subscription
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + PLAN_DAYS[plan_type]);
-
-      await Subscription.create({
-        user_id: parseInt(user_id),
-        plan_type: plan_type,
-        start_date: startDate,
-        end_date: endDate,
-        status: 'completed',
-        transaction_id
+    // Use Sequelize transaction for atomicity
+    const sequelize = require('../config/sequelize');
+    await sequelize.transaction(async (t) => {
+      // Update transaction
+      const transaction = await PaymentTransaction.findOne({
+        where: { transaction_id },
+        transaction: t
       });
 
-      console.log(`✅ Subscription created for user ${user_id}`);
-    }
+      if (transaction) {
+        transaction.status = 'success';
+        transaction.payment_method = session.payment_method_types?.[0] || 'card';
+        await transaction.save({ transaction: t });
+
+        // Calculate dates
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + PLAN_DAYS[plan_type]);
+
+        // Determine plan_type for database (monthly or yearly)
+        const dbPlanType = plan_type === 'yearly' ? 'yearly' : 'monthly';
+
+        // Create subscription
+        const subscription = await Subscription.create({
+          user_id: userId,
+          plan_type: dbPlanType,
+          start_date: startDate,
+          end_date: endDate,
+          status: 'active',
+          auto_renew: false
+        }, { transaction: t });
+
+        // Link subscription to transaction
+        transaction.subscription_id = subscription.id;
+        await transaction.save({ transaction: t });
+
+        // Update user premium status with expiry date
+        await User.updatePremiumStatus(userId, true, endDate);
+
+        console.log(`✅ Subscription created for user ${user_id}, expires:`, endDate);
+
+        // Create notification after transaction commits
+        t.afterCommit(async () => {
+          try {
+            const { createNotification } = require('../utils/simpleNotificationHelpers');
+            const planNames = {
+              '15days': '15 Days',
+              '30days': '30 Days',
+              'yearly': 'Yearly'
+            };
+            await createNotification({
+              userId,
+              type: 'system',
+              content: `🎉 Welcome to Campus Gigs Premium! Your ${planNames[plan_type]} subscription is now active.`,
+              metadata: { plan_type, subscription_id: subscription.id, amount: amount_bdt }
+            });
+          } catch (notifError) {
+            console.error('Notification error:', notifError);
+          }
+        });
+      }
+    });
   } catch (error) {
     console.error('Error handling successful payment:', error);
   }
@@ -285,34 +323,68 @@ exports.verifySession = async (req, res) => {
 
       if (!existingSubscription) {
         // Extract plan details from metadata
-        const planName = session.metadata.plan_name || 'Premium Monthly';
-        const planDuration = parseInt(session.metadata.plan_duration) || 30;
+        const planType = session.metadata.plan_type || '30days';
+        const planDuration = PLAN_DAYS[planType] || 30;
         const planPrice = session.amount_total / 100;
 
-        // Calculate expiry date
+        // Calculate end date
         const startDate = new Date();
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + planDuration);
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + planDuration);
 
-        // Create subscription
-        await Subscription.create({
-          user_id: userId,
-          plan_name: planName,
-          start_date: startDate,
-          expiry_date: expiryDate,
-          status: 'active',
-          payment_method: 'stripe',
-          amount: planPrice,
-          stripe_session_id: session_id
+        // Determine plan_type for database (monthly or yearly)
+        const dbPlanType = planType === 'yearly' ? 'yearly' : 'monthly';
+
+        // Use Sequelize transaction for atomicity
+        const sequelize = require('../config/sequelize');
+        await sequelize.transaction(async (t) => {
+          // Create subscription
+          const subscription = await Subscription.create({
+            user_id: userId,
+            plan_type: dbPlanType,
+            start_date: startDate,
+            end_date: endDate,
+            status: 'active',
+            auto_renew: false
+          }, { transaction: t });
+
+          // Update transaction to link subscription and mark as success
+          await PaymentTransaction.update(
+            { 
+              status: 'success',
+              subscription_id: subscription.id
+            },
+            { 
+              where: { transaction_id: session_id },
+              transaction: t 
+            }
+          );
+
+          // Update user premium status with expiry date
+          await User.updatePremiumStatus(userId, true, endDate);
+
+          console.log('✅ Premium subscription activated for user:', userId, 'expires:', endDate);
+
+          // Create notification after transaction commits
+          t.afterCommit(async () => {
+            try {
+              const { createNotification } = require('../utils/simpleNotificationHelpers');
+              const planNames = {
+                '15days': '15 Days',
+                '30days': '30 Days',
+                'yearly': 'Yearly'
+              };
+              await createNotification({
+                userId,
+                type: 'system',
+                content: `🎉 Welcome to Campus Gigs Premium! Your ${planNames[planType]} subscription is now active.`,
+                metadata: { plan_type: planType, subscription_id: subscription.id, amount: planPrice }
+              });
+            } catch (notifError) {
+              console.error('Notification error:', notifError);
+            }
+          });
         });
-
-        // Update user premium status
-        await User.update(
-          { is_premium: true },
-          { where: { id: userId } }
-        );
-
-        console.log('✅ Premium subscription activated for user:', userId);
       }
 
       res.json({
