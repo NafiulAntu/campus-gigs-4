@@ -220,9 +220,7 @@ export default function SendMoneyPage() {
               </button>
               <div>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
-                    <i className="fi fi-rr-paper-plane text-white text-sm"></i>
-                  </div>
+                  <i className="fi fi-rr-paper-plane text-cyan-400 text-2xl"></i>
                   <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Send Money</h1>
                 </div>
                 <p className="text-xs text-gray-400 ml-10">Quick & Secure Transfer</p>
@@ -272,9 +270,7 @@ export default function SendMoneyPage() {
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
-                      <i className="fi fi-rr-paper-plane text-white text-xs"></i>
-                    </div>
+                    <i className="fi fi-rr-paper-plane text-cyan-400 text-xl"></i>
                     <div className="text-gray-300 text-xs font-bold uppercase tracking-wider">Sending to</div>
                   </div>
                 </div>
@@ -318,9 +314,7 @@ export default function SendMoneyPage() {
               <div className="relative">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-green-600 rounded-lg flex items-center justify-center">
-                      <i className="fi fi-rr-wallet text-white text-xs"></i>
-                    </div>
+                    <i className="fi fi-rr-wallet text-emerald-400 text-xl"></i>
                     <span className="text-gray-300 text-xs font-bold uppercase tracking-wider">Available Balance</span>
                   </div>
                   <button
@@ -345,9 +339,7 @@ export default function SendMoneyPage() {
             <div className="rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-blue-500/30 p-5 backdrop-blur-xl shadow-lg hover:shadow-blue-500/20 transition-all duration-300 group">
               <div className="flex gap-3">
                 <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <i className="fi fi-rr-info text-white"></i>
-                  </div>
+                  <i className="fi fi-rr-info text-blue-400 text-2xl"></i>
                 </div>
                 <div className="flex-1">
                   <h4 className="text-sm font-bold text-blue-300 mb-2 flex items-center gap-2">
@@ -372,9 +364,7 @@ export default function SendMoneyPage() {
               {/* Payment Methods */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
-                    <i className="fi fi-rr-credit-card text-white text-xs"></i>
-                  </div>
+                  <i className="fi fi-rr-credit-card text-purple-400 text-xl"></i>
                   <label className="block text-sm font-bold text-white">Payment Method</label>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
@@ -412,9 +402,7 @@ export default function SendMoneyPage() {
               {/* Amount Input */}
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
-                    <i className="fi fi-rr-coins text-white text-xs"></i>
-                  </div>
+                  <i className="fi fi-rr-coins text-cyan-400 text-xl"></i>
                   <label className="block text-sm font-bold text-white">Amount</label>
                 </div>
                 <div className="relative group">
@@ -445,9 +433,7 @@ export default function SendMoneyPage() {
               {/* Notes */}
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
-                    <i className="fi fi-rr-edit text-white text-xs"></i>
-                  </div>
+                  <i className="fi fi-rr-edit text-orange-400 text-xl"></i>
                   <label className="block text-sm font-bold text-white">Note (Optional)</label>
                 </div>
                 <textarea
@@ -514,9 +500,7 @@ export default function SendMoneyPage() {
             <div className="relative z-10">
               <div className="p-6 border-b border-white/10">
                 <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
-                    <i className="fi fi-rr-shield-check text-white text-2xl"></i>
-                  </div>
+                  <i className="fi fi-rr-shield-check text-cyan-400 text-4xl"></i>
                   <div>
                     <h3 className="text-xl font-bold text-white">Confirm Transaction</h3>
                     <p className="text-sm text-gray-400">Review details before sending</p>
