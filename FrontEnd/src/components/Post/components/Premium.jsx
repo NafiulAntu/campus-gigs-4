@@ -338,7 +338,6 @@ const Premium = ({ onBack }) => {
             </div>
           </div>
         </div>
-          </div>
         </div>
       </div>
     );
