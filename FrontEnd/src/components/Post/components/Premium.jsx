@@ -107,11 +107,16 @@ const Premium = ({ onBack }) => {
 
     try {
       setLoading(true);
+      console.log('🚀 Calling cancel subscription API...');
       const response = await api.post('/subscription/cancel');
+      console.log('✅ Cancel response:', response.data);
       alert('✅ ' + response.data.message);
       checkSubscriptionStatus();
     } catch (err) {
-      alert('❌ ' + (err.response?.data?.error || 'Failed to cancel subscription'));
+      console.error('❌ Cancel error:', err);
+      console.error('Error response:', err.response);
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to cancel subscription';
+      alert('❌ ' + errorMsg);
     } finally {
       setLoading(false);
     }
@@ -121,11 +126,16 @@ const Premium = ({ onBack }) => {
     if (!window.confirm('Turn off auto-renewal?\n\nYou will keep premium access until the end date, but it won\'t renew automatically.')) return;
 
     try {
+      console.log('🚀 Calling turn off auto-renew API...');
       const response = await api.post('/subscription/turn-off-auto-renew');
+      console.log('✅ Auto-renew response:', response.data);
       alert('✅ ' + response.data.message);
       checkSubscriptionStatus();
     } catch (err) {
-      alert('❌ ' + (err.response?.data?.error || 'Failed to turn off auto-renew'));
+      console.error('❌ Auto-renew error:', err);
+      console.error('Error response:', err.response);
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to turn off auto-renew';
+      alert('❌ ' + errorMsg);
     }
   };
 

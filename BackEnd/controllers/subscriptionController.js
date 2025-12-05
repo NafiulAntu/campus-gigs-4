@@ -59,6 +59,7 @@ exports.getSubscriptionStatus = async (req, res) => {
 exports.cancelSubscription = async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log('🚀 Cancel subscription request from user:', userId);
 
     const subscription = await Subscription.findOne({
       where: { 
@@ -67,7 +68,10 @@ exports.cancelSubscription = async (req, res) => {
       }
     });
 
+    console.log('📊 Found subscription:', subscription ? `ID ${subscription.id}` : 'None');
+
     if (!subscription) {
+      console.log('❌ No active subscription found');
       return res.status(404).json({ error: 'No active subscription found' });
     }
 
@@ -97,13 +101,14 @@ exports.cancelSubscription = async (req, res) => {
       });
     });
 
+    console.log('✅ Subscription cancelled successfully');
     res.json({
       success: true,
       message: 'Subscription cancelled successfully. You can purchase a new subscription anytime.'
     });
   } catch (error) {
-    console.error('Cancel subscription error:', error);
-    res.status(500).json({ error: 'Failed to cancel subscription' });
+    console.error('❌ Cancel subscription error:', error);
+    res.status(500).json({ error: 'Failed to cancel subscription', details: error.message });
   }
 };
 
