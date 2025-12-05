@@ -194,8 +194,8 @@ const Premium = ({ onBack }) => {
                   <i className="fi fi-br-crown text-yellow-400 text-6xl drop-shadow-lg"></i>
                 </div>
                 <div className="flex items-center justify-center gap-4 mb-4">
-                  <h1 className="text-3xl font-black bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">You're Premium!</h1>
-                  <img src="https://cdn-icons-png.flaticon.com/512/3386/3386773.png" alt="Celebration" className="w-10 h-10 drop-shadow-lg" />
+                  <h1 className="text-4xl font-black bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">You're Premium!</h1>
+                  <img src="https://cdn-icons-png.flaticon.com/512/3386/3386773.png" alt="Celebration" className="w-12 h-12 drop-shadow-lg" />
                 </div>
                 <p className="text-lg text-gray-300 font-semibold tracking-wide">Enjoying all the exclusive features</p>
                 <div className="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500/20 to-green-500/20 backdrop-blur-sm rounded-full border border-emerald-400/30 shadow-lg shadow-emerald-500/20">
