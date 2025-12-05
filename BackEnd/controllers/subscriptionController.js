@@ -82,8 +82,7 @@ exports.cancelSubscription = async (req, res) => {
         { where: { id: subscription.id }, transaction: t }
       );
 
-      // Remove user premium status
-      await User.updatePremiumStatus(userId, false, null);
+      console.log('✅ Subscription status updated to cancelled');
 
       // Send notification after commit
       t.afterCommit(async () => {
@@ -100,6 +99,15 @@ exports.cancelSubscription = async (req, res) => {
         }
       });
     });
+
+    // Remove user premium status AFTER transaction completes
+    try {
+      await User.updatePremiumStatus(userId, false, null);
+      console.log('✅ User premium status updated');
+    } catch (userUpdateError) {
+      console.error('❌ User premium status update error:', userUpdateError);
+      // Continue anyway, subscription is already cancelled
+    }
 
     console.log('✅ Subscription cancelled successfully');
     res.json({
