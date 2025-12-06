@@ -71,8 +71,10 @@ export default function SendMoneyPage() {
     try {
       setReceiverLoading(true);
       const response = await getUserById(receiverId);
+      console.log('Receiver info loaded:', response.data);
       setReceiverInfo(response.data);
     } catch (err) {
+      console.error('Failed to load receiver:', err);
       setError('Failed to load receiver information');
     } finally {
       setReceiverLoading(false);
@@ -105,7 +107,7 @@ export default function SendMoneyPage() {
   const validateAndShowConfirm = () => {
     const numAmount = parseFloat(amount);
 
-    if (!receiverInfo?.user_id) {
+    if (!receiverInfo?.id && !receiverInfo?.user_id) {
       setError('Receiver information is missing');
       return;
     }
@@ -141,7 +143,7 @@ export default function SendMoneyPage() {
 
       // Initiate payment with mobile wallet gateway
       const response = await initiateMobileWalletPayment({
-        receiver_id: receiverInfo.user_id,
+        receiver_id: receiverInfo.id || receiverInfo.user_id,
         amount: parseFloat(amount),
         payment_method: paymentMethod,
         notes: notes.trim()
