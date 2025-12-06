@@ -495,23 +495,42 @@ const Premium = ({ onBack }) => {
             <p>Unlock powerful features to grow your presence on Campus Gigs</p>
           </div>
 
-      {/* Success Message */}
+      {/* Success Message with Celebration */}
       {successMessage && (
-        <div className="mb-6 p-4 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/50 rounded-xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
-              <i className="fi fi-rr-check text-emerald-400 text-xl"></i>
+        <div className="mb-6 relative overflow-hidden">
+          <div className="p-6 bg-gradient-to-r from-emerald-500/20 via-green-500/20 to-cyan-500/20 border-2 border-emerald-500/50 rounded-2xl shadow-2xl shadow-emerald-500/20 animate-slideDown">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full flex items-center justify-center animate-bounce">
+                  <i className="fi fi-rr-check text-white text-3xl"></i>
+                </div>
+                <div className="absolute -top-1 -right-1">
+                  <span className="text-2xl animate-spin-slow">🎉</span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-bold text-lg mb-1">{successMessage}</p>
+                <p className="text-emerald-300 text-sm font-semibold flex items-center gap-2">
+                  <i className="fi fi-rr-crown text-yellow-400"></i>
+                  All premium features are now unlocked!
+                </p>
+              </div>
+              <button 
+                onClick={() => setSuccessMessage('')}
+                className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+              >
+                <i className="fi fi-rr-cross text-xl"></i>
+              </button>
             </div>
-            <div className="flex-1">
-              <p className="text-white font-semibold">{successMessage}</p>
-              <p className="text-gray-400 text-sm mt-1">Your premium features are now active!</p>
+            
+            {/* Confetti Effect */}
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+              <div className="confetti">🎊</div>
+              <div className="confetti" style={{animationDelay: '0.3s', left: '20%'}}>✨</div>
+              <div className="confetti" style={{animationDelay: '0.6s', left: '40%'}}>🎉</div>
+              <div className="confetti" style={{animationDelay: '0.2s', left: '60%'}}>⭐</div>
+              <div className="confetti" style={{animationDelay: '0.8s', left: '80%'}}>💫</div>
             </div>
-            <button 
-              onClick={() => setSuccessMessage('')}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <i className="fi fi-rr-cross text-lg"></i>
-            </button>
           </div>
         </div>
       )}
@@ -785,3 +804,60 @@ const Premium = ({ onBack }) => {
 };
 
 export default Premium;
+
+// Add these styles to your CSS file or use styled-components
+const styles = `
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.5s ease-out;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
+
+.confetti {
+  position: absolute;
+  font-size: 24px;
+  animation: confettiFall 3s ease-in-out infinite;
+  top: -50px;
+  left: 10%;
+}
+`;
+
+// Inject styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+}

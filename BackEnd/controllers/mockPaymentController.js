@@ -143,6 +143,25 @@ exports.processMockPayment = async (req, res) => {
           await user.save();
         }
 
+        // Create notification for premium activation
+        const pool = require('../config/db');
+        try {
+          await pool.query(`
+            INSERT INTO notifications (user_id, type, title, message, link, created_at)
+            VALUES ($1, $2, $3, $4, $5, NOW())
+          `, [
+            transaction.user_id,
+            'premium_activated',
+            '🎉 Premium Activated!',
+            `Your ${planType === '15days' ? '15 Days' : planType === '30days' ? '30 Days' : 'Yearly'} Premium subscription is now active! Enjoy all premium features.`,
+            '/premium'
+          ]);
+        } catch (notifError) {
+          console.error('Failed to create notification:', notifError);
+        }
+
+        console.log('✅ Mock payment completed successfully for user:', transaction.user_id, 'plan:', planType);
+
         // Return success JSON for API call
         return res.json({
           success: true,
