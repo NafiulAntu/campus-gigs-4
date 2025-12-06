@@ -127,11 +127,32 @@ export default function SendMoneyPage() {
 
   const fetchSenderInfo = async () => {
     try {
-      // Try to get from localStorage first
+      // Try to get from localStorage - check multiple possible keys
+      let userData = null;
+      
+      // Try different localStorage keys
       const userDataStr = localStorage.getItem('userData');
+      const userStr = localStorage.getItem('user');
+      const profileStr = localStorage.getItem('profile');
+      
       if (userDataStr) {
-        const userData = JSON.parse(userDataStr);
-        setSenderInfo(userData);
+        userData = JSON.parse(userDataStr);
+      } else if (userStr) {
+        userData = JSON.parse(userStr);
+      } else if (profileStr) {
+        userData = JSON.parse(profileStr);
+      }
+      
+      console.log('Sender info loaded:', userData);
+      
+      if (userData) {
+        // Ensure we have the required fields
+        setSenderInfo({
+          id: userData.id || userData.user_id,
+          full_name: userData.full_name || userData.name || 'You',
+          username: userData.username,
+          profile_picture: userData.profile_picture
+        });
       }
     } catch (err) {
       console.error('Failed to load sender info:', err);
@@ -750,7 +771,14 @@ export default function SendMoneyPage() {
       </div>
 
       {/* Confirmation Modal */}
-      {showConfirm && (
+      {showConfirm && (() => {
+        console.log('Confirmation Modal Data:', {
+          senderInfo,
+          receiverInfo,
+          amount,
+          paymentMethod
+        });
+        return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fadeIn">
           <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl border border-white/20 max-w-md w-full shadow-2xl shadow-cyan-500/20 animate-scaleIn relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5"></div>
@@ -785,9 +813,13 @@ export default function SendMoneyPage() {
                   {/* Sender (From) */}
                   <div>
                     <p className="text-xs text-gray-400 mb-1.5">From</p>
-                    <p className="text-white font-semibold text-lg">{senderInfo?.full_name || 'You'}</p>
-                    {senderInfo?.username && (
+                    <p className="text-white font-semibold text-lg">
+                      {senderInfo?.full_name || senderInfo?.name || 'You'}
+                    </p>
+                    {senderInfo?.username ? (
                       <p className="text-cyan-400 text-sm">@{senderInfo.username}</p>
+                    ) : (
+                      <p className="text-gray-500 text-xs italic">Your account</p>
                     )}
                   </div>
 
@@ -799,9 +831,13 @@ export default function SendMoneyPage() {
                   {/* Receiver (To) */}
                   <div>
                     <p className="text-xs text-gray-400 mb-1.5">To</p>
-                    <p className="text-white font-semibold text-lg">{receiverInfo?.full_name}</p>
-                    {receiverInfo?.username && (
+                    <p className="text-white font-semibold text-lg">
+                      {receiverInfo?.full_name || receiverInfo?.name || 'Recipient'}
+                    </p>
+                    {receiverInfo?.username ? (
                       <p className="text-cyan-400 text-sm">@{receiverInfo.username}</p>
+                    ) : (
+                      <p className="text-gray-500 text-xs italic">No username</p>
                     )}
                   </div>
                 </div>
@@ -873,7 +909,8 @@ export default function SendMoneyPage() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
