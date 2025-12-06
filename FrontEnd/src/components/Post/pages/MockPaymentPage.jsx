@@ -13,10 +13,23 @@ export default function MockPaymentPage() {
   const [processing, setProcessing] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState('card');
   const [cardNumber, setCardNumber] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [planType, setPlanType] = useState('');
 
   const tranId = searchParams.get('tran_id');
   const amount = searchParams.get('amount');
   const currency = searchParams.get('currency') || 'BDT';
+
+  // Extract plan type from transaction ID
+  useEffect(() => {
+    if (tranId) {
+      // Try to extract plan from transaction ID or localStorage
+      const storedPlan = localStorage.getItem('mock_payment_plan');
+      if (storedPlan) {
+        setPlanType(storedPlan);
+      }
+    }
+  }, [tranId]);
 
   const paymentMethods = [
     { id: 'card', name: 'Credit/Debit Card', icon: 'fa-credit-card' },
@@ -31,8 +44,8 @@ export default function MockPaymentPage() {
     { number: '4000000000000069', label: 'Expired Card', type: 'error' }
   ];
 
-  const handlePayment = async () => {
-    if (selectedMethod === 'card' && !cardNumber) {
+  const handlePayment = async (isSuccess = true) => {
+    if (isSuccess && selectedMethod === 'card' && !cardNumber) {
       alert('Please enter a card number');
       return;
     }
@@ -46,8 +59,13 @@ export default function MockPaymentPage() {
       });
 
       if (response.data.success) {
-        // Navigate to success URL
-        navigate(response.data.redirect_url || '/premium?status=success');
+        // Show success animation
+        setShowSuccess(true);
+        
+        // Wait 2 seconds then navigate to premium with success
+        setTimeout(() => {
+          navigate(response.data.redirect_url || '/premium?status=success');
+        }, 2000);
       } else {
         // Navigate to failed URL
         navigate(response.data.redirect_url || '/premium?status=failed');
@@ -148,21 +166,39 @@ export default function MockPaymentPage() {
           </div>
         )}
 
+        {/* Quick OTP Success Button */}
+        <div className="mb-4 p-4 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/30 rounded-xl">
+          <div className="text-emerald-300 text-sm mb-3 font-semibold">
+            <i className="fas fa-bolt mr-2"></i>
+            Quick Test Payment
+          </div>
+          <button
+            onClick={() => handlePayment(true)}
+            disabled={processing}
+            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg hover:shadow-emerald-500/50"
+          >
+            <span className="flex items-center justify-center">
+              <i className="fas fa-check-circle mr-2"></i>
+              ✓ OTP Success (Instant Premium)
+            </span>
+          </button>
+        </div>
+
         {/* Pay Button */}
         <button
-          onClick={handlePayment}
+          onClick={() => handlePayment(true)}
           disabled={processing}
-          className="w-full py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-emerald-500/50"
+          className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-cyan-500/50"
         >
           {processing ? (
             <span className="flex items-center justify-center">
               <i className="fas fa-spinner fa-spin mr-2"></i>
-              Processing...
+              Processing Payment...
             </span>
           ) : (
             <span className="flex items-center justify-center">
               <i className="fas fa-lock mr-2"></i>
-              Pay {currency} {parseFloat(amount).toLocaleString()}
+              Complete Payment - {currency} {parseFloat(amount).toLocaleString()}
             </span>
           )}
         </button>
@@ -170,7 +206,8 @@ export default function MockPaymentPage() {
         {/* Cancel */}
         <button
           onClick={() => navigate('/premium')}
-          className="w-full mt-3 py-3 text-gray-400 hover:text-white transition-colors"
+          disabled={processing}
+          className="w-full mt-3 py-3 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
         >
           Cancel Payment
         </button>
@@ -181,6 +218,57 @@ export default function MockPaymentPage() {
           Demo Mode - No real transactions
         </div>
       </div>
+
+      {/* Success Animation Overlay */}
+      {showSuccess && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-12 max-w-md mx-4 border-2 border-emerald-500/30 shadow-2xl shadow-emerald-500/20 animate-scaleIn">
+            <div className="text-center">
+              {/* Success Icon */}
+              <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full mx-auto mb-6 flex items-center justify-center animate-bounce">
+                <i className="fas fa-check text-white text-5xl"></i>
+              </div>
+              
+              {/* Success Message */}
+              <h2 className="text-3xl font-bold text-white mb-3">
+                Payment Successful! 🎉
+              </h2>
+              <p className="text-emerald-400 text-lg mb-6 font-semibold">
+                Premium Activated
+              </p>
+              
+              {/* Loading Indicator */}
+              <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
+                <i className="fas fa-spinner fa-spin"></i>
+                <span>Redirecting to Premium...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { 
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to { 
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        .animate-scaleIn {
+          animation: scaleIn 0.4s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

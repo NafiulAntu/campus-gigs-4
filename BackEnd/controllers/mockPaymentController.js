@@ -48,7 +48,9 @@ exports.initiateMockPayment = async (req, res) => {
       transaction_id: tran_id,
       amount,
       currency: 'BDT',
-      status: 'pending'
+      status: 'pending',
+      plan_type: plan_type,
+      payment_method: 'mock'
     });
 
     const data = {
@@ -69,6 +71,7 @@ exports.initiateMockPayment = async (req, res) => {
       success: true,
       gateway_url: response.GatewayPageURL,
       transaction_id: tran_id,
+      plan_type: plan_type,
       mode: 'DEMO'
     });
 

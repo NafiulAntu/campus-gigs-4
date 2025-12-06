@@ -121,8 +121,15 @@ const Premium = ({ onBack }) => {
           setError(response.data.message || response.data.error || 'Failed to initiate SSLCommerz payment');
         }
       } else if (paymentGateway === 'mock') {
+        console.log('🔵 Initiating Mock payment for plan:', planType);
         response = await api.post('/mock-payment/initiate', { plan_type: planType });
+        console.log('🔵 Mock payment response:', response.data);
+        
         if (response.data.success && response.data.gateway_url) {
+          // Store plan type for the payment page
+          localStorage.setItem('mock_payment_plan', planType);
+          localStorage.setItem('mock_payment_transaction', response.data.transaction_id);
+          
           window.location.href = response.data.gateway_url; // Redirect to Mock Payment
           return;
         } else {
