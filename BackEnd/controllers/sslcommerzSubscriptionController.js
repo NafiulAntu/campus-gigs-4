@@ -204,6 +204,7 @@ exports.subscriptionSuccess = async (req, res) => {
 
     // Update payment transaction
     paymentTransaction.status = 'completed';
+    paymentTransaction.subscription_id = subscription.id;
     paymentTransaction.payment_intent_id = val_id;
     paymentTransaction.ssl_val_id = val_id;
     paymentTransaction.ssl_card_type = card_type;
