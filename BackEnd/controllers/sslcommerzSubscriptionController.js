@@ -147,13 +147,13 @@ exports.subscriptionSuccess = async (req, res) => {
   try {
     const { tran_id, val_id, amount, card_type, card_brand, bank_tran_id } = req.body;
 
-    console.log('Subscription payment success callback:', req.body);
+    console.log('✅ SSLCommerz payment success callback:', req.body);
 
     // Validate payment with SSLCommerz
     const validation = await sslcommerzService.validatePayment(val_id);
 
     if (!validation.success || validation.data.status !== 'VALID') {
-      console.error('Subscription payment validation failed:', validation);
+      console.error('❌ Payment validation failed:', validation);
       return res.redirect(
         `${process.env.FRONTEND_URL}/premium?status=failed&message=Payment validation failed`
       );
@@ -165,6 +165,7 @@ exports.subscriptionSuccess = async (req, res) => {
     });
 
     if (!paymentTransaction) {
+      console.error('❌ Transaction not found:', tran_id);
       return res.redirect(
         `${process.env.FRONTEND_URL}/premium?status=failed&message=Transaction not found`
       );
@@ -173,64 +174,68 @@ exports.subscriptionSuccess = async (req, res) => {
     const userId = paymentTransaction.user_id;
     const planType = paymentTransaction.plan_type;
 
-    // Calculate subscription dates
-    const startDate = new Date();
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + PLAN_DAYS[planType]);
+    // Use Sequelize transaction for atomicity (same as Stripe)
+    const sequelize = require('../config/sequelize');
+    await sequelize.transaction(async (t) => {
+      // Update payment transaction to success
+      paymentTransaction.status = 'success';
+      paymentTransaction.payment_method = `sslcommerz_${card_type || 'card'}`;
+      paymentTransaction.ssl_val_id = val_id;
+      paymentTransaction.ssl_card_type = card_type;
+      paymentTransaction.ssl_card_brand = card_brand;
+      paymentTransaction.ssl_bank_tran_id = bank_tran_id;
+      await paymentTransaction.save({ transaction: t });
 
-    // Create or update subscription
-    const [subscription, created] = await Subscription.findOrCreate({
-      where: { user_id: userId },
-      defaults: {
+      // Calculate dates
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + PLAN_DAYS[planType]);
+
+      // Determine plan_type for database (monthly or yearly)
+      const dbPlanType = planType === 'yearly' ? 'yearly' : 'monthly';
+
+      // Create subscription with plan_duration (same as Stripe)
+      const subscription = await Subscription.create({
         user_id: userId,
-        plan_type: planType,
-        plan_duration: planType,
-        status: 'active',
+        plan_type: dbPlanType,
+        plan_duration: planType, // Store original plan (15days/30days/yearly)
         start_date: startDate,
         end_date: endDate,
+        status: 'active',
         auto_renew: false
-      }
+      }, { transaction: t });
+
+      // Link subscription to transaction
+      paymentTransaction.subscription_id = subscription.id;
+      await paymentTransaction.save({ transaction: t });
+
+      // Update user premium status with expiry date (same as Stripe)
+      await User.updatePremiumStatus(userId, true, endDate);
+
+      console.log(`✅ Subscription created for user ${userId}, expires:`, endDate);
+
+      // Create notification after transaction commits (same as Stripe)
+      t.afterCommit(async () => {
+        try {
+          const { createNotification } = require('../utils/simpleNotificationHelpers');
+          const planNames = {
+            '15days': '15 Days',
+            '30days': '30 Days',
+            'yearly': 'Yearly'
+          };
+          await createNotification({
+            userId,
+            type: 'system',
+            content: `🎉 Welcome to Campus Gigs Premium! Your ${planNames[planType]} subscription is now active.`,
+            metadata: { plan_type: planType, subscription_id: subscription.id, amount: paymentTransaction.amount }
+          });
+        } catch (notifError) {
+          console.error('Notification error:', notifError);
+        }
+      });
     });
 
-    if (!created) {
-      // Update existing subscription
-      subscription.plan_type = planType;
-      subscription.plan_duration = planType;
-      subscription.status = 'active';
-      subscription.start_date = startDate;
-      subscription.end_date = endDate;
-      await subscription.save();
-    }
-
-    // Update payment transaction
-    paymentTransaction.status = 'completed';
-    paymentTransaction.subscription_id = subscription.id;
-    paymentTransaction.payment_intent_id = val_id;
-    paymentTransaction.ssl_val_id = val_id;
-    paymentTransaction.ssl_card_type = card_type;
-    paymentTransaction.ssl_card_brand = card_brand;
-    paymentTransaction.ssl_bank_tran_id = bank_tran_id;
-    await paymentTransaction.save();
-
-    // Update user premium status
-    await pool.query(
-      'UPDATE users SET is_premium = true, premium_until = $1 WHERE id = $2',
-      [endDate, userId]
-    );
-
-    // Create notification
-    await pool.query(`
-      INSERT INTO notifications (user_id, type, title, message, link, created_at)
-      VALUES ($1, $2, $3, $4, $5, NOW())
-    `, [
-      userId,
-      'premium_activated',
-      'Premium Activated!',
-      `Your ${planType} premium subscription is now active`,
-      '/premium'
-    ]);
-
-    console.log('Subscription activated successfully for user:', userId);
+    console.log('✅ SSLCommerz subscription activated successfully for user:', userId);
 
     res.redirect(
       `${process.env.FRONTEND_URL}/premium?status=success&plan=${planType}`
@@ -251,7 +256,7 @@ exports.subscriptionFail = async (req, res) => {
   try {
     const { tran_id, error } = req.body;
 
-    console.log('Subscription payment failed:', req.body);
+    console.log('❌ SSLCommerz payment failed:', req.body);
 
     // Update payment transaction
     await PaymentTransaction.update(
@@ -277,7 +282,7 @@ exports.subscriptionCancel = async (req, res) => {
   try {
     const { tran_id } = req.body;
 
-    console.log('Subscription payment cancelled:', req.body);
+    console.log('⚠️ SSLCommerz payment cancelled:', req.body);
 
     // Update payment transaction
     await PaymentTransaction.update(
