@@ -862,6 +862,17 @@ export default function SendMoneyPage() {
                   {/* Receiver (To) */}
                   <div>
                     <p className="text-xs text-gray-400 mb-1.5">To</p>
+                    {(() => {
+                      console.log('🔴 RENDERING RECEIVER IN MODAL:', {
+                        receiverInfo,
+                        hasReceiverInfo: !!receiverInfo,
+                        full_name: receiverInfo?.full_name,
+                        name: receiverInfo?.name,
+                        username: receiverInfo?.username,
+                        allKeys: receiverInfo ? Object.keys(receiverInfo) : 'null'
+                      });
+                      return null;
+                    })()}
                     <p className="text-white font-semibold text-lg">
                       {receiverInfo?.full_name || receiverInfo?.name || 'Recipient'}
                     </p>
