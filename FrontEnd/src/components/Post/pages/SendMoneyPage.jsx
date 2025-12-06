@@ -60,14 +60,6 @@ export default function SendMoneyPage() {
       logo: 'https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg',
       color: '#8B3090',
       gradient: 'from-purple-600 to-purple-500'
-    },
-    { 
-      id: 'sslcommerz', 
-      name: 'Card Payment', 
-      logo: 'https://seeklogo.com/images/S/sslcommerz-logo-79BD65046D-seeklogo.com.png',
-      color: '#1A8FE3',
-      gradient: 'from-blue-600 to-indigo-600',
-      description: 'Visa, MasterCard, Amex & more'
     }
   ];
 
@@ -251,34 +243,8 @@ export default function SendMoneyPage() {
 
       const receiverId = receiverInfo.id || receiverInfo.user_id;
 
-      // Handle SSLCommerz (Credit/Debit Card) payment separately
-      if (paymentMethod === 'sslcommerz') {
-        const response = await initiateSSLCommerzPayment({
-          receiver_id: receiverId,
-          amount: parseFloat(amount),
-          notes: notes.trim()
-        });
-
-        if (response.data.success && response.data.gatewayUrl) {
-          console.log('Redirecting to SSLCommerz:', response.data.gatewayUrl);
-          
-          // Store transaction info for redirect callback
-          localStorage.setItem('pending_transaction_id', response.data.transaction_id);
-          localStorage.setItem('payment_method', 'sslcommerz');
-          localStorage.setItem('ssl_session_key', response.data.session_key);
-          
-          // Redirect to SSLCommerz gateway
-          window.location.href = response.data.gatewayUrl;
-        } else {
-          throw new Error('Failed to initialize SSLCommerz payment');
-        }
-        return;
-      }
-
       // Handle Mobile Wallet payments (bKash, Nagad, Rocket)
-      const apiUrl = isDummyMode 
-        ? 'http://localhost:5000/api/dummy-mobile-wallet/initiate'
-        : 'http://localhost:5000/api/mobile-wallet/initiate';
+      const apiUrl = 'http://localhost:5000/api/mobile-wallet/initiate';
 
       const token = localStorage.getItem('token');
       const response = await fetch(apiUrl, {
@@ -300,10 +266,9 @@ export default function SendMoneyPage() {
       if (data.success && data.data.payment_url) {
         console.log('Redirecting to payment gateway:', data.data.payment_url);
         
-        // Store transaction ID and mode for verification after redirect back
+        // Store transaction ID for verification after redirect back
         localStorage.setItem('pending_transaction_id', data.data.transaction_id);
         localStorage.setItem('payment_method', paymentMethod);
-        localStorage.setItem('payment_mode', isDummyMode ? 'dummy' : 'real');
         
         // Redirect to payment gateway
         window.location.href = data.data.payment_url;
