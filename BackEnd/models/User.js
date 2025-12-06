@@ -162,23 +162,29 @@ class User {
     return result.rows[0];
   }
 
-  // Search users by username, full name, or email
+  // Search users by username, full name, email, or phone number
   static async search(searchTerm) {
     const query = `
-      SELECT id, firebase_uid, full_name, username, email, profile_picture, profession, provider, created_at
-      FROM users 
+      SELECT DISTINCT u.id, u.firebase_uid, u.full_name, u.username, u.email, u.profile_picture, u.profession, u.provider, u.created_at,
+             COALESCE(t.phone, s.phone, e.phone) as phone
+      FROM users u
+      LEFT JOIN teachers t ON u.id = t.user_id
+      LEFT JOIN students s ON u.id = s.user_id
+      LEFT JOIN employees e ON u.id = e.user_id
       WHERE 
-        LOWER(username) LIKE $1 OR 
-        LOWER(full_name) LIKE $1 OR 
-        LOWER(email) LIKE $1
+        LOWER(u.username) LIKE $1 OR 
+        LOWER(u.full_name) LIKE $1 OR 
+        LOWER(u.email) LIKE $1 OR
+        COALESCE(t.phone, s.phone, e.phone) LIKE $1
       ORDER BY 
         CASE 
-          WHEN LOWER(username) = LOWER($2) THEN 1
-          WHEN LOWER(username) LIKE $3 THEN 2
-          WHEN LOWER(full_name) LIKE $3 THEN 3
-          ELSE 4
+          WHEN LOWER(u.username) = LOWER($2) THEN 1
+          WHEN COALESCE(t.phone, s.phone, e.phone) = $2 THEN 2
+          WHEN LOWER(u.username) LIKE $3 THEN 3
+          WHEN LOWER(u.full_name) LIKE $3 THEN 4
+          ELSE 5
         END,
-        full_name
+        u.full_name
       LIMIT 20
     `;
     const wildcardSearch = `%${searchTerm}%`;

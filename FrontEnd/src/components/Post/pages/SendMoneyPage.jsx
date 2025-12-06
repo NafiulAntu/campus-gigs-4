@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   sendMoney, 
   getBalance, 
   getUserById,
+  searchUsers,
   initiateMobileWalletPayment,
   verifyMobileWalletPayment,
   checkPaymentStatus
@@ -25,6 +26,14 @@ export default function SendMoneyPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [balanceLoading, setBalanceLoading] = useState(true);
   const [receiverLoading, setReceiverLoading] = useState(true);
+  const [isDummyMode, setIsDummyMode] = useState(true); // Toggle between dummy and real API
+  
+  // Phone number search states
+  const [phoneSearch, setPhoneSearch] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchRef = useRef(null);
 
   const MIN_AMOUNT = 50;
   const MAX_AMOUNT = 5000;
@@ -102,6 +111,56 @@ export default function SendMoneyPage() {
     }
   };
 
+  // Phone number search handler
+  const handlePhoneSearch = async (value) => {
+    setPhoneSearch(value);
+    
+    if (value.trim().length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const response = await searchUsers(value.trim());
+      setSearchResults(response.data.data || []);
+      setShowSearchResults(true);
+    } catch (err) {
+      console.error('Search error:', err);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Select user from search results
+  const selectUser = (user) => {
+    setReceiverInfo(user);
+    setPhoneSearch('');
+    setSearchResults([]);
+    setShowSearchResults(false);
+  };
+
+  // Clear selected receiver
+  const clearReceiver = () => {
+    setReceiverInfo(null);
+    setPhoneSearch('');
+    setAmount('');
+    setNotes('');
+  };
+
+  // Click outside to close search results
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSearchResults(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const quickAmounts = [100, 500, 1000, 2000, 5000];
 
   const validateAndShowConfirm = () => {
@@ -141,24 +200,39 @@ export default function SendMoneyPage() {
       setLoading(true);
       setError('');
 
-      // Initiate payment with mobile wallet gateway
-      const response = await initiateMobileWalletPayment({
-        receiver_id: receiverInfo.id || receiverInfo.user_id,
-        amount: parseFloat(amount),
-        payment_method: paymentMethod,
-        notes: notes.trim()
+      // Choose API endpoint based on mode
+      const apiUrl = isDummyMode 
+        ? 'http://localhost:5000/api/dummy-mobile-wallet/initiate'
+        : 'http://localhost:5000/api/mobile-wallet/initiate';
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          receiver_id: receiverInfo.id || receiverInfo.user_id,
+          amount: parseFloat(amount),
+          payment_method: paymentMethod,
+          notes: notes.trim()
+        })
       });
 
-      if (response.data.success && response.data.payment_url) {
+      const data = await response.json();
+
+      if (data.success && data.data.payment_url) {
         // Redirect to payment gateway
-        console.log('Redirecting to payment gateway:', response.data.payment_url);
+        console.log('Redirecting to payment gateway:', data.data.payment_url);
         
-        // Store transaction ID for verification after redirect back
-        localStorage.setItem('pending_transaction_id', response.data.transaction_id);
+        // Store transaction ID and mode for verification after redirect back
+        localStorage.setItem('pending_transaction_id', data.data.transaction_id);
         localStorage.setItem('payment_method', paymentMethod);
+        localStorage.setItem('payment_mode', isDummyMode ? 'dummy' : 'real');
         
         // Redirect to payment gateway
-        window.location.href = response.data.payment_url;
+        window.location.href = data.data.payment_url;
       } else {
         throw new Error('Failed to get payment URL');
       }
@@ -273,6 +347,20 @@ export default function SendMoneyPage() {
         .animate-float-slow {
           animation: float-slow 10s ease-in-out infinite;
         }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(30, 41, 59, 0.5);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(6, 182, 212, 0.5);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(6, 182, 212, 0.7);
+        }
       `}</style>
 
       {/* Main Content */}
@@ -280,6 +368,78 @@ export default function SendMoneyPage() {
         <div className="grid lg:grid-cols-3 gap-4">
           {/* Left Sidebar - Receiver & Balance Info */}
           <div className="lg:col-span-1 space-y-3">
+            
+            {/* Phone Number Search - Show when no receiver selected */}
+            {!receiverInfo && !receiverId && (
+              <div ref={searchRef} className="rounded-2xl bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border border-white/10 p-4 backdrop-blur-xl shadow-xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <i className="fi fi-rr-search text-cyan-400 text-xl"></i>
+                  <h3 className="text-white font-semibold">Find Receiver</h3>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Enter phone, name, or username..."
+                    value={phoneSearch}
+                    onChange={(e) => handlePhoneSearch(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                  />
+                  {searchLoading && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="w-5 h-5 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Search Results */}
+                {showSearchResults && searchResults.length > 0 && (
+                  <div className="mt-3 max-h-64 overflow-y-auto space-y-2 custom-scrollbar">
+                    {searchResults.map((user) => (
+                      <button
+                        key={user.id}
+                        onClick={() => selectUser(user)}
+                        className="w-full p-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg border border-slate-700/50 hover:border-cyan-500/50 transition-all text-left group"
+                      >
+                        <div className="flex items-center gap-3">
+                          {user.profile_picture ? (
+                            <img
+                              src={user.profile_picture}
+                              alt={user.full_name}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                              <span className="text-white font-bold">{user.full_name?.charAt(0)}</span>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-medium truncate">{user.full_name}</p>
+                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                              {user.username && <span>@{user.username}</span>}
+                              {user.phone && (
+                                <>
+                                  {user.username && <span>•</span>}
+                                  <span>{user.phone}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <i className="fi fi-rr-arrow-right text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {showSearchResults && searchResults.length === 0 && !searchLoading && phoneSearch.length >= 2 && (
+                  <div className="mt-3 text-center py-4 text-gray-400 text-sm">
+                    <i className="fi fi-rr-user-slash text-2xl mb-2"></i>
+                    <p>No users found</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
             {/* Receiver Card */}
             {receiverInfo && (
               <div className="rounded-2xl bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 border border-white/10 p-4 backdrop-blur-xl hover:border-cyan-500/30 transition-all duration-300 shadow-xl hover:shadow-cyan-500/10 group">
@@ -315,11 +475,26 @@ export default function SendMoneyPage() {
                     {receiverInfo.username && (
                       <p className="text-gray-400 text-sm">@{receiverInfo.username}</p>
                     )}
-                    {!receiverInfo.username && receiverInfo.email && (
+                    {receiverInfo.phone && (
+                      <p className="text-gray-400 text-sm flex items-center gap-1">
+                        <i className="fi fi-rr-phone-call text-xs"></i>
+                        {receiverInfo.phone}
+                      </p>
+                    )}
+                    {!receiverInfo.username && !receiverInfo.phone && receiverInfo.email && (
                       <p className="text-gray-400 text-sm">{receiverInfo.email}</p>
                     )}
                   </div>
                 </div>
+                {!receiverId && (
+                  <button
+                    onClick={clearReceiver}
+                    className="mt-3 w-full py-2 bg-slate-800/50 hover:bg-red-500/20 border border-slate-700 hover:border-red-500/50 rounded-lg text-red-400 text-sm font-medium transition-all flex items-center justify-center gap-2"
+                  >
+                    <i className="fi fi-rr-cross-circle"></i>
+                    Change Receiver
+                  </button>
+                )}
               </div>
             )}
 
@@ -377,6 +552,25 @@ export default function SendMoneyPage() {
               <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -z-0"></div>
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl -z-0"></div>
               <div className="relative z-10">
+              {/* Test Mode Toggle */}
+              <div className="mb-5 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-white text-sm font-medium">Test Mode</span>
+                  <button
+                    onClick={() => setIsDummyMode(!isDummyMode)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      isDummyMode ? 'bg-amber-500' : 'bg-slate-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${
+                        isDummyMode ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
               {/* Payment Methods */}
               <div className="mb-5">
                 <div className="flex items-center gap-2 mb-4">

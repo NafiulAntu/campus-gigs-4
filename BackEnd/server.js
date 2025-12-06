@@ -53,6 +53,7 @@ const stripeRoutes = require('./routes/stripeRoutes');
 const mockPaymentRoutes = require('./routes/mockPaymentRoutes');
 const mobileWalletRoutes = require('./routes/mobileWalletRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
+const dummyMobileWalletRoutes = require('./routes/dummyMobileWalletRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
@@ -69,6 +70,7 @@ app.use('/api/stripe', stripeRoutes);
 app.use('/api/mock-payment', mockPaymentRoutes);
 app.use('/api/mobile-wallet', mobileWalletRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/dummy-mobile-wallet', dummyMobileWalletRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Campus Gigs API', status: 'running' });
