@@ -19,6 +19,11 @@ const Subscription = sequelize.define('Subscription', {
     type: DataTypes.ENUM('monthly', 'yearly'),
     allowNull: false
   },
+  plan_duration: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    comment: 'Original plan duration: 15days, 30days, or yearly'
+  },
   status: {
     type: DataTypes.ENUM('active', 'expired', 'cancelled', 'pending', 'completed'),
     defaultValue: 'pending'
