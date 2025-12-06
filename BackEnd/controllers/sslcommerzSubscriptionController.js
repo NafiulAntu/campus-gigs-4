@@ -112,9 +112,11 @@ exports.initPremiumSubscription = async (req, res) => {
     });
 
     // Initialize payment with SSLCommerz
+    console.log('🔵 Initiating SSLCommerz payment with data:', JSON.stringify(paymentData, null, 2));
     const paymentResponse = await sslcommerzService.initPayment(paymentData);
 
-    console.log('SSLCommerz subscription session created:', tran_id);
+    console.log('✅ SSLCommerz subscription session created:', tran_id);
+    console.log('✅ Gateway URL:', paymentResponse.gatewayUrl);
 
     res.json({
       success: true,
@@ -127,11 +129,13 @@ exports.initPremiumSubscription = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('SSLCommerz subscription init error:', error);
+    console.error('❌ SSLCommerz subscription init error:', error);
+    console.error('❌ Error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Failed to initialize payment',
-      error: error.message
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

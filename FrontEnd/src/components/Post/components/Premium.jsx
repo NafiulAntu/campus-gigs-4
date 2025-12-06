@@ -102,11 +102,14 @@ const Premium = ({ onBack }) => {
           setError(response.data.error || 'Failed to create Stripe checkout session');
         }
       } else if (paymentGateway === 'sslcommerz') {
-        console.log('Initiating SSLCommerz payment for plan:', planType);
+        console.log('🔵 Initiating SSLCommerz payment for plan:', planType);
         response = await initiateSSLCommerzSubscription({ plan_type: planType });
-        console.log('SSLCommerz response:', response.data);
+        console.log('🔵 SSLCommerz full response:', response);
+        console.log('🔵 SSLCommerz response data:', response.data);
         
         if (response.data.success && response.data.gatewayUrl) {
+          console.log('✅ SSLCommerz gateway URL received:', response.data.gatewayUrl);
+          
           // Store transaction info for callback
           localStorage.setItem('ssl_subscription_transaction', response.data.transaction_id);
           localStorage.setItem('ssl_subscription_plan', planType);
@@ -114,7 +117,8 @@ const Premium = ({ onBack }) => {
           window.location.href = response.data.gatewayUrl; // Redirect to SSLCommerz
           return;
         } else {
-          setError('Failed to initiate SSLCommerz payment');
+          console.error('❌ SSLCommerz payment initiation failed:', response.data);
+          setError(response.data.message || response.data.error || 'Failed to initiate SSLCommerz payment');
         }
       } else if (paymentGateway === 'mock') {
         response = await api.post('/mock-payment/initiate', { plan_type: planType });

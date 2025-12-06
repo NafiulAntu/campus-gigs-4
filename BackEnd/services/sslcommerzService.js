@@ -5,6 +5,18 @@ class SSLCommerzService {
     this.store_id = process.env.SSLCOMMERZ_STORE_ID;
     this.store_passwd = process.env.SSLCOMMERZ_STORE_PASSWORD;
     this.is_live = process.env.SSLCOMMERZ_MODE === 'live';
+    
+    // Validate credentials on initialization
+    if (!this.store_id || !this.store_passwd) {
+      console.error('❌ SSLCommerz credentials missing!');
+      console.error('Store ID:', this.store_id ? '✓ Present' : '✗ Missing');
+      console.error('Store Password:', this.store_passwd ? '✓ Present' : '✗ Missing');
+      throw new Error('SSLCommerz credentials are not configured');
+    }
+    
+    console.log('✅ SSLCommerz Service initialized');
+    console.log('Store ID:', this.store_id);
+    console.log('Mode:', this.is_live ? 'LIVE' : 'SANDBOX');
   }
 
   /**
@@ -14,8 +26,19 @@ class SSLCommerzService {
    */
   async initPayment(paymentData) {
     try {
+      console.log('🔵 SSLCommerz Init - Store ID:', this.store_id);
+      console.log('🔵 SSLCommerz Init - Mode:', this.is_live ? 'LIVE' : 'SANDBOX');
+      console.log('🔵 SSLCommerz Init - Payment Data:', JSON.stringify(paymentData, null, 2));
+      
       const sslcz = new SSLCommerzPayment(this.store_id, this.store_passwd, this.is_live);
       const apiResponse = await sslcz.init(paymentData);
+      
+      console.log('✅ SSLCommerz Init Response:', JSON.stringify(apiResponse, null, 2));
+      
+      if (apiResponse.status === 'FAILED') {
+        throw new Error(apiResponse.failedreason || 'Payment initialization failed');
+      }
+      
       return {
         success: true,
         gatewayUrl: apiResponse.GatewayPageURL,
@@ -23,7 +46,8 @@ class SSLCommerzService {
         response: apiResponse
       };
     } catch (error) {
-      console.error('SSLCommerz init error:', error);
+      console.error('❌ SSLCommerz init error:', error);
+      console.error('❌ Error stack:', error.stack);
       throw new Error('Payment initialization failed: ' + error.message);
     }
   }
