@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { sendMoney, getBalance, getUserById } from '../../../services/api';
+import { 
+  sendMoney, 
+  getBalance, 
+  getUserById,
+  initiateMobileWalletPayment,
+  verifyMobileWalletPayment,
+  checkPaymentStatus
+} from '../../../services/api';
 
 export default function SendMoneyPage() {
   const navigate = useNavigate();
@@ -132,24 +139,31 @@ export default function SendMoneyPage() {
       setLoading(true);
       setError('');
 
-      const response = await sendMoney({
+      // Initiate payment with mobile wallet gateway
+      const response = await initiateMobileWalletPayment({
         receiver_id: receiverInfo.user_id,
         amount: parseFloat(amount),
         payment_method: paymentMethod,
         notes: notes.trim()
       });
 
-      setSuccess('Money sent successfully!');
-      await fetchBalance();
-      
-      setTimeout(() => {
-        navigate('/post');
-      }, 2000);
+      if (response.data.success && response.data.payment_url) {
+        // Redirect to payment gateway
+        console.log('Redirecting to payment gateway:', response.data.payment_url);
+        
+        // Store transaction ID for verification after redirect back
+        localStorage.setItem('pending_transaction_id', response.data.transaction_id);
+        localStorage.setItem('payment_method', paymentMethod);
+        
+        // Redirect to payment gateway
+        window.location.href = response.data.payment_url;
+      } else {
+        throw new Error('Failed to get payment URL');
+      }
     } catch (err) {
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to send money. Please try again.';
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to initiate payment. Please try again.';
       setError(errorMsg);
       setShowConfirm(false);
-    } finally {
       setLoading(false);
     }
   };

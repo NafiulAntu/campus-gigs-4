@@ -141,6 +141,12 @@ export const getTransactionById = (transactionId) => API.get(`/transactions/${tr
 export const getBalance = () => API.get('/transactions/balance/current');
 export const addBalance = (amount) => API.post('/transactions/balance/add', { amount });
 
+// Mobile Wallet Payment API
+export const initiateMobileWalletPayment = (data) => API.post('/mobile-wallet/initiate', data);
+export const verifyMobileWalletPayment = (data) => API.post('/mobile-wallet/verify', data);
+export const checkPaymentStatus = (transactionId) => API.get(`/mobile-wallet/status/${transactionId}`);
+export const cancelPayment = (transactionId) => API.post(`/mobile-wallet/cancel/${transactionId}`);
+
 // Payment Transaction API (for subscription payments)
 export const getPaymentHistory = () => API.get('/payments/history');
 
