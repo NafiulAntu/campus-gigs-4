@@ -100,28 +100,71 @@ exports.processMockPayment = async (req, res) => {
         const planType = mockTxn.product_name.includes('15days') ? '15days' :
                         mockTxn.product_name.includes('30days') ? '30days' : 'yearly';
 
-        // Create subscription
+        // Create or update subscription
         const startDate = new Date();
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + PLAN_DAYS[planType]);
 
-        await Subscription.create({
-          user_id: transaction.user_id,
-          plan_type: planType,
-          start_date: startDate,
-          end_date: endDate,
-          status: 'active',
-          transaction_id
+        // Check if user already has an active subscription
+        const existingSub = await Subscription.findOne({
+          where: { 
+            user_id: transaction.user_id,
+            status: 'active'
+          }
         });
 
-        res.redirect(`${process.env.FRONTEND_URL}/payment/success?tran_id=${transaction_id}`);
+        if (existingSub) {
+          // Extend existing subscription
+          existingSub.end_date = endDate;
+          existingSub.plan_type = planType;
+          existingSub.plan_duration = planType;
+          await existingSub.save();
+        } else {
+          // Create new subscription
+          await Subscription.create({
+            user_id: transaction.user_id,
+            plan_type: planType,
+            plan_duration: planType,
+            start_date: startDate,
+            end_date: endDate,
+            status: 'active',
+            transaction_id
+          });
+        }
+
+        // Activate premium for user
+        const user = await User.findByPk(transaction.user_id);
+        if (user) {
+          user.is_premium = true;
+          user.premium_activated_at = new Date();
+          await user.save();
+        }
+
+        // Return success JSON for API call
+        return res.json({
+          success: true,
+          transaction_id,
+          message: 'Payment successful',
+          redirect_url: `/premium?status=success&plan=${planType}`
+        });
       }
-    } else {
-      res.redirect(`${process.env.FRONTEND_URL}/payment/failed?tran_id=${transaction_id}`);
     }
+    
+    // Payment failed
+    return res.json({
+      success: false,
+      transaction_id,
+      message: result.message || 'Payment failed',
+      redirect_url: `/premium?status=failed&error=${encodeURIComponent(result.message || 'Payment failed')}`
+    });
 
   } catch (error) {
-    res.status(500).json({ error: 'Payment processing failed' });
+    console.error('Mock payment processing error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Payment processing failed',
+      message: error.message
+    });
   }
 };
 

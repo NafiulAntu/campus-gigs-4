@@ -39,13 +39,22 @@ export default function MockPaymentPage() {
 
     setProcessing(true);
     try {
-      await processMockPayment({
+      const response = await processMockPayment({
         transaction_id: tranId,
         payment_method: selectedMethod,
         card_number: selectedMethod === 'card' ? cardNumber : null
       });
+
+      if (response.data.success) {
+        // Navigate to success URL
+        navigate(response.data.redirect_url || '/premium?status=success');
+      } else {
+        // Navigate to failed URL
+        navigate(response.data.redirect_url || '/premium?status=failed');
+      }
     } catch (error) {
-      alert('Payment failed: ' + error.message);
+      console.error('Payment error:', error);
+      alert('❌ Payment processing failed: ' + (error.response?.data?.message || error.message));
       setProcessing(false);
     }
   };

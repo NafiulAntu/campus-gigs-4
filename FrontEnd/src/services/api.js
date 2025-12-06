@@ -163,5 +163,9 @@ export const querySSLCommerzRefund = (refundRefId) => API.get(`/sslcommerz/refun
 // SSLCommerz Subscription API
 export const initiateSSLCommerzSubscription = (data) => API.post('/sslcommerz/subscription/init', data);
 
+// Mock Payment API
+export const initiateMockPayment = (data) => API.post('/mock-payment/initiate', data);
+export const processMockPayment = (data) => API.post('/mock-payment/complete', data);
+
 // Export API instance as default for direct usage
 export default API;
