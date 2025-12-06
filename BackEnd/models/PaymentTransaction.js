@@ -39,11 +39,29 @@ const PaymentTransaction = sequelize.define('PaymentTransaction', {
     type: DataTypes.STRING(50)
   },
   status: {
-    type: DataTypes.ENUM('pending', 'success', 'failed', 'cancelled', 'refunded'),
+    type: DataTypes.ENUM('pending', 'success', 'failed', 'cancelled', 'refunded', 'completed'),
     defaultValue: 'pending'
   },
   gateway_response: {
     type: DataTypes.JSONB
+  },
+  plan_type: {
+    type: DataTypes.STRING(50)
+  },
+  payment_intent_id: {
+    type: DataTypes.STRING(255)
+  },
+  ssl_val_id: {
+    type: DataTypes.STRING(255)
+  },
+  ssl_card_type: {
+    type: DataTypes.STRING(100)
+  },
+  ssl_card_brand: {
+    type: DataTypes.STRING(100)
+  },
+  ssl_bank_tran_id: {
+    type: DataTypes.STRING(255)
   },
   created_at: {
     type: DataTypes.DATE,

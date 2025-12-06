@@ -58,31 +58,46 @@ export default function Transactions({ onBack }) {
   return (
     <div className="fixed inset-0 bg-black overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 bg-black/95 backdrop-blur-sm border-b border-white/10">
-        <div className="flex items-center gap-4 px-4 py-3">
-          <button
-            onClick={onBack}
-            className="h-9 w-9 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"
-          >
-            <i className="fi fi-br-arrow-left text-white text-xl"></i>
-          </button>
-          <div>
-            <h2 className="text-xl font-bold text-white">Transactions</h2>
-            <p className="text-sm text-gray-400">Your transaction history</p>
+      <div className="flex-shrink-0 bg-gradient-to-r from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl border-b border-white/10 shadow-xl">
+        <div className="flex items-center justify-between px-4 py-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onBack}
+              className="h-11 w-11 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-700/80 hover:from-slate-700/90 hover:to-slate-600/90 flex items-center justify-center transition-all duration-300 border border-white/10 shadow-lg hover:shadow-cyan-500/20 hover:scale-105 group"
+            >
+              <i className="fi fi-br-arrow-left text-white text-xl group-hover:-translate-x-1 transition-transform"></i>
+            </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <i className="fi fi-rr-receipt text-cyan-400 text-2xl"></i>
+                <h2 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Transactions</h2>
+              </div>
+              <p className="text-xs text-gray-400 ml-10">Your payment history</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-full border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-green-500/10">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+            <span className="text-emerald-300 text-xs font-semibold">Live</span>
           </div>
         </div>
       </div>
 
       {/* Balance Card */}
       <div className="flex-shrink-0 p-4">
-        <div className="bg-gradient-to-br from-primary-teal to-blue-500 rounded-2xl p-6 shadow-xl">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-br from-cyan-500/10 via-blue-500/10 to-purple-500/10 rounded-2xl p-6 shadow-2xl border border-cyan-500/20 relative overflow-hidden">
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
+          <div className="relative flex items-center justify-between">
             <div>
-              <div className="text-white/80 text-sm font-medium mb-1">Available Balance</div>
-              <div className="text-white text-3xl font-bold">৳{balance.toFixed(2)}</div>
+              <div className="flex items-center gap-2 text-gray-400 text-sm font-medium mb-2">
+                <i className="fi fi-rr-wallet text-emerald-400"></i>
+                <span>Available Balance</span>
+              </div>
+              <div className="text-white text-4xl font-black">৳{balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <p className="text-xs text-gray-500 mt-1">Updated just now</p>
             </div>
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <i className="fas fa-wallet text-white text-2xl"></i>
+            <div className="w-20 h-20 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-cyan-500/30 shadow-lg">
+              <i className="fi fi-rr-piggy-bank text-cyan-400 text-3xl"></i>
             </div>
           </div>
         </div>
@@ -90,23 +105,28 @@ export default function Transactions({ onBack }) {
 
       {/* Filter Tabs */}
       <div className="flex-shrink-0 px-4 pb-4">
-        <div className="flex gap-2 bg-white/5 rounded-xl p-1">
+        <div className="flex gap-2 bg-slate-900/50 rounded-xl p-1.5 border border-slate-800">
           {[
-            { key: 'all', label: 'All', icon: 'fa-list' },
-            { key: 'sent', label: 'Sent', icon: 'fa-arrow-up' },
-            { key: 'received', label: 'Received', icon: 'fa-arrow-down' }
+            { key: 'all', label: 'All', icon: 'fi-rr-apps', color: 'cyan' },
+            { key: 'sent', label: 'Sent', icon: 'fi-rr-arrow-up', color: 'red' },
+            { key: 'received', label: 'Received', icon: 'fi-rr-arrow-down', color: 'green' }
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => setFilter(tab.key)}
-              className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
                 filter === tab.key
-                  ? 'bg-primary-teal text-white shadow-lg'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 scale-105'
+                  : 'text-gray-400 hover:text-white hover:bg-slate-800/50'
               }`}
             >
-              <i className={`fas ${tab.icon} mr-2`}></i>
-              {tab.label}
+              <i className={`fi ${tab.icon} ${filter === tab.key ? 'text-white' : ''}`}></i>
+              <span>{tab.label}</span>
+              {filter === tab.key && (
+                <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">
+                  {filteredTransactions.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -115,15 +135,23 @@ export default function Transactions({ onBack }) {
       {/* Transactions List */}
       <div className="flex-1 overflow-y-auto px-4">
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-4 border-primary-teal border-t-transparent rounded-full animate-spin"></div>
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-gray-400">Loading transactions...</p>
           </div>
         ) : filteredTransactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
-              <i className="fas fa-receipt text-gray-600 text-3xl"></i>
+            <div className="w-24 h-24 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-2xl flex items-center justify-center mb-6 border border-cyan-500/20">
+              <i className="fi fi-rr-receipt text-gray-500 text-4xl"></i>
             </div>
-            <p className="text-gray-400 text-center">No transactions found</p>
+            <h3 className="text-white font-bold text-lg mb-2">No Transactions Yet</h3>
+            <p className="text-gray-400 text-center text-sm max-w-xs">
+              {filter === 'all' 
+                ? 'Your transaction history will appear here once you send or receive money.'
+                : filter === 'sent'
+                ? 'You haven\'t sent any money yet. Start sending money to see your sent transactions.'
+                : 'You haven\'t received any money yet. Share your details to receive payments.'}
+            </p>
           </div>
         ) : (
           <div className="space-y-3 pb-6">
@@ -136,68 +164,114 @@ export default function Transactions({ onBack }) {
               return (
                 <div
                   key={transaction.id}
-                  className="bg-white/5 hover:bg-white/10 rounded-xl p-4 transition-all border border-white/10 hover:border-white/20"
+                  className="bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 hover:from-slate-800/90 hover:via-slate-700/90 hover:to-slate-800/90 rounded-xl p-4 transition-all border border-white/10 hover:border-cyan-500/30 shadow-lg hover:shadow-cyan-500/10 group"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3">
                     {/* User Avatar */}
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 relative">
                       {otherUser.picture ? (
                         <img
                           src={otherUser.picture}
                           alt={otherUser.name}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-white/10"
+                          className="w-14 h-14 rounded-full object-cover border-2 border-white/10 group-hover:border-cyan-500/30 transition-all"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-teal to-blue-500 flex items-center justify-center text-white font-bold text-lg">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-lg">
                           {otherUser.name?.charAt(0).toUpperCase() || 'U'}
                         </div>
                       )}
+                      <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center shadow-lg ${
+                        isSent ? 'bg-red-500' : 'bg-green-500'
+                      }`}>
+                        <i className={`fi ${isSent ? 'fi-rr-arrow-up' : 'fi-rr-arrow-down'} text-white text-xs`}></i>
+                      </div>
                     </div>
 
                     {/* Transaction Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="min-w-0 flex-1">
-                          <div className="text-white font-semibold truncate">
-                            {isSent ? 'Sent to' : 'Received from'} {otherUser.name}
+                          <div className="text-white font-bold truncate flex items-center gap-2">
+                            {isSent ? (
+                              <>
+                                <span className="text-gray-400 font-normal text-sm">Sent to</span>
+                                {otherUser.name}
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-gray-400 font-normal text-sm">From</span>
+                                {otherUser.name}
+                              </>
+                            )}
                           </div>
-                          <div className="text-gray-400 text-sm">@{otherUser.username}</div>
+                          <div className="text-gray-400 text-xs mt-0.5">@{otherUser.username}</div>
                         </div>
-                        <div className={`text-lg font-bold whitespace-nowrap ${
+                        <div className={`text-xl font-black whitespace-nowrap ${
                           isSent ? 'text-red-400' : 'text-green-400'
                         }`}>
-                          {isSent ? '-' : '+'}৳{parseFloat(transaction.amount).toFixed(2)}
+                          {isSent ? '-' : '+'}৳{parseFloat(transaction.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </div>
                       </div>
 
                       {/* Transaction Details */}
-                      <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
-                        <span className="capitalize">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mt-2">
+                        <span className="capitalize flex items-center gap-1 bg-slate-800/50 px-2 py-1 rounded-md">
                           <i className={`fas ${
+                            transaction.transaction_type === 'send_money' ? 'fa-paper-plane' :
                             transaction.transaction_type === 'transfer' ? 'fa-exchange-alt' :
                             transaction.transaction_type === 'payment' ? 'fa-credit-card' :
                             transaction.transaction_type === 'tip' ? 'fa-hand-holding-usd' :
                             'fa-undo'
-                          } mr-1`}></i>
-                          {transaction.transaction_type}
+                          }`}></i>
+                          {transaction.transaction_type?.replace('_', ' ') || 'Transfer'}
                         </span>
+                        
+                        {transaction.payment_method && (
+                          <>
+                            <span>•</span>
+                            <span className="flex items-center gap-1 bg-slate-800/50 px-2 py-1 rounded-md capitalize">
+                              <i className="fi fi-rr-credit-card"></i>
+                              {transaction.payment_method}
+                            </span>
+                          </>
+                        )}
+                        
                         <span>•</span>
-                        <span>{formatDate(transaction.created_at)}</span>
+                        <span className="flex items-center gap-1">
+                          <i className="fi fi-rr-clock"></i>
+                          {formatDate(transaction.created_at)}
+                        </span>
+                        
                         <span>•</span>
-                        <span className={`px-2 py-0.5 rounded-full ${
+                        <span className={`px-2 py-1 rounded-md font-medium ${
                           transaction.status === 'completed' ? 'bg-green-500/20 text-green-400' :
                           transaction.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
                           transaction.status === 'failed' ? 'bg-red-500/20 text-red-400' :
                           'bg-gray-500/20 text-gray-400'
                         }`}>
+                          <i className={`fas ${
+                            transaction.status === 'completed' ? 'fa-check-circle' :
+                            transaction.status === 'pending' ? 'fa-clock' :
+                            transaction.status === 'failed' ? 'fa-times-circle' :
+                            'fa-circle'
+                          } mr-1`}></i>
                           {transaction.status}
                         </span>
                       </div>
 
+                      {/* Payment Reference */}
+                      {transaction.payment_reference && (
+                        <div className="mt-2 text-xs text-gray-500 font-mono bg-slate-900/50 px-2 py-1 rounded inline-block">
+                          <i className="fi fi-rr-barcode-read mr-1"></i>
+                          Ref: {transaction.payment_reference}
+                        </div>
+                      )}
+
                       {/* Notes */}
-                      {transaction.notes && (
-                        <div className="mt-2 text-sm text-gray-400 italic">
-                          "{transaction.notes}"
+                      {transaction.description && (
+                        <div className="mt-2 text-sm text-gray-400 bg-slate-800/30 px-3 py-2 rounded-lg italic border border-slate-700/50">
+                          <i className="fi fi-rr-comment-alt mr-1"></i>
+                          "{transaction.description}"
                         </div>
                       )}
                     </div>

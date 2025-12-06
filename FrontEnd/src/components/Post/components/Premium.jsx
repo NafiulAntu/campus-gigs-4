@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createStripeCheckout } from '../../../services/api';
+import { createStripeCheckout, initiateSSLCommerzSubscription } from '../../../services/api';
 import api from '../../../services/api';
 import '../styles/Premium.css';
 
@@ -62,9 +62,16 @@ const Premium = ({ onBack }) => {
           setError(response.data.error || 'Failed to create Stripe checkout session');
         }
       } else if (paymentGateway === 'sslcommerz') {
-        response = await api.post('/payments/initiate', { plan_type: planType });
-        if (response.data.success && response.data.gateway_url) {
-          window.location.href = response.data.gateway_url; // Redirect to SSLCommerz
+        console.log('Initiating SSLCommerz payment for plan:', planType);
+        response = await initiateSSLCommerzSubscription({ plan_type: planType });
+        console.log('SSLCommerz response:', response.data);
+        
+        if (response.data.success && response.data.gatewayUrl) {
+          // Store transaction info for callback
+          localStorage.setItem('ssl_subscription_transaction', response.data.transaction_id);
+          localStorage.setItem('ssl_subscription_plan', planType);
+          
+          window.location.href = response.data.gatewayUrl; // Redirect to SSLCommerz
           return;
         } else {
           setError('Failed to initiate SSLCommerz payment');

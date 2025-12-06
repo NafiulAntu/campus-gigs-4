@@ -7,7 +7,8 @@ import {
   searchUsers,
   initiateMobileWalletPayment,
   verifyMobileWalletPayment,
-  checkPaymentStatus
+  checkPaymentStatus,
+  initiateSSLCommerzPayment
 } from '../../../services/api';
 
 export default function SendMoneyPage() {
@@ -59,6 +60,14 @@ export default function SendMoneyPage() {
       logo: 'https://futurestartup.com/wp-content/uploads/2016/09/DBBL-Mobile-Banking-Becomes-Rocket.jpg',
       color: '#8B3090',
       gradient: 'from-purple-600 to-purple-500'
+    },
+    { 
+      id: 'sslcommerz', 
+      name: 'Card Payment', 
+      logo: 'https://seeklogo.com/images/S/sslcommerz-logo-79BD65046D-seeklogo.com.png',
+      color: '#1A8FE3',
+      gradient: 'from-blue-600 to-indigo-600',
+      description: 'Visa, MasterCard, Amex & more'
     }
   ];
 
@@ -77,11 +86,20 @@ export default function SendMoneyPage() {
   }, []);
 
   const fetchReceiverInfo = async () => {
+    if (!receiverId) return;
+    
     try {
       setReceiverLoading(true);
       const response = await getUserById(receiverId);
-      console.log('Receiver info loaded:', response.data);
-      setReceiverInfo(response.data);
+      console.log('Receiver info loaded from URL:', response.data);
+      
+      // Ensure the receiver has the id field set
+      const receiver = response.data;
+      if (receiver && !receiver.id && receiver.user_id) {
+        receiver.id = receiver.user_id;
+      }
+      
+      setReceiverInfo(receiver);
     } catch (err) {
       console.error('Failed to load receiver:', err);
       setError('Failed to load receiver information');
@@ -136,10 +154,19 @@ export default function SendMoneyPage() {
 
   // Select user from search results
   const selectUser = (user) => {
-    setReceiverInfo(user);
+    console.log('User selected from search:', user);
+    
+    // Ensure the user object has an id field
+    const receiver = { ...user };
+    if (!receiver.id && receiver.user_id) {
+      receiver.id = receiver.user_id;
+    }
+    
+    setReceiverInfo(receiver);
     setPhoneSearch('');
     setSearchResults([]);
     setShowSearchResults(false);
+    setError(''); // Clear any previous errors
   };
 
   // Clear selected receiver
@@ -164,15 +191,37 @@ export default function SendMoneyPage() {
   const quickAmounts = [100, 500, 1000, 2000, 5000];
 
   const validateAndShowConfirm = () => {
-    const numAmount = parseFloat(amount);
+    // Check if receiver exists and has valid ID
+    const targetReceiverId = receiverInfo?.id || receiverInfo?.user_id;
+    
+    console.log('Validation check:', {
+      receiverInfo,
+      targetReceiverId,
+      hasReceiverInfo: !!receiverInfo,
+      hasId: !!targetReceiverId,
+      receiverLoading
+    });
 
-    if (!receiverInfo?.id && !receiverInfo?.user_id) {
-      setError('Receiver information is missing');
+    // Check if receiver is still loading
+    if (receiverLoading) {
+      setError('Please wait, loading receiver information...');
       return;
     }
 
-    if (!amount || numAmount <= 0) {
-      setError('Please enter an amount');
+    if (!receiverInfo) {
+      setError('Please search and select a receiver first');
+      return;
+    }
+
+    if (!targetReceiverId) {
+      setError('Receiver information is incomplete. Please select again.');
+      return;
+    }
+
+    const numAmount = parseFloat(amount);
+    
+    if (!amount || isNaN(numAmount) || numAmount <= 0) {
+      setError('Please enter a valid amount');
       return;
     }
 
@@ -187,7 +236,7 @@ export default function SendMoneyPage() {
     }
 
     if (numAmount > balance) {
-      setError('Insufficient balance');
+      setError('Insufficient balance. Please add funds first.');
       return;
     }
 
@@ -200,7 +249,33 @@ export default function SendMoneyPage() {
       setLoading(true);
       setError('');
 
-      // Choose API endpoint based on mode
+      const receiverId = receiverInfo.id || receiverInfo.user_id;
+
+      // Handle SSLCommerz (Credit/Debit Card) payment separately
+      if (paymentMethod === 'sslcommerz') {
+        const response = await initiateSSLCommerzPayment({
+          receiver_id: receiverId,
+          amount: parseFloat(amount),
+          notes: notes.trim()
+        });
+
+        if (response.data.success && response.data.gatewayUrl) {
+          console.log('Redirecting to SSLCommerz:', response.data.gatewayUrl);
+          
+          // Store transaction info for redirect callback
+          localStorage.setItem('pending_transaction_id', response.data.transaction_id);
+          localStorage.setItem('payment_method', 'sslcommerz');
+          localStorage.setItem('ssl_session_key', response.data.session_key);
+          
+          // Redirect to SSLCommerz gateway
+          window.location.href = response.data.gatewayUrl;
+        } else {
+          throw new Error('Failed to initialize SSLCommerz payment');
+        }
+        return;
+      }
+
+      // Handle Mobile Wallet payments (bKash, Nagad, Rocket)
       const apiUrl = isDummyMode 
         ? 'http://localhost:5000/api/dummy-mobile-wallet/initiate'
         : 'http://localhost:5000/api/mobile-wallet/initiate';
@@ -213,7 +288,7 @@ export default function SendMoneyPage() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          receiver_id: receiverInfo.id || receiverInfo.user_id,
+          receiver_id: receiverId,
           amount: parseFloat(amount),
           payment_method: paymentMethod,
           notes: notes.trim()
@@ -223,7 +298,6 @@ export default function SendMoneyPage() {
       const data = await response.json();
 
       if (data.success && data.data.payment_url) {
-        // Redirect to payment gateway
         console.log('Redirecting to payment gateway:', data.data.payment_url);
         
         // Store transaction ID and mode for verification after redirect back
@@ -237,7 +311,7 @@ export default function SendMoneyPage() {
         throw new Error('Failed to get payment URL');
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to initiate payment. Please try again.';
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to initiate payment. Please try again.';
       setError(errorMsg);
       setShowConfirm(false);
       setLoading(false);
@@ -728,14 +802,53 @@ export default function SendMoneyPage() {
                   </div>
                 </div>
 
-                {/* Details */}
+                {/* Receiver Info */}
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5">
+                  <div className="flex items-center gap-3 mb-4">
+                    {receiverInfo?.profile_picture ? (
+                      <img
+                        src={receiverInfo.profile_picture}
+                        alt={receiverInfo.full_name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-cyan-500/30"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                        <span className="text-white text-lg font-bold">
+                          {receiverInfo?.full_name?.charAt(0)?.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white font-semibold truncate">{receiverInfo?.full_name}</p>
+                      {receiverInfo?.username && (
+                        <p className="text-gray-400 text-xs">@{receiverInfo.username}</p>
+                      )}
+                      {receiverInfo?.phone && (
+                        <p className="text-gray-400 text-xs flex items-center gap-1">
+                          <i className="fi fi-rr-phone-call"></i>
+                          {receiverInfo.phone}
+                        </p>
+                      )}
+                    </div>
+                    <i className="fi fi-rr-check-circle text-emerald-400 text-xl"></i>
+                  </div>
+                </div>
+
+                {/* Transaction Details */}
                 <div className="space-y-3 bg-slate-800/50 rounded-xl p-5 border border-white/5">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-sm flex items-center gap-2">
-                      <i className="fi fi-rr-user text-xs"></i>
-                      To
+                      <i className="fi fi-rr-coins text-xs"></i>
+                      Amount
                     </span>
-                    <span className="text-white text-sm font-semibold">{receiverInfo?.full_name}</span>
+                    <span className="text-white text-lg font-bold">৳{parseFloat(amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400 text-sm flex items-center gap-2">
+                      <i className="fi fi-rr-credit-card text-xs"></i>
+                      Method
+                    </span>
+                    <span className="text-white text-sm font-semibold">{selectedMethod.name}</span>
                   </div>
                   {notes && (
                     <div className="flex justify-between items-start">
@@ -743,7 +856,7 @@ export default function SendMoneyPage() {
                         <i className="fi fi-rr-comment-alt text-xs"></i>
                         Note
                       </span>
-                      <span className="text-white text-sm max-w-[200px] text-right">{notes}</span>
+                      <span className="text-white text-sm max-w-[180px] text-right">{notes}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center pt-3 border-t border-white/10">

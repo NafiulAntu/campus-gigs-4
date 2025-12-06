@@ -154,5 +154,14 @@ export const getPaymentHistory = () => API.get('/payments/history');
 export const createStripeCheckout = (data) => API.post('/stripe/create-checkout-session', data);
 export const verifyStripeSession = (sessionId) => API.get(`/stripe/verify-session?session_id=${sessionId}`);
 
+// SSLCommerz Payment API
+export const initiateSSLCommerzPayment = (data) => API.post('/sslcommerz/init', data);
+export const querySSLCommerzTransaction = (tranId) => API.get(`/sslcommerz/query/${tranId}`);
+export const initiateSSLCommerzRefund = (data) => API.post('/sslcommerz/refund', data);
+export const querySSLCommerzRefund = (refundRefId) => API.get(`/sslcommerz/refund/${refundRefId}`);
+
+// SSLCommerz Subscription API
+export const initiateSSLCommerzSubscription = (data) => API.post('/sslcommerz/subscription/init', data);
+
 // Export API instance as default for direct usage
 export default API;
