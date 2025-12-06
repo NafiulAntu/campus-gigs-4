@@ -166,50 +166,54 @@ export default function MockPaymentPage() {
           </div>
         )}
 
-        {/* Quick OTP Success Button */}
-        <div className="mb-4 p-4 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/30 rounded-xl">
-          <div className="text-emerald-300 text-sm mb-3 font-semibold">
-            <i className="fas fa-bolt mr-2"></i>
-            Quick Test Payment
+        {/* Quick Test Buttons - Like Real Gateway */}
+        <div className="mb-6 p-5 bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700 rounded-2xl">
+          <div className="text-gray-300 text-sm mb-4 font-semibold flex items-center gap-2">
+            <i className="fas fa-flask text-cyan-400"></i>
+            Test Payment Gateway (Choose Outcome)
           </div>
-          <button
-            onClick={() => handlePayment(true)}
-            disabled={processing}
-            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold rounded-lg transition-all disabled:opacity-50 shadow-lg hover:shadow-emerald-500/50"
-          >
-            <span className="flex items-center justify-center">
-              <i className="fas fa-check-circle mr-2"></i>
-              ✓ OTP Success (Instant Premium)
-            </span>
-          </button>
+          
+          <div className="grid grid-cols-2 gap-3">
+            {/* Success Button */}
+            <button
+              onClick={() => window.location.href = `http://localhost:5000/api/mock-payment/success?tran_id=${tranId}`}
+              disabled={processing}
+              className="py-3 px-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg hover:shadow-emerald-500/50 hover:scale-105 transform"
+            >
+              <span className="flex flex-col items-center gap-1">
+                <i className="fas fa-check-circle text-2xl"></i>
+                <span className="text-sm">Success</span>
+              </span>
+            </button>
+
+            {/* Fail Button */}
+            <button
+              onClick={() => window.location.href = `http://localhost:5000/api/mock-payment/fail?tran_id=${tranId}&error=Payment declined`}
+              disabled={processing}
+              className="py-3 px-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg hover:shadow-red-500/50 hover:scale-105 transform"
+            >
+              <span className="flex flex-col items-center gap-1">
+                <i className="fas fa-times-circle text-2xl"></i>
+                <span className="text-sm">Failed</span>
+              </span>
+            </button>
+          </div>
+
+          <div className="mt-3 text-xs text-gray-500 text-center">
+            Click Success to activate Premium or Failed to test error handling
+          </div>
         </div>
 
-        {/* Pay Button */}
+        {/* Cancel Button */}
         <button
-          onClick={() => handlePayment(true)}
+          onClick={() => window.location.href = `http://localhost:5000/api/mock-payment/cancel?tran_id=${tranId}`}
           disabled={processing}
-          className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-cyan-500/50"
+          className="w-full py-3 bg-slate-700 hover:bg-slate-600 text-gray-300 font-semibold rounded-xl transition-all disabled:opacity-50 border border-slate-600"
         >
-          {processing ? (
-            <span className="flex items-center justify-center">
-              <i className="fas fa-spinner fa-spin mr-2"></i>
-              Processing Payment...
-            </span>
-          ) : (
-            <span className="flex items-center justify-center">
-              <i className="fas fa-lock mr-2"></i>
-              Complete Payment - {currency} {parseFloat(amount).toLocaleString()}
-            </span>
-          )}
-        </button>
-
-        {/* Cancel */}
-        <button
-          onClick={() => navigate('/premium')}
-          disabled={processing}
-          className="w-full mt-3 py-3 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
-        >
-          Cancel Payment
+          <span className="flex items-center justify-center gap-2">
+            <i className="fas fa-times"></i>
+            Cancel Payment
+          </span>
         </button>
 
         {/* Footer */}

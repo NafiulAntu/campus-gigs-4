@@ -190,4 +190,153 @@ exports.processMockPayment = async (req, res) => {
   }
 };
 
+// Handle Success Callback (like Stripe/SSLCommerz)
+exports.handleSuccess = async (req, res) => {
+  try {
+    const tran_id = req.query.tran_id || req.body.tran_id;
+    
+    console.log('✅ Mock payment success callback:', tran_id);
+
+    if (!tran_id) {
+      return res.redirect(`${process.env.FRONTEND_URL}/premium?status=failed&error=No transaction ID`);
+    }
+
+    // Get transaction
+    const transaction = await PaymentTransaction.findOne({
+      where: { transaction_id: tran_id }
+    });
+
+    if (!transaction) {
+      return res.redirect(`${process.env.FRONTEND_URL}/premium?status=failed&error=Transaction not found`);
+    }
+
+    // Get plan type from transaction
+    const mockTxn = mockGateway.getTransaction(tran_id);
+    const planType = transaction.plan_type || 
+                    (mockTxn?.product_name.includes('15days') ? '15days' :
+                     mockTxn?.product_name.includes('30days') ? '30days' : 'yearly');
+
+    // Update transaction status
+    transaction.status = 'completed';
+    transaction.payment_method = transaction.payment_method || 'mock';
+    await transaction.save();
+
+    // Create or update subscription
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + PLAN_DAYS[planType]);
+
+    const existingSub = await Subscription.findOne({
+      where: { 
+        user_id: transaction.user_id,
+        status: 'active'
+      }
+    });
+
+    if (existingSub) {
+      existingSub.end_date = endDate;
+      existingSub.plan_type = planType;
+      existingSub.plan_duration = planType;
+      await existingSub.save();
+    } else {
+      await Subscription.create({
+        user_id: transaction.user_id,
+        plan_type: planType,
+        plan_duration: planType,
+        start_date: startDate,
+        end_date: endDate,
+        status: 'active',
+        transaction_id: tran_id
+      });
+    }
+
+    // Activate premium
+    const user = await User.findByPk(transaction.user_id);
+    if (user) {
+      user.is_premium = true;
+      user.premium_activated_at = new Date();
+      await user.save();
+    }
+
+    // Create notification
+    const pool = require('../config/db');
+    try {
+      await pool.query(`
+        INSERT INTO notifications (user_id, type, title, message, link, created_at)
+        VALUES ($1, $2, $3, $4, $5, NOW())
+      `, [
+        transaction.user_id,
+        'premium_activated',
+        '🎉 Premium Activated!',
+        `Your ${planType === '15days' ? '15 Days' : planType === '30days' ? '30 Days' : 'Yearly'} Premium subscription is now active!`,
+        '/premium'
+      ]);
+    } catch (notifError) {
+      console.error('Failed to create notification:', notifError);
+    }
+
+    console.log('✅ Mock payment success processed for user:', transaction.user_id);
+
+    // Redirect to premium with success
+    res.redirect(`${process.env.FRONTEND_URL}/premium?status=success&plan=${planType}`);
+
+  } catch (error) {
+    console.error('Mock payment success handler error:', error);
+    res.redirect(`${process.env.FRONTEND_URL}/premium?status=failed&error=Payment processing failed`);
+  }
+};
+
+// Handle Fail Callback
+exports.handleFail = async (req, res) => {
+  try {
+    const tran_id = req.query.tran_id || req.body.tran_id;
+    const error = req.query.error || req.body.error || 'Payment failed';
+
+    console.log('❌ Mock payment failed callback:', tran_id);
+
+    if (tran_id) {
+      const transaction = await PaymentTransaction.findOne({
+        where: { transaction_id: tran_id }
+      });
+
+      if (transaction) {
+        transaction.status = 'failed';
+        await transaction.save();
+      }
+    }
+
+    res.redirect(`${process.env.FRONTEND_URL}/premium?status=failed&error=${encodeURIComponent(error)}`);
+
+  } catch (error) {
+    console.error('Mock payment fail handler error:', error);
+    res.redirect(`${process.env.FRONTEND_URL}/premium?status=failed&error=Payment failed`);
+  }
+};
+
+// Handle Cancel Callback
+exports.handleCancel = async (req, res) => {
+  try {
+    const tran_id = req.query.tran_id || req.body.tran_id;
+
+    console.log('⚠️ Mock payment cancelled:', tran_id);
+
+    if (tran_id) {
+      const transaction = await PaymentTransaction.findOne({
+        where: { transaction_id: tran_id }
+      });
+
+      if (transaction) {
+        transaction.status = 'cancelled';
+        await transaction.save();
+      }
+    }
+
+    res.redirect(`${process.env.FRONTEND_URL}/premium?status=cancelled`);
+
+  } catch (error) {
+    console.error('Mock payment cancel handler error:', error);
+    res.redirect(`${process.env.FRONTEND_URL}/premium?status=cancelled`);
+  }
+};
+
 module.exports = exports;
