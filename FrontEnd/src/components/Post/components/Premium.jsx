@@ -103,7 +103,11 @@ const Premium = ({ onBack }) => {
   };
 
   const handleCancelSubscription = async () => {
-    if (!window.confirm('⚠️ Cancel subscription now?\n\nYour premium access will end immediately and you can purchase a new subscription anytime.\n\nNote: Payment history will be preserved.')) return;
+    console.log('🔵 handleCancelSubscription called');
+    if (!window.confirm('⚠️ Cancel subscription now?\n\nYour premium access will end immediately and you can purchase a new subscription anytime.\n\nNote: Payment history will be preserved.')) {
+      console.log('❌ User cancelled the confirmation dialog');
+      return;
+    }
 
     try {
       setLoading(true);

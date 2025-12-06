@@ -64,7 +64,7 @@ exports.cancelSubscription = async (req, res) => {
     const subscription = await Subscription.findOne({
       where: { 
         user_id: userId, 
-        status: { [sequelize.Op.in]: ['active', 'completed'] }
+        status: { [Op.in]: ['active', 'completed'] }
       }
     });
 
@@ -128,7 +128,7 @@ exports.turnOffAutoRenew = async (req, res) => {
     const subscription = await Subscription.findOne({
       where: { 
         user_id: userId, 
-        status: { [sequelize.Op.in]: ['active', 'completed'] }
+        status: { [Op.in]: ['active', 'completed'] }
       }
     });
 
@@ -178,7 +178,7 @@ exports.reactivateSubscription = async (req, res) => {
     const subscription = await Subscription.findOne({
       where: { 
         user_id: userId, 
-        status: { [sequelize.Op.in]: ['active', 'completed'] }
+        status: { [Op.in]: ['active', 'completed'] }
       }
     });
 
@@ -236,7 +236,7 @@ exports.expireSubscriptions = async () => {
       const expiredSubs = await Subscription.findAll({
         where: {
           status: 'active',
-          end_date: { [sequelize.Op.lt]: new Date() }
+          end_date: { [Op.lt]: new Date() }
         },
         transaction: t
       });
@@ -247,7 +247,7 @@ exports.expireSubscriptions = async () => {
         {
           where: {
             status: 'active',
-            end_date: { [sequelize.Op.lt]: new Date() }
+            end_date: { [Op.lt]: new Date() }
           },
           transaction: t
         }
