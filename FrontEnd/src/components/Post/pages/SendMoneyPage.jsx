@@ -17,6 +17,7 @@ export default function SendMoneyPage() {
   const receiverId = searchParams.get('to');
 
   const [receiverInfo, setReceiverInfo] = useState(null);
+  const [senderInfo, setSenderInfo] = useState(null);
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('bkash');
@@ -72,9 +73,10 @@ export default function SendMoneyPage() {
     }
   }, [receiverId]);
 
-  // Fetch balance
+  // Fetch balance and sender info
   useEffect(() => {
     fetchBalance();
+    fetchSenderInfo();
   }, []);
 
   const fetchReceiverInfo = async () => {
@@ -120,6 +122,19 @@ export default function SendMoneyPage() {
       setBalance(0);
     } finally {
       setBalanceLoading(false);
+    }
+  };
+
+  const fetchSenderInfo = async () => {
+    try {
+      // Try to get from localStorage first
+      const userDataStr = localStorage.getItem('userData');
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        setSenderInfo(userData);
+      }
+    } catch (err) {
+      console.error('Failed to load sender info:', err);
     }
   };
 
@@ -765,35 +780,65 @@ export default function SendMoneyPage() {
                   </div>
                 </div>
 
-                {/* Receiver Info */}
-                <div className="bg-slate-800/50 rounded-xl p-4 border border-white/5">
-                  <div className="flex items-center gap-3 mb-4">
-                    {receiverInfo?.profile_picture ? (
-                      <img
-                        src={receiverInfo.profile_picture}
-                        alt={receiverInfo.full_name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-cyan-500/30"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                        <span className="text-white text-lg font-bold">
-                          {receiverInfo?.full_name?.charAt(0)?.toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                {/* Sender and Receiver */}
+                <div className="bg-slate-800/50 rounded-xl p-5 border border-white/5 space-y-4">
+                  {/* Sender (From) */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {senderInfo?.profile_picture ? (
+                        <img
+                          src={senderInfo.profile_picture}
+                          alt={senderInfo.full_name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-blue-500/30"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                          <span className="text-white text-lg font-bold">
+                            {senderInfo?.full_name?.charAt(0)?.toUpperCase() || 'Y'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-400 mb-0.5">From</p>
+                      <p className="text-white font-semibold truncate">{senderInfo?.full_name || 'You'}</p>
+                      {senderInfo?.username && (
+                        <p className="text-gray-400 text-xs">@{senderInfo.username}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="flex items-center justify-center">
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
+                    <i className="fi fi-rr-arrow-down text-cyan-400 text-xl mx-4"></i>
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
+                  </div>
+
+                  {/* Receiver (To) */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">
+                      {receiverInfo?.profile_picture ? (
+                        <img
+                          src={receiverInfo.profile_picture}
+                          alt={receiverInfo.full_name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-cyan-500/30"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-600 flex items-center justify-center">
+                          <span className="text-white text-lg font-bold">
+                            {receiverInfo?.full_name?.charAt(0)?.toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-400 mb-0.5">To</p>
                       <p className="text-white font-semibold truncate">{receiverInfo?.full_name}</p>
                       {receiverInfo?.username && (
                         <p className="text-gray-400 text-xs">@{receiverInfo.username}</p>
                       )}
-                      {receiverInfo?.phone && (
-                        <p className="text-gray-400 text-xs flex items-center gap-1">
-                          <i className="fi fi-rr-phone-call"></i>
-                          {receiverInfo.phone}
-                        </p>
-                      )}
                     </div>
-                    <i className="fi fi-rr-check-circle text-emerald-400 text-xl"></i>
                   </div>
                 </div>
 
