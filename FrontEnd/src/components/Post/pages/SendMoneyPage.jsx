@@ -27,7 +27,7 @@ export default function SendMoneyPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [balanceLoading, setBalanceLoading] = useState(true);
   const [receiverLoading, setReceiverLoading] = useState(true);
-  const [isDummyMode, setIsDummyMode] = useState(true); // Toggle between dummy and real API
+  const isDummyMode = false; // Always use real payment
   
   // Phone number search states
   const [phoneSearch, setPhoneSearch] = useState('');
@@ -626,25 +626,6 @@ export default function SendMoneyPage() {
               <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl -z-0"></div>
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl -z-0"></div>
               <div className="relative z-10">
-              {/* Test Mode Toggle */}
-              <div className="mb-5 p-3 rounded-lg bg-slate-800/50 border border-slate-700">
-                <div className="flex items-center justify-between">
-                  <span className="text-white text-sm font-medium">Test Mode</span>
-                  <button
-                    onClick={() => setIsDummyMode(!isDummyMode)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      isDummyMode ? 'bg-amber-500' : 'bg-slate-600'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform ${
-                        isDummyMode ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-              </div>
-
               {/* Payment Methods */}
               <div className="mb-5">
                 <div className="flex items-center gap-2 mb-4">
