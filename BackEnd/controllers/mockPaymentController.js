@@ -60,9 +60,9 @@ exports.initiateMockPayment = async (req, res) => {
       customer_name: user.fullname || user.username,
       customer_email: user.email,
       product_name: `Campus Gigs Premium - ${plan_type}`,
-      success_url: `${process.env.FRONTEND_URL}/payment/success`,
-      fail_url: `${process.env.FRONTEND_URL}/payment/failed`,
-      cancel_url: `${process.env.FRONTEND_URL}/payment/cancelled`
+      success_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/mock-payment/success`,
+      fail_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/mock-payment/fail`,
+      cancel_url: `${process.env.BACKEND_URL || 'http://localhost:5000'}/api/mock-payment/cancel`
     };
 
     const response = await mockGateway.initiatePayment(data);
@@ -195,20 +195,28 @@ exports.handleSuccess = async (req, res) => {
   try {
     const tran_id = req.query.tran_id || req.body.tran_id;
     
-    console.log('✅ Mock payment success callback:', tran_id);
+    console.log('✅ Mock payment success callback received');
+    console.log('📋 Transaction ID:', tran_id);
+    console.log('📋 Query params:', req.query);
+    console.log('📋 Body:', req.body);
 
     if (!tran_id) {
-      return res.redirect(`${process.env.FRONTEND_URL}/premium?status=failed&error=No transaction ID`);
+      console.error('❌ No transaction ID provided');
+      return res.redirect(`${process.env.FRONTEND_URL}/premium?status=failed&error=${encodeURIComponent('No transaction ID')}`);
     }
 
     // Get transaction
+    console.log('🔍 Looking up transaction:', tran_id);
     const transaction = await PaymentTransaction.findOne({
       where: { transaction_id: tran_id }
     });
 
     if (!transaction) {
-      return res.redirect(`${process.env.FRONTEND_URL}/premium?status=failed&error=Transaction not found`);
+      console.error('❌ Transaction not found in database:', tran_id);
+      return res.redirect(`${process.env.FRONTEND_URL}/premium?status=failed&error=${encodeURIComponent('Transaction not found')}`);
     }
+
+    console.log('✅ Transaction found:', transaction.id, 'User:', transaction.user_id);
 
     // Get plan type from transaction
     const mockTxn = mockGateway.getTransaction(tran_id);

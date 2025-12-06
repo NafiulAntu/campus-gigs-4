@@ -7,6 +7,15 @@ const router = express.Router();
 const mockPaymentController = require('../controllers/mockPaymentController');
 const { protect } = require('../middleware/authMiddleware');
 
+// Test endpoint to verify routes are working
+router.get('/test', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Mock payment routes are working!',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Initiate mock payment (protected)
 router.post('/initiate', protect, mockPaymentController.initiateMockPayment);
 

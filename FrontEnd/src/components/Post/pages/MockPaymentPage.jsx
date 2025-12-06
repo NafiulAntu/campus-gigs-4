@@ -172,13 +172,37 @@ export default function MockPaymentPage() {
             <i className="fas fa-flask text-cyan-400"></i>
             Test Payment Gateway (Choose Outcome)
           </div>
+
+          {/* Transaction ID Display */}
+          {tranId && (
+            <div className="mb-3 p-2 bg-slate-900/50 rounded-lg">
+              <div className="text-xs text-gray-500">Transaction ID:</div>
+              <div className="text-xs text-gray-400 font-mono break-all">{tranId}</div>
+            </div>
+          )}
+
+          {!tranId && (
+            <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <div className="text-red-400 text-sm flex items-center gap-2">
+                <i className="fas fa-exclamation-triangle"></i>
+                <span>Error: No transaction ID found. Please restart the payment process.</span>
+              </div>
+            </div>
+          )}
           
           <div className="grid grid-cols-2 gap-3">
             {/* Success Button */}
             <button
-              onClick={() => window.location.href = `http://localhost:5000/api/mock-payment/success?tran_id=${tranId}`}
-              disabled={processing}
-              className="py-3 px-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg hover:shadow-emerald-500/50 hover:scale-105 transform"
+              onClick={() => {
+                if (!tranId) {
+                  alert('❌ No transaction ID found. Please go back and try again.');
+                  return;
+                }
+                console.log('🟢 Redirecting to success callback:', tranId);
+                window.location.href = `/api/mock-payment/success?tran_id=${tranId}`;
+              }}
+              disabled={processing || !tranId}
+              className="py-3 px-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-emerald-500/50 hover:scale-105 transform"
             >
               <span className="flex flex-col items-center gap-1">
                 <i className="fas fa-check-circle text-2xl"></i>
@@ -188,9 +212,16 @@ export default function MockPaymentPage() {
 
             {/* Fail Button */}
             <button
-              onClick={() => window.location.href = `http://localhost:5000/api/mock-payment/fail?tran_id=${tranId}&error=Payment declined`}
-              disabled={processing}
-              className="py-3 px-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 shadow-lg hover:shadow-red-500/50 hover:scale-105 transform"
+              onClick={() => {
+                if (!tranId) {
+                  alert('❌ No transaction ID found. Please go back and try again.');
+                  return;
+                }
+                console.log('🔴 Redirecting to fail callback:', tranId);
+                window.location.href = `/api/mock-payment/fail?tran_id=${tranId}&error=Payment%20declined`;
+              }}
+              disabled={processing || !tranId}
+              className="py-3 px-4 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-red-500/50 hover:scale-105 transform"
             >
               <span className="flex flex-col items-center gap-1">
                 <i className="fas fa-times-circle text-2xl"></i>
@@ -200,13 +231,17 @@ export default function MockPaymentPage() {
           </div>
 
           <div className="mt-3 text-xs text-gray-500 text-center">
-            Click Success to activate Premium or Failed to test error handling
+            {tranId ? (
+              'Click Success to activate Premium or Failed to test error handling'
+            ) : (
+              'Please restart payment process to get a valid transaction ID'
+            )}
           </div>
         </div>
 
         {/* Cancel Button */}
         <button
-          onClick={() => window.location.href = `http://localhost:5000/api/mock-payment/cancel?tran_id=${tranId}`}
+          onClick={() => window.location.href = `/api/mock-payment/cancel?tran_id=${tranId}`}
           disabled={processing}
           className="w-full py-3 bg-slate-700 hover:bg-slate-600 text-gray-300 font-semibold rounded-xl transition-all disabled:opacity-50 border border-slate-600"
         >
