@@ -90,6 +90,10 @@ export default function SendMoneyPage() {
       console.log('Fetching receiver info for ID:', receiverId);
       const response = await getUserById(receiverId);
       console.log('Receiver info API response:', response);
+      console.log('Response structure:', {
+        hasData: !!response.data,
+        dataKeys: response.data ? Object.keys(response.data) : 'none'
+      });
       
       // Ensure the receiver has the id field set
       const receiver = response.data;
@@ -794,13 +798,17 @@ export default function SendMoneyPage() {
         console.log('  👤 Sender:', {
           full_name: senderInfo?.full_name || senderInfo?.name,
           username: senderInfo?.username,
-          hasData: !!senderInfo
+          hasData: !!senderInfo,
+          rawData: senderInfo
         });
         console.log('  📥 Receiver:', {
           full_name: receiverInfo?.full_name || receiverInfo?.name,
           username: receiverInfo?.username,
-          hasData: !!receiverInfo
+          hasData: !!receiverInfo,
+          rawData: receiverInfo
         });
+        console.log('  🔍 Full receiverInfo object:', receiverInfo);
+        console.log('  🔍 Full senderInfo object:', senderInfo);
         return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fadeIn">
           <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl border border-white/20 max-w-md w-full shadow-2xl shadow-cyan-500/20 animate-scaleIn relative overflow-hidden">
