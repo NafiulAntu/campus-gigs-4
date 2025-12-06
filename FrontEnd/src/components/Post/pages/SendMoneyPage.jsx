@@ -783,62 +783,26 @@ export default function SendMoneyPage() {
                 {/* Sender and Receiver */}
                 <div className="bg-slate-800/50 rounded-xl p-5 border border-white/5 space-y-4">
                   {/* Sender (From) */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      {senderInfo?.profile_picture ? (
-                        <img
-                          src={senderInfo.profile_picture}
-                          alt={senderInfo.full_name}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-blue-500/30"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                          <span className="text-white text-lg font-bold">
-                            {senderInfo?.full_name?.charAt(0)?.toUpperCase() || 'Y'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-400 mb-0.5">From</p>
-                      <p className="text-white font-semibold truncate">{senderInfo?.full_name || 'You'}</p>
-                      {senderInfo?.username && (
-                        <p className="text-gray-400 text-xs">@{senderInfo.username}</p>
-                      )}
-                    </div>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1.5">From</p>
+                    <p className="text-white font-semibold text-lg">{senderInfo?.full_name || 'You'}</p>
+                    {senderInfo?.username && (
+                      <p className="text-cyan-400 text-sm">@{senderInfo.username}</p>
+                    )}
                   </div>
 
                   {/* Arrow */}
-                  <div className="flex items-center justify-center">
-                    <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
-                    <i className="fi fi-rr-arrow-down text-cyan-400 text-xl mx-4"></i>
-                    <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent"></div>
+                  <div className="flex items-center justify-center py-2">
+                    <i className="fi fi-rr-arrow-down text-cyan-400 text-2xl"></i>
                   </div>
 
                   {/* Receiver (To) */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      {receiverInfo?.profile_picture ? (
-                        <img
-                          src={receiverInfo.profile_picture}
-                          alt={receiverInfo.full_name}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-cyan-500/30"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-emerald-600 flex items-center justify-center">
-                          <span className="text-white text-lg font-bold">
-                            {receiverInfo?.full_name?.charAt(0)?.toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-400 mb-0.5">To</p>
-                      <p className="text-white font-semibold truncate">{receiverInfo?.full_name}</p>
-                      {receiverInfo?.username && (
-                        <p className="text-gray-400 text-xs">@{receiverInfo.username}</p>
-                      )}
-                    </div>
+                  <div>
+                    <p className="text-xs text-gray-400 mb-1.5">To</p>
+                    <p className="text-white font-semibold text-lg">{receiverInfo?.full_name}</p>
+                    {receiverInfo?.username && (
+                      <p className="text-cyan-400 text-sm">@{receiverInfo.username}</p>
+                    )}
                   </div>
                 </div>
 
