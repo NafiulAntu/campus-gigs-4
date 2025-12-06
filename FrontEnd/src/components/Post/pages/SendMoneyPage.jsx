@@ -80,12 +80,16 @@ export default function SendMoneyPage() {
   }, []);
 
   const fetchReceiverInfo = async () => {
-    if (!receiverId) return;
+    if (!receiverId) {
+      console.log('No receiverId in URL parameter');
+      return;
+    }
     
     try {
       setReceiverLoading(true);
+      console.log('Fetching receiver info for ID:', receiverId);
       const response = await getUserById(receiverId);
-      console.log('Receiver info loaded from URL:', response.data);
+      console.log('Receiver info API response:', response);
       
       // Ensure the receiver has the id field set
       const receiver = response.data;
@@ -97,17 +101,20 @@ export default function SendMoneyPage() {
           receiver.id = receiver.user_id || receiverId;
         }
         
-        console.log('Receiver info processed:', {
+        console.log('✅ Receiver info successfully loaded:', {
           id: receiver.id,
           full_name: receiver.full_name,
-          username: receiver.username
+          username: receiver.username,
+          profile_picture: receiver.profile_picture ? 'Yes' : 'No'
         });
+      } else {
+        console.error('❌ Receiver data is null or undefined');
       }
       
       setReceiverInfo(receiver);
     } catch (err) {
-      console.error('Failed to load receiver:', err);
-      setError('Failed to load receiver information');
+      console.error('❌ Failed to load receiver:', err);
+      setError('Failed to load receiver information. Please try again.');
     } finally {
       setReceiverLoading(false);
     }
@@ -129,6 +136,7 @@ export default function SendMoneyPage() {
     try {
       // Try to get from localStorage - check multiple possible keys
       let userData = null;
+      let sourceKey = null;
       
       // Try different localStorage keys
       const userDataStr = localStorage.getItem('userData');
@@ -137,13 +145,21 @@ export default function SendMoneyPage() {
       
       if (userDataStr) {
         userData = JSON.parse(userDataStr);
+        sourceKey = 'userData';
       } else if (userStr) {
         userData = JSON.parse(userStr);
+        sourceKey = 'user';
       } else if (profileStr) {
         userData = JSON.parse(profileStr);
+        sourceKey = 'profile';
       }
       
-      console.log('Sender info loaded:', userData);
+      console.log('✅ Sender info loaded from localStorage key:', sourceKey);
+      console.log('Sender data:', {
+        id: userData?.id || userData?.user_id,
+        full_name: userData?.full_name || userData?.name,
+        username: userData?.username
+      });
       
       if (userData) {
         // Ensure we have the required fields
@@ -772,11 +788,18 @@ export default function SendMoneyPage() {
 
       {/* Confirmation Modal */}
       {showConfirm && (() => {
-        console.log('Confirmation Modal Data:', {
-          senderInfo,
-          receiverInfo,
-          amount,
-          paymentMethod
+        console.log('🔍 Confirmation Modal Data:');
+        console.log('  💰 Amount:', amount);
+        console.log('  💳 Payment Method:', paymentMethod);
+        console.log('  👤 Sender:', {
+          full_name: senderInfo?.full_name || senderInfo?.name,
+          username: senderInfo?.username,
+          hasData: !!senderInfo
+        });
+        console.log('  📥 Receiver:', {
+          full_name: receiverInfo?.full_name || receiverInfo?.name,
+          username: receiverInfo?.username,
+          hasData: !!receiverInfo
         });
         return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fadeIn">
