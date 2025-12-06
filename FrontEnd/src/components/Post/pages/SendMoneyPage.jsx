@@ -87,8 +87,19 @@ export default function SendMoneyPage() {
       
       // Ensure the receiver has the id field set
       const receiver = response.data;
-      if (receiver && !receiver.id && receiver.user_id) {
-        receiver.id = receiver.user_id;
+      
+      // Handle different response structures
+      if (receiver) {
+        // Ensure id field exists - check multiple possible fields
+        if (!receiver.id) {
+          receiver.id = receiver.user_id || receiverId;
+        }
+        
+        console.log('Receiver info processed:', {
+          id: receiver.id,
+          full_name: receiver.full_name,
+          username: receiver.username
+        });
       }
       
       setReceiverInfo(receiver);
@@ -184,11 +195,12 @@ export default function SendMoneyPage() {
 
   const validateAndShowConfirm = () => {
     // Check if receiver exists and has valid ID
-    const targetReceiverId = receiverInfo?.id || receiverInfo?.user_id;
+    const targetReceiverId = receiverInfo?.id || receiverInfo?.user_id || receiverId;
     
     console.log('Validation check:', {
       receiverInfo,
       targetReceiverId,
+      receiverId,
       hasReceiverInfo: !!receiverInfo,
       hasId: !!targetReceiverId,
       receiverLoading
@@ -207,6 +219,7 @@ export default function SendMoneyPage() {
 
     if (!targetReceiverId) {
       setError('Receiver information is incomplete. Please select again.');
+      console.error('Missing receiver ID. receiverInfo:', receiverInfo);
       return;
     }
 
@@ -241,7 +254,11 @@ export default function SendMoneyPage() {
       setLoading(true);
       setError('');
 
-      const receiverId = receiverInfo.id || receiverInfo.user_id;
+      const targetReceiverId = receiverInfo?.id || receiverInfo?.user_id || receiverId;
+      
+      if (!targetReceiverId) {
+        throw new Error('Receiver ID is missing');
+      }
 
       // Handle Mobile Wallet payments (bKash, Nagad, Rocket)
       const apiUrl = 'http://localhost:5000/api/mobile-wallet/initiate';
@@ -254,7 +271,7 @@ export default function SendMoneyPage() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          receiver_id: receiverId,
+          receiver_id: targetReceiverId,
           amount: parseFloat(amount),
           payment_method: paymentMethod,
           notes: notes.trim()
