@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createStripeCheckout, initiateSSLCommerzSubscription } from '../../../services/api';
 import api from '../../../services/api';
 import '../styles/Premium.css';
@@ -9,9 +9,49 @@ const Premium = ({ onBack }) => {
   const [subscription, setSubscription] = useState(null);
   const [error, setError] = useState('');
   const [paymentGateway, setPaymentGateway] = useState('stripe'); // stripe, sslcommerz, mock
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    // Check for payment callback status
+    const status = searchParams.get('status');
+    const plan = searchParams.get('plan');
+    
+    if (status === 'success' && plan) {
+      const planNames = {
+        '15days': '15 Days',
+        '30days': '30 Days',
+        'yearly': 'Yearly'
+      };
+      setSuccessMessage(`🎉 Premium ${planNames[plan] || plan} subscription activated successfully!`);
+      
+      // Force refresh subscription status
+      setTimeout(() => {
+        checkSubscriptionStatus();
+      }, 500);
+      
+      // Clear URL parameters after showing message
+      setTimeout(() => {
+        navigate('/premium', { replace: true });
+        // Hide success message after 10 seconds
+        setTimeout(() => setSuccessMessage(''), 10000);
+      }, 100);
+    } else if (status === 'failed') {
+      const message = searchParams.get('message') || 'Payment failed';
+      setError(`❌ ${decodeURIComponent(message)}`);
+      setTimeout(() => {
+        navigate('/premium', { replace: true });
+        setTimeout(() => setError(''), 5000);
+      }, 100);
+    } else if (status === 'cancelled') {
+      setError('⚠️ Payment was cancelled. You can try again anytime.');
+      setTimeout(() => {
+        navigate('/premium', { replace: true });
+        setTimeout(() => setError(''), 5000);
+      }, 100);
+    }
+    
     checkSubscriptionStatus();
     
     // Refresh subscription status when user returns to this page
@@ -21,7 +61,7 @@ const Premium = ({ onBack }) => {
     
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, []);
+  }, [searchParams]);
 
   const checkSubscriptionStatus = async () => {
     try {
@@ -278,9 +318,26 @@ const Premium = ({ onBack }) => {
                 : 'Expired'}
             </p>
             {subscription.subscription.expiry_date && (
-              <p className="text-gray-400 text-sm flex items-center gap-2">
+              <p className="text-gray-400 text-sm flex items-center gap-2 mb-2">
                 <i className="fi fi-rr-calendar text-emerald-400 text-xs"></i>
                 Valid until {new Date(subscription.subscription.expiry_date).toLocaleDateString()}
+              </p>
+            )}
+            {subscription.subscription.payment_info && (
+              <p className="text-gray-400 text-sm flex items-center gap-2 mt-3 pt-3 border-t border-emerald-500/20">
+                <i className={`fi ${
+                  subscription.subscription.payment_info.payment_method === 'stripe' ? 'fi-brands-stripe text-purple-400' : 
+                  subscription.subscription.payment_info.payment_method === 'sslcommerz' ? 'fi-rr-credit-card text-cyan-400' : 
+                  'fi-rr-money-check-edit-alt text-green-400'
+                } text-xs`}></i>
+                Paid via {
+                  subscription.subscription.payment_info.payment_method === 'stripe' ? 'Stripe' : 
+                  subscription.subscription.payment_info.payment_method === 'sslcommerz' ? 'SSLCommerz' : 
+                  subscription.subscription.payment_info.payment_method.toUpperCase()
+                }
+                {subscription.subscription.payment_info.card_brand && 
+                  ` (${subscription.subscription.payment_info.card_brand})`
+                }
               </p>
             )}
           </div>
@@ -426,6 +483,27 @@ const Premium = ({ onBack }) => {
             <h1>Upgrade to Premium</h1>
             <p>Unlock powerful features to grow your presence on Campus Gigs</p>
           </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-6 p-4 bg-gradient-to-r from-emerald-500/20 to-cyan-500/20 border border-emerald-500/50 rounded-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
+              <i className="fi fi-rr-check text-emerald-400 text-xl"></i>
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-semibold">{successMessage}</p>
+              <p className="text-gray-400 text-sm mt-1">Your premium features are now active!</p>
+            </div>
+            <button 
+              onClick={() => setSuccessMessage('')}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <i className="fi fi-rr-cross text-lg"></i>
+            </button>
+          </div>
+        </div>
+      )}
 
       {error && <div className="error-message">{error}</div>}
 

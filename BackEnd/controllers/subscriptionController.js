@@ -33,6 +33,30 @@ exports.getSubscriptionStatus = async (req, res) => {
     const planDuration = subscription.plan_duration || (subscription.plan_type === 'yearly' ? 'yearly' : '30days');
     const currentPlan = planInfo[planDuration] || planInfo['30days'];
 
+    // Get the last payment transaction for this subscription
+    const PaymentTransaction = require('../models/PaymentTransaction');
+    let paymentInfo = null;
+    try {
+      const lastPayment = await PaymentTransaction.findOne({
+        where: { 
+          user_id: userId,
+          status: { [Op.in]: ['completed', 'success'] }
+        },
+        order: [['created_at', 'DESC']]
+      });
+      
+      if (lastPayment) {
+        paymentInfo = {
+          payment_method: lastPayment.payment_method || 'unknown',
+          card_type: lastPayment.ssl_card_type || null,
+          card_brand: lastPayment.ssl_card_brand || null,
+          paid_at: lastPayment.created_at
+        };
+      }
+    } catch (err) {
+      console.error('Error fetching payment info:', err);
+    }
+
     res.json({
       is_premium: isPremium,
       subscription: {
@@ -46,7 +70,8 @@ exports.getSubscriptionStatus = async (req, res) => {
         end_date: subscription.end_date,
         expiry_date: subscription.end_date,
         auto_renew: subscription.auto_renew,
-        days_remaining: Math.ceil((new Date(subscription.end_date) - new Date()) / (1000 * 60 * 60 * 24))
+        days_remaining: Math.ceil((new Date(subscription.end_date) - new Date()) / (1000 * 60 * 60 * 24)),
+        payment_info: paymentInfo
       }
     });
   } catch (error) {
