@@ -484,7 +484,7 @@ export default function PostPage({ onNavigate = () => {} }) {
   }
 
   return (
-    <div className={`w-full min-h-screen ${brightOn ? 'bg-white' : 'bg-black'}`}>
+    <div className={`w-full min-h-screen ${brightOn ? 'bg-gray-50' : 'bg-black'}`}>
       <div className="max-w-[1400px] mx-auto flex relative">
         {/* Fixed Left Sidebar - hidden on mobile, compact on xl-2xl, full on 2xl+ */}
         <aside className="hidden xl:block xl:w-[88px] 2xl:w-[275px] fixed left-[max(0px,calc((100vw-1400px)/2))] top-0 h-screen z-30 transition-all duration-300 xl:ml-[-10px] 2xl:ml-[-17px]">
@@ -597,7 +597,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                 onFocus={() => setIsSearching(true)}
                 onChange={(e) => setQuery(e.target.value)}
                 className={`search-input flex-1 bg-transparent outline-none text-lg font-semibold transition-colors duration-300 ${
-                  brightOn ? 'text-black placeholder:text-[#008B8B]/60' : 'text-white placeholder:text-blue-400/60'
+                  brightOn ? 'text-gray-900 placeholder:text-gray-500' : 'text-white placeholder:text-blue-400/60'
                 }`}
                 placeholder="Search #Jobs, Communities, People..."
                 style={{ border: 'none', outline: 'none', boxShadow: 'none' }}
@@ -620,7 +620,7 @@ export default function PostPage({ onNavigate = () => {} }) {
 
           {/* Divider after composer or under sticky search */}
           <div className={`transition-colors duration-300 ${
-            brightOn ? 'border-b-2 border-gray-200' : 'border-b border-white/10'
+            brightOn ? 'border-b border-gray-200' : 'border-b border-white/10'
           }`}></div>
 
           {/* Explore mode: show recommendations when searching */}
@@ -628,7 +628,7 @@ export default function PostPage({ onNavigate = () => {} }) {
             <div className="mt-0">
               <div className="pl-6 pr-4 py-4">
                 <h3 className={`text-lg font-bold mb-3 transition-colors duration-300 ${
-                  brightOn ? 'text-white' : 'text-white'
+                  brightOn ? 'text-gray-900' : 'text-white'
                 }`}>
                   Recommended Communities
                 </h3>
@@ -644,19 +644,19 @@ export default function PostPage({ onNavigate = () => {} }) {
                       key={t.title}
                       onClick={() => { setQuery(t.title); }}
                       className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                        brightOn ? 'hover:bg-gray-700 active:bg-gray-600' : 'hover:bg-white/5 active:bg-white/10'
+                        brightOn ? 'hover:bg-gray-100 active:bg-gray-200' : 'hover:bg-white/5 active:bg-white/10'
                       }`}
                     >
                       <div className={`text-xs font-medium transition-colors duration-300 ${
-                        brightOn ? 'text-white/70' : 'text-text-muted'
+                        brightOn ? 'text-gray-600' : 'text-text-muted'
                       }`}>
                         Trending in {t.area}
                       </div>
                       <div className={`font-bold text-base transition-colors duration-300 mt-0.5 ${
-                        brightOn ? 'text-white' : 'text-white'
+                        brightOn ? 'text-gray-900' : 'text-white'
                       }`}>{t.title}</div>
                       <div className={`text-xs font-medium transition-colors duration-300 mt-0.5 ${
-                        brightOn ? 'text-white/70' : 'text-text-muted'
+                        brightOn ? 'text-gray-600' : 'text-text-muted'
                       }`}>
                         {t.posts} posts
                       </div>
@@ -677,7 +677,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                   <i className="fa-regular fa-face-frown" />
                 </div>
                 <div className={`font-semibold transition-colors duration-300 ${
-                  brightOn ? 'text-white' : 'text-white'
+                  brightOn ? 'text-gray-900' : 'text-white'
                 }`}>No results</div>
                 <div className={`text-sm transition-colors duration-300 ${
                   brightOn ? 'text-gray-400' : 'text-text-muted'
@@ -704,12 +704,12 @@ export default function PostPage({ onNavigate = () => {} }) {
                 <div
                   key={p.id}
                   id={`post-${p.id}`}
-                  className={`mb-2 transition-colors duration-300 border overflow-hidden ${
-                    brightOn ? 'border-white bg-white' : 'border-[#045F5F] bg-black'
+                  className={`mb-2 transition-colors duration-300 border overflow-hidden rounded-lg ${
+                    brightOn ? 'border-gray-200 bg-white shadow-sm' : 'border-[#045F5F] bg-black'
                   }`}
                 >
                   <article className={`px-6 sm:px-8 py-5 sm:py-6 transition-colors duration-150 ${
-                    brightOn ? 'bg-white hover:bg-gray-50' : 'bg-black hover:bg-gray-900/40'
+                    brightOn ? 'bg-white hover:bg-gray-50/70' : 'bg-black hover:bg-gray-900/40'
                   }`}>
                     <div className="flex items-start gap-3 sm:gap-4">
                       <button
@@ -751,23 +751,23 @@ export default function PostPage({ onNavigate = () => {} }) {
                                   }
                                 }}
                                 className={`font-bold text-[15px] sm:text-[17px] transition-colors duration-300 hover:underline cursor-pointer ${
-                                  brightOn ? 'text-black hover:text-primary-teal' : 'text-white hover:text-primary-teal'
+                                  brightOn ? 'text-gray-900 hover:text-primary-teal' : 'text-white hover:text-primary-teal'
                                 }`}
                               >
                                 {p.full_name || "Unknown"}
                               </button>
                               <span className={`text-xs sm:text-sm truncate transition-colors duration-300 ${
-                                brightOn ? 'text-gray-600' : 'text-gray-400'
+                                brightOn ? 'text-gray-500' : 'text-gray-400'
                               }`}>
                                 @{p.username || "unknown"}
                               </span>
                               <span className={`hidden sm:inline transition-colors duration-300 ${
-                                brightOn ? 'text-gray-600' : 'text-gray-400'
+                                brightOn ? 'text-gray-400' : 'text-gray-400'
                               }`}>•</span>
                               <a
                                 href="#"
                                 className={`text-xs sm:text-sm hover:underline hidden sm:inline transition-colors duration-300 ${
-                                  brightOn ? 'text-gray-600 hover:text-black' : 'text-gray-400 hover:text-white'
+                                  brightOn ? 'text-gray-500 hover:text-gray-900' : 'text-gray-400 hover:text-white'
                                 }`}
                               >
                                 {formatRelativeTime(p.createdAt)}
@@ -797,7 +797,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                                   className={`shrink-0 rounded-full p-2 transition-all duration-300 ${
                                     openMenuId === p.id 
                                       ? 'bg-primary-teal/20 text-primary-teal' 
-                                      : brightOn ? 'text-[#008B8B] hover:text-[#00CED1] hover:bg-[#1E293B]' : 'text-text-muted hover:text-white hover:bg-white/5'
+                                      : brightOn ? 'text-gray-500 hover:text-teal-600 hover:bg-gray-100' : 'text-text-muted hover:text-white hover:bg-white/5'
                                   }`}
                                   aria-label="More options"
                                 >
@@ -807,11 +807,11 @@ export default function PostPage({ onNavigate = () => {} }) {
                                 {/* Dropdown Menu */}
                                 {openMenuId === p.id && (
                                   <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl overflow-hidden z-50 border transition-colors duration-300 ${
-                                    brightOn ? 'bg-[#1E293B] border-white/20' : 'bg-gray-900 border-white/10'
+                                    brightOn ? 'bg-white border-gray-200' : 'bg-gray-900 border-white/10'
                                   }`}>
                                     <button
                                       className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 ${
-                                        brightOn ? 'text-white hover:bg-[#2D3B4E]' : 'text-white hover:bg-white/10'
+                                        brightOn ? 'text-gray-700 hover:bg-gray-50' : 'text-white hover:bg-white/10'
                                       }`}
                                     >
                                       <i className="fi fi-br-bookmark text-lg"></i>
@@ -837,7 +837,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                         {/* Repost indicator */}
                         {p.repost_of && (
                           <div className={`mt-2 flex items-center gap-2 text-sm ${
-                            brightOn ? 'text-gray-600' : 'text-gray-400'
+                            brightOn ? 'text-gray-500' : 'text-gray-400'
                           }`}>
                             <i className="fi fi-br-refresh"></i>
                             <span>Reposted</span>
@@ -1254,7 +1254,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                       }
                     }}
                   />
-                  <i className={`fa-regular fa-sun text-2xl transition-all duration-300 ${brightOn ? 'text-white scale-125 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'text-gray-500 scale-100 group-hover:text-gray-400'}`} />
+                  <i className={`fa-regular fa-sun text-2xl transition-all duration-300 ${brightOn ? 'text-amber-500 scale-125 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'text-gray-500 scale-100 group-hover:text-gray-400'}`} />
                 </div>
               </div>
             </div>
