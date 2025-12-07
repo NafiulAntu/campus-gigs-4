@@ -384,39 +384,76 @@ export default function Payments({ onBack }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((txn) => (
-                    <tr
-                      key={txn.id}
-                      className="border-t border-white/10 hover:bg-white/[0.04] transition-colors"
-                    >
-                      <td className="p-4 text-white font-mono text-sm">
-                        {txn.id}
-                      </td>
-                      <td className="p-4 text-white">{txn.description}</td>
-                      <td className="p-4 text-text-muted">{txn.date}</td>
-                      <td
-                        className={`p-4 font-bold ${
-                          txn.type === "received"
-                            ? "text-green-400"
-                            : "text-red-400"
-                        }`}
-                      >
-                        {txn.type === "received" ? "+" : "-"}$
-                        {txn.amount.toFixed(2)}
-                      </td>
-                      <td className="p-4">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            txn.status === "completed"
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-yellow-500/20 text-yellow-400"
-                          }`}
-                        >
-                          {txn.status}
-                        </span>
+                  {transactions.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="p-8 text-center text-gray-400">
+                        <i className="fi fi-rr-inbox text-3xl mb-2 block"></i>
+                        No transactions yet
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    transactions.map((txn) => {
+                      const isReceived = txn.receiver_id === currentUserId;
+                      const isSent = txn.sender_id === currentUserId;
+                      const otherPerson = isReceived 
+                        ? { name: txn.sender_name, username: txn.sender_username }
+                        : { name: txn.receiver_name, username: txn.receiver_username };
+                      
+                      return (
+                        <tr
+                          key={txn.id}
+                          className="border-t border-white/10 hover:bg-white/[0.04] transition-colors"
+                        >
+                          <td className="p-4 text-white font-mono text-sm">
+                            #{txn.id}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex flex-col">
+                              <span className="text-white font-medium">
+                                {isReceived ? 'Received from' : 'Sent to'} {otherPerson.name}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                @{otherPerson.username}
+                                {txn.payment_method && (
+                                  <span className="ml-2 px-2 py-0.5 bg-primary-teal/20 text-primary-teal rounded text-xs">
+                                    {txn.payment_method.toUpperCase()}
+                                  </span>
+                                )}
+                              </span>
+                              {txn.notes && (
+                                <span className="text-xs text-gray-500 mt-1 italic">"{txn.notes}"</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 text-text-muted text-sm">
+                            {formatDate(txn.created_at)}
+                          </td>
+                          <td
+                            className={`p-4 font-bold ${
+                              isReceived
+                                ? "text-green-400"
+                                : "text-red-400"
+                            }`}
+                          >
+                            {isReceived ? "+" : "-"}৳{parseFloat(txn.amount).toFixed(2)}
+                          </td>
+                          <td className="p-4">
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                txn.status === "completed" || txn.status === "success"
+                                  ? "bg-green-500/20 text-green-400"
+                                  : txn.status === "pending"
+                                  ? "bg-yellow-500/20 text-yellow-400"
+                                  : "bg-red-500/20 text-red-400"
+                              }`}
+                            >
+                              {txn.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
