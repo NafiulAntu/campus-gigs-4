@@ -31,6 +31,16 @@ exports.initiatePayment = async (req, res) => {
     const { plan_type } = req.body; // '15days', '30days', or 'yearly'
     const userId = req.user.id;
 
+    // Check if user is verified
+    if (!req.user.is_verified) {
+      return res.status(403).json({
+        success: false,
+        error: 'Verification required',
+        message: 'You must verify your account before making purchases. Please complete ID verification in your profile.',
+        requiresVerification: true
+      });
+    }
+
     // Validate plan
     if (!['15days', '30days', 'yearly'].includes(plan_type)) {
       return res.status(400).json({ error: 'Invalid plan type' });

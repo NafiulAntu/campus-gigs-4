@@ -324,44 +324,62 @@ exports.deleteUser = async (req, res) => {
 
     const userData = userCheck.rows[0];
 
+    console.log(`🗑️ Admin deleting user ${userId} (${userData.email}). Reason: ${reason}`);
+
     // Delete related data first (with error handling for missing tables)
     const deleteOperations = [
-      'DELETE FROM students WHERE user_id = $1',
-      'DELETE FROM teachers WHERE user_id = $1',
-      'DELETE FROM employees WHERE user_id = $1',
-      'DELETE FROM posts WHERE posted_by = $1',
-      'DELETE FROM followers WHERE follower_id = $1 OR following_id = $1',
-      'DELETE FROM notifications WHERE user_id = $1 OR actor_id = $1',
-      'DELETE FROM verification_requests WHERE user_id = $1',
-      'DELETE FROM user_transactions WHERE sender_id = $1 OR receiver_id = $1',
-      'DELETE FROM subscriptions WHERE user_id = $1',
-      'DELETE FROM payment_transactions WHERE user_id = $1'
+      { query: 'DELETE FROM verification_requests WHERE user_id = $1', name: 'verification requests' },
+      { query: 'DELETE FROM teachers WHERE user_id = $1', name: 'teacher profile' },
+      { query: 'DELETE FROM students WHERE user_id = $1', name: 'student profile' },
+      { query: 'DELETE FROM employees WHERE user_id = $1', name: 'employee profile' },
+      { query: 'DELETE FROM posts WHERE posted_by = $1', name: 'posts' },
+      { query: 'DELETE FROM followers WHERE follower_id = $1 OR following_id = $1', name: 'followers' },
+      { query: 'DELETE FROM notifications WHERE user_id = $1 OR actor_id = $1', name: 'notifications' },
+      { query: 'DELETE FROM user_transactions WHERE sender_id = $1 OR receiver_id = $1', name: 'transactions' },
+      { query: 'DELETE FROM subscriptions WHERE user_id = $1', name: 'subscriptions' },
+      { query: 'DELETE FROM payment_transactions WHERE user_id = $1', name: 'payments' },
+      { query: 'DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1', name: 'messages' },
+      { query: 'DELETE FROM comments WHERE user_id = $1', name: 'comments' },
+      { query: 'DELETE FROM likes WHERE user_id = $1', name: 'likes' }
     ];
 
+    let deletedCounts = {};
     for (const operation of deleteOperations) {
       try {
-        await pool.query(operation, [userId]);
+        const result = await pool.query(operation.query, [userId]);
+        if (result.rowCount > 0) {
+          deletedCounts[operation.name] = result.rowCount;
+          console.log(`  ✅ Deleted ${result.rowCount} ${operation.name}`);
+        }
       } catch (e) {
         // Table might not exist, continue
+        console.log(`  ⚠️ Skipped ${operation.name}: ${e.message}`);
       }
     }
 
     // Delete user
     await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+    console.log(`✅ User ${userId} (${userData.email}) deleted successfully`);
 
-    // Log admin action
+    // Log admin action with deletion summary
     try {
       await pool.query(`
         INSERT INTO admin_logs (admin_id, action, target_type, target_id, details)
         VALUES ($1, 'delete_user', 'user', $2, $3)
-      `, [adminId, userId, JSON.stringify({ email: userData.email, name: userData.full_name, reason })]);
+      `, [adminId, userId, JSON.stringify({ 
+        email: userData.email, 
+        name: userData.full_name, 
+        reason,
+        deletedCounts
+      })]);
     } catch (logError) {
       console.log('Admin log skipped (table may not exist):', logError.message);
     }
 
     res.json({
       success: true,
-      message: 'User deleted successfully'
+      message: 'User and all associated data deleted successfully',
+      deletedItems: deletedCounts
     });
   } catch (error) {
     console.error('Delete user error:', error);

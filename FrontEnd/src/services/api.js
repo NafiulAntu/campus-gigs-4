@@ -202,5 +202,27 @@ export const approveAdminUser = (userId, data) => API.post(`/admin/users/${userI
 export const updateUserRole = (userId, role) => API.put(`/admin/users/${userId}/role`, { role });
 export const deleteAdminUser = (userId, data) => API.delete(`/admin/users/${userId}`, { data });
 
+// ============= JOB SEARCH API =============
+// Get all jobs with filters
+export const getJobs = (params) => API.get('/jobs', { params });
+// Get single job
+export const getJobById = (id) => API.get(`/jobs/${id}`);
+// Get job categories
+export const getJobCategories = () => API.get('/jobs/categories');
+// Get job locations
+export const getJobLocations = () => API.get('/jobs/locations');
+// Create job (protected)
+export const createJob = (data) => API.post('/jobs', data);
+// Update job (protected)
+export const updateJob = (id, data) => API.put(`/jobs/${id}`, data);
+// Delete job (protected)
+export const deleteJob = (id) => API.delete(`/jobs/${id}`);
+// Apply for job (protected)
+export const applyForJob = (id, data) => API.post(`/jobs/${id}/apply`, data);
+// Get my applications (protected)
+export const getMyApplications = () => API.get('/jobs/my/applications');
+// Get my posted jobs (protected)
+export const getMyPostedJobs = () => API.get('/jobs/my/posted');
+
 // Export API instance as default for direct usage
 export default API;

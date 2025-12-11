@@ -33,9 +33,14 @@ try {
 
     // Try to initialize storage bucket if credentials provided
     if (process.env.FIREBASE_STORAGE_BUCKET) {
-      bucket = admin.storage().bucket();
-      isStorageEnabled = true;
-      console.log('✅ Firebase Admin SDK initialized (Auth + Storage)');
+      try {
+        bucket = admin.storage().bucket();
+        // Don't set isStorageEnabled to true yet - will be tested on first upload
+        console.log('✅ Firebase Admin SDK initialized (Auth + Storage bucket configured)');
+        console.log('⚠️  Using local storage for verification uploads');
+      } catch (bucketError) {
+        console.log('⚠️  Firebase Storage bucket not accessible - using local storage');
+      }
     } else {
       console.log('✅ Firebase Admin SDK initialized (Auth only)');
     }
@@ -53,21 +58,61 @@ try {
  * @returns {Promise<string>} - Public URL of uploaded file
  */
 async function uploadToFirebase(fileBuffer, fileName, mimeType) {
-  if (!bucket) {
-    throw new Error('Firebase Storage not initialized');
+  // For verification uploads, always use local storage
+  // Firebase bucket is not available yet
+  if (fileName.includes('verifications/')) {
+    return await uploadToLocalStorage(fileBuffer, fileName, mimeType);
   }
 
-  const file = bucket.file(`posts/${Date.now()}_${fileName}`);
-  
-  await file.save(fileBuffer, {
-    metadata: {
-      contentType: mimeType,
-    },
-    public: true,
-  });
+  // If Firebase Storage is not available, use local storage
+  if (!bucket || !isStorageEnabled) {
+    return await uploadToLocalStorage(fileBuffer, fileName, mimeType);
+  }
 
-  // Get public URL
-  const publicUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+  try {
+    const file = bucket.file(`posts/${Date.now()}_${fileName}`);
+    
+    await file.save(fileBuffer, {
+      metadata: {
+        contentType: mimeType,
+      },
+      public: true,
+    });
+
+    // Get public URL
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+    return publicUrl;
+  } catch (error) {
+    console.error('⚠️  Firebase upload failed, using local storage:', error.message);
+    return await uploadToLocalStorage(fileBuffer, fileName, mimeType);
+  }
+}
+
+/**
+ * Upload file to local storage (fallback)
+ * @param {Buffer} fileBuffer - File buffer
+ * @param {string} fileName - File name with path
+ * @param {string} mimeType - File MIME type
+ * @returns {Promise<string>} - Public URL of uploaded file
+ */
+async function uploadToLocalStorage(fileBuffer, fileName, mimeType) {
+  const fs = require('fs').promises;
+  const path = require('path');
+  
+  // Create uploads directory structure
+  const uploadsDir = path.join(__dirname, '..', 'uploads', 'verifications');
+  await fs.mkdir(uploadsDir, { recursive: true });
+  
+  // Generate unique filename
+  const uniqueFileName = `${Date.now()}_${fileName.replace(/\//g, '_')}`;
+  const filePath = path.join(uploadsDir, uniqueFileName);
+  
+  // Save file
+  await fs.writeFile(filePath, fileBuffer);
+  
+  // Return local URL (accessible via static route)
+  const publicUrl = `http://localhost:5000/uploads/verifications/${uniqueFileName}`;
+  console.log('✅ File saved to local storage:', publicUrl);
   return publicUrl;
 }
 

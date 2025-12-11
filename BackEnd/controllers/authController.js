@@ -390,32 +390,39 @@ exports.deleteAccount = async (req, res) => {
       console.log('Password verified successfully');
     }
 
-    // Delete related profile data first to avoid foreign key constraints
+    // Delete ALL related data first to avoid foreign key constraints
     const pool = require('../config/db');
     
-    try {
-      // Delete teacher profile if exists
-      await pool.query('DELETE FROM teachers WHERE user_id = $1', [userId]);
-      console.log('Teacher profile deleted (if existed)');
-      
-      // Delete student profile if exists
-      await pool.query('DELETE FROM students WHERE user_id = $1', [userId]);
-      console.log('Student profile deleted (if existed)');
-      
-      // Delete employee profile if exists
-      await pool.query('DELETE FROM employees WHERE user_id = $1', [userId]);
-      console.log('Employee profile deleted (if existed)');
-      
-      // Delete any other related data (messages, payments, etc.)
-      await pool.query('DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1', [userId]);
-      console.log('Messages deleted (if existed)');
-      
-      await pool.query('DELETE FROM payments WHERE user_id = $1', [userId]);
-      console.log('Payments deleted (if existed)');
-    } catch (relatedDataError) {
-      console.error('Error deleting related data:', relatedDataError);
-      // Continue with user deletion even if related data deletion fails
+    console.log('🗑️ Starting comprehensive data deletion for user:', userId);
+    
+    const deleteOperations = [
+      { query: 'DELETE FROM teachers WHERE user_id = $1', name: 'teacher profile' },
+      { query: 'DELETE FROM students WHERE user_id = $1', name: 'student profile' },
+      { query: 'DELETE FROM employees WHERE user_id = $1', name: 'employee profile' },
+      { query: 'DELETE FROM verification_requests WHERE user_id = $1', name: 'verification requests' },
+      { query: 'DELETE FROM posts WHERE posted_by = $1', name: 'posts' },
+      { query: 'DELETE FROM followers WHERE follower_id = $1 OR following_id = $1', name: 'follower relationships' },
+      { query: 'DELETE FROM notifications WHERE user_id = $1 OR actor_id = $1', name: 'notifications' },
+      { query: 'DELETE FROM user_transactions WHERE sender_id = $1 OR receiver_id = $1', name: 'transactions' },
+      { query: 'DELETE FROM subscriptions WHERE user_id = $1', name: 'subscriptions' },
+      { query: 'DELETE FROM payment_transactions WHERE user_id = $1', name: 'payment transactions' },
+      { query: 'DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1', name: 'messages' },
+      { query: 'DELETE FROM payments WHERE user_id = $1', name: 'payments' }
+    ];
+
+    for (const operation of deleteOperations) {
+      try {
+        const result = await pool.query(operation.query, [userId]);
+        if (result.rowCount > 0) {
+          console.log(`✅ Deleted ${result.rowCount} ${operation.name}`);
+        }
+      } catch (err) {
+        // Table might not exist or other error - continue anyway
+        console.log(`⚠️ Skipped ${operation.name}: ${err.message}`);
+      }
     }
+    
+    console.log('✅ All related data deletion completed');
 
     // Finally delete the user
     const deletedUser = await User.delete(userId);

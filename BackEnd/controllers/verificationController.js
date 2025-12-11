@@ -1,5 +1,6 @@
 const VerificationRequest = require('../models/VerificationRequest');
 const User = require('../models/User');
+const pool = require('../config/db');
 const textractService = require('../services/textractService');
 const { uploadToFirebase } = require('../config/firebase');
 const sharp = require('sharp');
@@ -68,24 +69,26 @@ exports.submitVerification = async (req, res) => {
 
       console.log('✅ ID card uploaded:', frontImageUrl);
 
-      // Extract text using AWS Textract
+      // Extract text using AWS Textract (non-blocking)
       if (textractService.isEnabled) {
-        console.log('🔍 Starting AWS Textract analysis...');
-        extractedData = await textractService.extractTextFromIDCard(optimizedBuffer);
-        
-        // Validate quality
-        const validation = textractService.validateIDCardQuality(extractedData);
-        
-        if (!validation.isValid) {
-          return res.status(400).json({
-            success: false,
-            message: 'ID card image quality is too low',
-            issues: validation.issues,
-            suggestion: 'Please retake the photo in good lighting with the ID card clearly visible'
-          });
-        }
+        try {
+          console.log('🔍 Starting AWS Textract analysis...');
+          extractedData = await textractService.extractTextFromIDCard(optimizedBuffer);
+          
+          // Validate quality
+          const validation = textractService.validateIDCardQuality(extractedData);
+          
+          if (!validation.isValid) {
+            console.warn('⚠️  ID card quality low but allowing submission:', validation.issues);
+            // Don't block submission, just log the warning
+          }
 
-        console.log('✅ Text extraction complete. Confidence:', extractedData.confidence);
+          console.log('✅ Text extraction complete. Confidence:', extractedData.confidence);
+        } catch (textractError) {
+          console.error('⚠️  Textract failed (non-blocking):', textractError.message);
+          // Continue without OCR data - manual review will be done by admin
+          extractedData = {};
+        }
       } else {
         console.log('⚠️  AWS Textract not configured - skipping OCR');
       }
@@ -310,7 +313,16 @@ exports.approveVerification = async (req, res) => {
       admin_notes
     );
 
+    // Update user's is_verified status
+    await pool.query(`
+      UPDATE users 
+      SET is_verified = true,
+          verified_at = CURRENT_TIMESTAMP
+      WHERE id = $1
+    `, [verification.user_id]);
+
     console.log(`✅ Verification ${id} approved by admin ${adminId}`);
+    console.log(`✅ User ${verification.user_id} marked as verified`);
 
     // TODO: Send notification to user
     // await notificationService.sendVerificationApproved(verification.user_id);
@@ -366,7 +378,16 @@ exports.rejectVerification = async (req, res) => {
       admin_notes
     );
 
+    // Ensure user remains unverified
+    await pool.query(`
+      UPDATE users 
+      SET is_verified = false,
+          verified_at = NULL
+      WHERE id = $1
+    `, [verification.user_id]);
+
     console.log(`❌ Verification ${id} rejected by admin ${adminId}`);
+    console.log(`❌ User ${verification.user_id} marked as unverified`);
 
     // TODO: Send notification to user
     // await notificationService.sendVerificationRejected(verification.user_id, rejection_reason);

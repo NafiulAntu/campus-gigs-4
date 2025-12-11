@@ -1752,6 +1752,40 @@ input.signin-input:focus-visible {
   transform: translateY(0);
 }
 
+/* Admin Panel Button */
+.admin-panel-button {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 10px;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.admin-panel-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
+}
+
+.admin-panel-button:active {
+  transform: translateY(0);
+}
+
+.admin-panel-button span {
+  letter-spacing: 0.025em;
+}
+
 /* Sign Up Link */
 .signup-link-text {
   text-align: center;

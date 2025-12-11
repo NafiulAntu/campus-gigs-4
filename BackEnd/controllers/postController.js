@@ -9,8 +9,19 @@ exports.createPost = async (req, res) => {
     console.log('Request body:', req.body);
     console.log('User ID:', req.user?.id);
     
-    const { content, media_urls } = req.body;
     const userId = req.user.id;
+
+    // Check if user is verified
+    if (!req.user.is_verified) {
+      return res.status(403).json({
+        success: false,
+        error: 'Verification required',
+        message: 'You must verify your account before creating posts. Please complete ID verification in your profile.',
+        requiresVerification: true
+      });
+    }
+    
+    const { content, media_urls } = req.body;
 
     // Allow posts with just media (no text content required)
     const postContent = content && content.trim() !== '' ? content.trim() : '';

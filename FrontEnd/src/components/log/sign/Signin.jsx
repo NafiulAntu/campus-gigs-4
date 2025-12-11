@@ -236,36 +236,12 @@ export default function Signin() {
             {/* Admin Panel Button - Only visible to admins */}
             {isAdmin && (
               <button
+                type="button"
                 onClick={() => navigate('/admin')}
-                style={{
-                  marginTop: '8px',
-                  width: '100%',
-                  padding: '12px 20px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #dc2626 0%, #7c2d12 100%)',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)',
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(220, 38, 38, 0.4)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 4px 15px rgba(220, 38, 38, 0.3)';
-                }}
+                className="admin-panel-button"
               >
                 <FaUserShield size={18} />
-                Admin Panel
+                <span>Admin Panel</span>
               </button>
             )}
 

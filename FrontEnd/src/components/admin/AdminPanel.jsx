@@ -59,7 +59,10 @@ import {
   SupervisorAccount as SuperAdminIcon,
   Block as BlockIcon,
   Edit as EditIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  PendingActions as PendingIcon,
+  Cancel as CancelIcon,
+  Image as ImageIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -70,7 +73,10 @@ import {
   approveAdminUser,
   updateUserRole,
   deleteAdminUser,
-  checkAdminStatus
+  checkAdminStatus,
+  getPendingVerifications,
+  approveVerification,
+  rejectVerification
 } from '../../services/api';
 
 // Stats Card Component
@@ -459,6 +465,199 @@ const ChangeRoleDialog = ({ open, onClose, user, onConfirm, loading }) => {
   );
 };
 
+// Verification Details Dialog
+const VerificationDetailsDialog = ({ open, onClose, verification, onApprove, onReject, loading }) => {
+  if (!verification) return null;
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        borderBottom: 1,
+        borderColor: 'divider'
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <VerifiedIcon color="warning" />
+          Review Verification Request
+        </Box>
+        <IconButton onClick={onClose} size="small">
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      
+      <DialogContent sx={{ mt: 2 }}>
+        {/* User Info */}
+        <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+          <Typography variant="subtitle2" color="primary" gutterBottom>User Information</Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">Full Name</Typography>
+              <Typography variant="body1" fontWeight="medium">{verification.full_name || 'N/A'}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">User Type</Typography>
+              <Chip 
+                label={verification.user_type}
+                size="small"
+                color={
+                  verification.user_type === 'student' ? 'primary' :
+                  verification.user_type === 'teacher' ? 'secondary' :
+                  'default'
+                }
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">Email</Typography>
+              <Typography variant="body1">{verification.email || 'N/A'}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">Institutional Email</Typography>
+              <Typography variant="body1">{verification.institutional_email || 'Not provided'}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">Submitted</Typography>
+              <Typography variant="body1">
+                {new Date(verification.created_at).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">User ID</Typography>
+              <Typography variant="body1">#{verification.user_id}</Typography>
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* ID Documents */}
+        <Paper variant="outlined" sx={{ p: 2 }}>
+          <Typography variant="subtitle2" color="primary" gutterBottom>Uploaded Documents</Typography>
+          <Grid container spacing={2}>
+            {verification.id_card_url && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>ID Card - Front</Typography>
+                <Box 
+                  component="img"
+                  src={verification.id_card_url}
+                  alt="ID Front"
+                  sx={{ 
+                    width: '100%', 
+                    height: 'auto',
+                    maxHeight: 300,
+                    objectFit: 'contain',
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    '&:hover': { opacity: 0.8 }
+                  }}
+                  onClick={() => window.open(verification.id_card_url, '_blank')}
+                />
+              </Grid>
+            )}
+            {verification.id_card_back_url && (
+              <Grid item xs={12} md={6}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>ID Card - Back</Typography>
+                <Box 
+                  component="img"
+                  src={verification.id_card_back_url}
+                  alt="ID Back"
+                  sx={{ 
+                    width: '100%', 
+                    height: 'auto',
+                    maxHeight: 300,
+                    objectFit: 'contain',
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    '&:hover': { opacity: 0.8 }
+                  }}
+                  onClick={() => window.open(verification.id_card_back_url, '_blank')}
+                />
+              </Grid>
+            )}
+          </Grid>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+            Click on images to view full size
+          </Typography>
+        </Paper>
+      </DialogContent>
+
+      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        <Button onClick={onClose} disabled={loading}>Cancel</Button>
+        <Button 
+          onClick={onReject}
+          color="error"
+          variant="outlined"
+          disabled={loading}
+          startIcon={<CancelIcon />}
+        >
+          Reject
+        </Button>
+        <Button 
+          onClick={onApprove}
+          color="success"
+          variant="contained"
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={16} /> : <ApproveIcon />}
+        >
+          Approve Verification
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// Rejection Dialog
+const RejectionDialog = ({ open, onClose, verification, onConfirm, loading, reason, setReason }) => (
+  <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <DialogTitle sx={{ color: 'error.main' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <CancelIcon />
+        Reject Verification
+      </Box>
+    </DialogTitle>
+    <DialogContent>
+      <Alert severity="warning" sx={{ mb: 2 }}>
+        Please provide a reason for rejection. This will be sent to the user.
+      </Alert>
+      <Typography variant="body2" gutterBottom>
+        Rejecting verification for: <strong>{verification?.full_name}</strong>
+      </Typography>
+      <TextField
+        fullWidth
+        multiline
+        rows={4}
+        label="Rejection Reason"
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="E.g., ID card is not clear, information does not match, etc."
+        sx={{ mt: 2 }}
+        required
+      />
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={onClose} disabled={loading}>Cancel</Button>
+      <Button 
+        onClick={onConfirm}
+        color="error"
+        variant="contained"
+        disabled={loading || !reason.trim()}
+        startIcon={loading ? <CircularProgress size={16} /> : <CancelIcon />}
+      >
+        Confirm Rejection
+      </Button>
+    </DialogActions>
+  </Dialog>
+);
+
 // Main Admin Panel Component
 const AdminPanel = () => {
   const navigate = useNavigate();
@@ -489,6 +688,15 @@ const AdminPanel = () => {
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  
+  // Verification Management
+  const [activeView, setActiveView] = useState('users'); // 'users' or 'verifications'
+  const [pendingVerifications, setPendingVerifications] = useState([]);
+  const [verificationsLoading, setVerificationsLoading] = useState(false);
+  const [selectedVerification, setSelectedVerification] = useState(null);
+  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   // Check admin status on mount
   useEffect(() => {
@@ -625,6 +833,76 @@ const AdminPanel = () => {
     }
   };
 
+  // Fetch pending verifications
+  const fetchVerifications = async () => {
+    setVerificationsLoading(true);
+    try {
+      const response = await getPendingVerifications();
+      setPendingVerifications(response.data.data || []);
+    } catch (err) {
+      console.error('Fetch verifications error:', err);
+    } finally {
+      setVerificationsLoading(false);
+    }
+  };
+
+  // Handle view verification details
+  const handleViewVerification = (verification) => {
+    setSelectedVerification(verification);
+    setVerificationDialogOpen(true);
+  };
+
+  // Handle approve verification
+  const handleApproveVerification = async () => {
+    if (!selectedVerification) return;
+    setActionLoading(true);
+    try {
+      await approveVerification(selectedVerification.id, {});
+      setVerificationDialogOpen(false);
+      setSelectedVerification(null);
+      fetchVerifications();
+      fetchDashboardData();
+      alert('Verification approved successfully!');
+    } catch (err) {
+      console.error('Approval error:', err);
+      alert(err.response?.data?.message || 'Failed to approve verification');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Handle reject verification
+  const handleRejectClick = () => {
+    setVerificationDialogOpen(false);
+    setRejectDialogOpen(true);
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!selectedVerification) return;
+    setActionLoading(true);
+    try {
+      await rejectVerification(selectedVerification.id, { rejection_reason: rejectionReason });
+      setRejectDialogOpen(false);
+      setVerificationDialogOpen(false);
+      setSelectedVerification(null);
+      setRejectionReason('');
+      fetchVerifications();
+      fetchDashboardData();
+      alert('Verification rejected');
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reject verification');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Load verifications when view changes
+  useEffect(() => {
+    if (isAdmin && activeView === 'verifications') {
+      fetchVerifications();
+    }
+  }, [activeView, isAdmin]);
+
   // Show access denied
   if (!checkingAdmin && !isAdmin) {
     return (
@@ -660,7 +938,25 @@ const AdminPanel = () => {
   }
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 3 }}>
+    <Box sx={{ 
+      bgcolor: 'background.default', 
+      minHeight: '100vh', 
+      py: 3,
+      overflowX: 'hidden',
+      '&::-webkit-scrollbar': {
+        width: '8px',
+      },
+      '&::-webkit-scrollbar-track': {
+        background: 'transparent',
+      },
+      '&::-webkit-scrollbar-thumb': {
+        background: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: '4px',
+      },
+      '&::-webkit-scrollbar-thumb:hover': {
+        background: 'rgba(255, 255, 255, 0.2)',
+      },
+    }}>
       <Container maxWidth="xl">
         {/* Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
@@ -714,6 +1010,15 @@ const AdminPanel = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <StatsCard
+              title="Pending Verification"
+              value={stats?.pendingVerifications || 0}
+              icon={<PendingIcon />}
+              color={theme.palette.warning.main}
+              subtitle="Awaiting review"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatsCard
               title="Verified Users"
               value={stats?.verifiedUsers || 0}
               icon={<VerifiedIcon />}
@@ -722,24 +1027,42 @@ const AdminPanel = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <StatsCard
-              title="Total Posts"
-              value={stats?.totalPosts || 0}
-              icon={<PostIcon />}
-              color={theme.palette.info.main}
-              subtitle={`+${stats?.newPostsThisWeek || 0} this week`}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Premium Users"
-              value={stats?.premiumUsers || 0}
-              icon={<PremiumIcon />}
-              color={theme.palette.warning.main}
+              title="Unverified Users"
+              value={(stats?.totalUsers || 0) - (stats?.verifiedUsers || 0)}
+              icon={<BlockIcon />}
+              color={theme.palette.error.main}
             />
           </Grid>
         </Grid>
 
+        {/* View Toggle */}
+        <Paper sx={{ mb: 3 }}>
+          <Tabs
+            value={activeView}
+            onChange={(e, newValue) => setActiveView(newValue)}
+            sx={{ borderBottom: 1, borderColor: 'divider' }}
+          >
+            <Tab 
+              label="User Management" 
+              value="users"
+              icon={<PeopleIcon />}
+              iconPosition="start"
+            />
+            <Tab 
+              label={
+                <Badge badgeContent={stats?.pendingVerifications || 0} color="warning">
+                  Verification Requests
+                </Badge>
+              }
+              value="verifications"
+              icon={<PendingIcon />}
+              iconPosition="start"
+            />
+          </Tabs>
+        </Paper>
+
         {/* Users Table */}
+        {activeView === 'users' && (
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PeopleIcon />
@@ -966,6 +1289,128 @@ const AdminPanel = () => {
             }}
           />
         </Paper>
+        )}
+
+        {/* Verification Requests */}
+        {activeView === 'verifications' && (
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PendingIcon />
+            Pending Verification Requests
+          </Typography>
+
+          {verificationsLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : pendingVerifications.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 6 }}>
+              <ApproveIcon sx={{ fontSize: 80, color: 'success.light', mb: 2 }} />
+              <Typography variant="h6" color="text.secondary">
+                No pending verifications
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                All verification requests have been processed
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>User</TableCell>
+                    <TableCell>User Type</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Submitted</TableCell>
+                    <TableCell>Documents</TableCell>
+                    <TableCell align="center">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pendingVerifications.map((verification) => (
+                    <TableRow key={verification.id} hover>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Avatar src={verification.profile_picture} sx={{ width: 32, height: 32 }}>
+                            {verification.full_name?.[0]?.toUpperCase()}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="body2" fontWeight="medium">
+                              {verification.full_name || 'N/A'}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              ID: {verification.user_id}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={verification.user_type}
+                          size="small"
+                          color={
+                            verification.user_type === 'student' ? 'primary' :
+                            verification.user_type === 'teacher' ? 'secondary' :
+                            'default'
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">{verification.institutional_email || 'N/A'}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {new Date(verification.created_at).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(verification.created_at).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          {verification.id_card_url && (
+                            <Chip 
+                              icon={<ImageIcon />}
+                              label="Front" 
+                              size="small"
+                              variant="outlined"
+                            />
+                          )}
+                          {verification.id_card_back_url && (
+                            <Chip 
+                              icon={<ImageIcon />}
+                              label="Back" 
+                              size="small"
+                              variant="outlined"
+                            />
+                          )}
+                        </Box>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<ViewIcon />}
+                          onClick={() => handleViewVerification(verification)}
+                        >
+                          Review
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Paper>
+        )}
 
         {/* Dialogs */}
         <UserDetailsDialog
@@ -988,6 +1433,31 @@ const AdminPanel = () => {
           user={selectedUser}
           onConfirm={handleRoleConfirm}
           loading={actionLoading}
+        />
+
+        <VerificationDetailsDialog
+          open={verificationDialogOpen}
+          onClose={() => {
+            setVerificationDialogOpen(false);
+            setSelectedVerification(null);
+          }}
+          verification={selectedVerification}
+          onApprove={handleApproveVerification}
+          onReject={handleRejectClick}
+          loading={actionLoading}
+        />
+
+        <RejectionDialog
+          open={rejectDialogOpen}
+          onClose={() => {
+            setRejectDialogOpen(false);
+            setRejectionReason('');
+          }}
+          verification={selectedVerification}
+          onConfirm={handleRejectConfirm}
+          loading={actionLoading}
+          reason={rejectionReason}
+          setReason={setRejectionReason}
         />
       </Container>
     </Box>

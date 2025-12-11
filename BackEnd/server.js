@@ -61,6 +61,7 @@ const activeUsersRoutes = require('./routes/activeUsers');
 const verificationRoutes = require('./routes/verificationRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const jobRoutes = require('./routes/jobRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
@@ -83,6 +84,7 @@ app.use('/api/active-users', activeUsersRoutes);
 app.use('/api/verification', verificationRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/jobs', jobRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Campus Gigs API', status: 'running' });

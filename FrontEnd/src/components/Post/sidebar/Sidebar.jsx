@@ -180,7 +180,7 @@ export default function Sidebar({ onNavigate = () => {}, brightOn = false }) {
   // X.com-like nav configuration
   const nav = [
     { key: "home", label: "Home", icon: "fi fi-br-home" },
-    { key: "jobs", label: "Explore", icon: "fi fi-br-search" },
+    { key: "jobs", label: "Jobs", icon: "fi fi-br-briefcase" },
     { key: "notifications", label: "Notifications", icon: "fi fi-br-bell" },
     { key: "messages", label: "Messages", icon: "fi fi-br-envelope" },
     { key: "communities", label: "Communities", icon: "fi fi-br-users-alt" },

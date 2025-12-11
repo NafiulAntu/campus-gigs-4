@@ -10,6 +10,7 @@ import {
   uploadFiles
 } from "../../../services/api";
 import { useNavigate } from 'react-router-dom';
+import VerificationSection from './VerificationSection';
 
 const Switcher8 = ({ isChecked, onChange }) => {
   return (
@@ -818,6 +819,11 @@ export default function Profile({ onBack }) {
                 </div>
               )}
             </div>
+
+            {/* Verification Section - Only for Students, Teachers, and Employees */}
+            {selectedProfession && ['student', 'teacher', 'employee'].includes(selectedProfession) && (
+              <VerificationSection user={user} selectedProfession={selectedProfession} />
+            )}
 
             {/* Interests */}
             <div className="bg-white/[0.04] rounded-xl p-6">
