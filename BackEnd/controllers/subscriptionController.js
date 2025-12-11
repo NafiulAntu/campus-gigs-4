@@ -6,6 +6,11 @@ const User = require('../models/User');
 // Get current subscription status
 exports.getSubscriptionStatus = async (req, res) => {
   try {
+    // Prevent caching of subscription status
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     const userId = req.user.id;
 
     const subscription = await Subscription.findOne({
@@ -20,7 +25,7 @@ exports.getSubscriptionStatus = async (req, res) => {
       });
     }
 
-    const isPremium = (subscription.status === 'active' || subscription.status === 'completed') && new Date(subscription.end_date) > new Date();
+    const isPremium = (subscription.status === 'active' || subscription.status === 'completed') && new Date(subscription.expires_at) > new Date();
 
     // Map plan_duration to display names and prices
     const planInfo = {
@@ -66,11 +71,11 @@ exports.getSubscriptionStatus = async (req, res) => {
         plan_name: currentPlan.name,
         amount: currentPlan.amount,
         status: subscription.status,
-        start_date: subscription.start_date,
-        end_date: subscription.end_date,
-        expiry_date: subscription.end_date,
-        auto_renew: subscription.auto_renew,
-        days_remaining: Math.ceil((new Date(subscription.end_date) - new Date()) / (1000 * 60 * 60 * 24)),
+        start_date: subscription.starts_at,
+        end_date: subscription.expires_at,
+        expiry_date: subscription.expires_at,
+        auto_renew: false, // We don't have this column yet
+        days_remaining: Math.ceil((new Date(subscription.expires_at) - new Date()) / (1000 * 60 * 60 * 24)),
         payment_info: paymentInfo
       }
     });

@@ -15,9 +15,17 @@ exports.createPost = async (req, res) => {
     // Allow posts with just media (no text content required)
     const postContent = content && content.trim() !== '' ? content.trim() : '';
 
-    console.log('✅ Creating post with:', { userId, content: postContent, media_urls });
+    console.log('✅ Creating post with:', { 
+      userId, 
+      content: postContent ? `${postContent.substring(0, 50)}...` : '(empty)',
+      media_count: media_urls ? media_urls.length : 0 
+    });
     const post = await Post.create(userId, postContent, media_urls || []);
-    console.log('✅ Post created:', post);
+    console.log('✅ Post created in PostgreSQL:', {
+      id: post.id,
+      posted_by: post.posted_by,
+      has_media: post.media_urls && post.media_urls.length > 0
+    });
     
     // Get the full post with user info
     const fullPost = await Post.getById(post.id);
@@ -41,7 +49,16 @@ exports.getAllPosts = async (req, res) => {
     const offset = parseInt(req.query.offset) || 0;
     const currentUserId = req.user ? req.user.id : null;
 
+    console.log(`📥 getAllPosts called by User ${currentUserId} (${req.user?.username || 'unknown'}) - Fetching from PostgreSQL`);
     const posts = await Post.getAll(currentUserId, limit, offset);
+    console.log(`📤 Returning ${posts.length} posts to User ${currentUserId}`);
+    
+    // Log posts breakdown by user
+    const breakdown = posts.reduce((acc, p) => {
+      acc[p.posted_by] = (acc[p.posted_by] || 0) + 1;
+      return acc;
+    }, {});
+    console.log(`   Posts breakdown:`, breakdown);
 
     res.status(200).json({ posts });
   } catch (error) {
@@ -238,6 +255,9 @@ exports.toggleShare = async (req, res) => {
       const repostContent = content?.trim() || '';
       const repost = await Post.createRepost(userId, postId, repostContent);
       
+      // Get the full repost with user info
+      const fullRepost = await Post.getById(repost.id);
+      
       // Get the original post for notification
       const originalPost = await Post.getById(postId);
       
@@ -258,7 +278,7 @@ exports.toggleShare = async (req, res) => {
         message: 'Post shared',
         shared: true,
         sharesCount: originalPost.shares_count + 1,
-        repost: repost
+        repost: fullRepost
       });
     }
   } catch (error) {

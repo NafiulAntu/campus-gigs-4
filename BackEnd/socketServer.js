@@ -4,15 +4,40 @@ const admin = require('firebase-admin');
 const db = require('./config/db');
 const { notifyMessage } = require('./utils/simpleNotificationHelpers');
 
-// Initialize Firebase Admin (if not already initialized)
+// Initialize Firebase Admin (if not already initialized and credentials are available)
+let firestore = null;
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-    projectId: 'campus-gigs-33f61'
-  });
+  try {
+    const hasCredentials = process.env.FIREBASE_PROJECT_ID && 
+                          process.env.FIREBASE_CLIENT_EMAIL && 
+                          process.env.FIREBASE_PRIVATE_KEY;
+    
+    if (hasCredentials) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        })
+      });
+      firestore = admin.firestore();
+      console.log('✅ Socket Server: Firebase Admin initialized');
+    } else {
+      console.log('⚠️  Socket Server: Firebase credentials not found - using PostgreSQL only');
+    }
+  } catch (error) {
+    console.error('❌ Socket Server: Firebase initialization error:', error.message);
+    console.log('⚠️  Socket Server: Falling back to PostgreSQL only');
+  }
+} else {
+  // Firebase already initialized by another module
+  try {
+    firestore = admin.firestore();
+    console.log('✅ Socket Server: Using existing Firebase Admin instance');
+  } catch (error) {
+    console.log('⚠️  Socket Server: Firebase not available - using PostgreSQL only');
+  }
 }
-
-const firestore = admin.firestore();
 
 /**
  * Socket.io + Firebase Hybrid Messaging Server
@@ -115,35 +140,41 @@ function createSocketServer(httpServer) {
           conversationId,
           text: text || '',
           attachments: attachments || [],
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          createdAt: firestore ? admin.firestore.FieldValue.serverTimestamp() : new Date().toISOString(),
           readBy: [socket.userId], // Sender has read it
           delivered: false,
           type: 'text'
         };
 
-        // 1. Save to Firestore for persistence
-        const messageRef = await firestore
-          .collection('conversations')
-          .doc(conversationId)
-          .collection('messages')
-          .add(message);
+        // 1. Save to Firestore for persistence (if available)
+        if (firestore) {
+          const messageRef = await firestore
+            .collection('conversations')
+            .doc(conversationId)
+            .collection('messages')
+            .add(message);
 
-        // Add message ID
-        message.id = messageRef.id;
+          // Add message ID
+          message.id = messageRef.id;
+        } else {
+          message.id = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
         message.createdAt = new Date().toISOString(); // For immediate display
 
         // 2. Deliver via Socket.io to online users (instant)
         io.to(`conversation:${conversationId}`).emit('message:new', message);
 
-        // 3. Update conversation metadata
-        await firestore
-          .collection('conversations')
-          .doc(conversationId)
-          .set({
-            lastMessage: text,
-            lastMessageAt: admin.firestore.FieldValue.serverTimestamp(),
-            participants: admin.firestore.FieldValue.arrayUnion(socket.userId, recipientId)
-          }, { merge: true });
+        // 3. Update conversation metadata (if Firestore available)
+        if (firestore) {
+          await firestore
+            .collection('conversations')
+            .doc(conversationId)
+            .set({
+              lastMessage: text,
+              lastMessageAt: admin.firestore.FieldValue.serverTimestamp(),
+              participants: admin.firestore.FieldValue.arrayUnion(socket.userId, recipientId)
+            }, { merge: true });
+        }
 
         // 4. Send notification to recipient
         if (recipientId && recipientId !== socket.userId) {
@@ -213,15 +244,17 @@ function createSocketServer(httpServer) {
       try {
         const { conversationId, messageId } = data;
         
-        // Update in Firestore
-        await firestore
-          .collection('conversations')
-          .doc(conversationId)
-          .collection('messages')
-          .doc(messageId)
-          .update({
-            readBy: admin.firestore.FieldValue.arrayUnion(socket.userId)
-          });
+        // Update in Firestore (if available)
+        if (firestore) {
+          await firestore
+            .collection('conversations')
+            .doc(conversationId)
+            .collection('messages')
+            .doc(messageId)
+            .update({
+              readBy: admin.firestore.FieldValue.arrayUnion(socket.userId)
+            });
+        }
 
         // Notify sender via Socket.io (instant)
         io.to(`conversation:${conversationId}`).emit('message:read', {
@@ -249,11 +282,18 @@ function createSocketServer(httpServer) {
     });
   });
 
+  // Helper function to get active users
+  io.getActiveUsers = () => {
+    return Array.from(activeUsers.keys());
+  };
+
   return io;
 }
 
 // Helper: Update user presence in Firestore
 async function updateUserPresence(userId, online) {
+  if (!firestore) return; // Skip if Firebase not available
+  
   try {
     await firestore.collection('presence').doc(userId).set({
       online,
@@ -266,6 +306,8 @@ async function updateUserPresence(userId, online) {
 
 // Helper: Send push notification via FCM
 async function sendPushNotification(userId, payload) {
+  if (!firestore) return; // Skip if Firebase not available
+  
   try {
     // Get user's FCM token from Firestore
     const userDoc = await firestore.collection('fcmTokens').doc(userId).get();

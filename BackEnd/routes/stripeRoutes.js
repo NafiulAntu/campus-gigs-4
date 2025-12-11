@@ -24,6 +24,9 @@ router.post('/create-checkout-session', (req, res, next) => {
 // Stripe webhook (public - Stripe will call this)
 router.post('/webhook', express.raw({ type: 'application/json' }), stripeController.handleWebhook);
 
+// Verify one-time payment token (protected)
+router.get('/verify-token', protect, stripeController.verifyPaymentToken);
+
 // Verify session (protected)
 router.get('/verify-session', protect, stripeController.verifySession);
 

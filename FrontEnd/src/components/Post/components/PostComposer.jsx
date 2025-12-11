@@ -77,12 +77,28 @@ export default function PostComposer({ onPost, onEdit, editingPost, repostingPos
   }, [editingPost, repostingPost]);
 
   function cancelEdit() {
+    // Professional cancel - smooth exit without confirmation
+    // Add a subtle fade-out animation
+    const composer = document.getElementById('post-composer');
+    if (composer) {
+      composer.classList.add('opacity-50');
+      setTimeout(() => {
+        composer.classList.remove('opacity-50');
+      }, 200);
+    }
+    
+    // Clear all states smoothly
     setText("");
     setFiles([]);
     if (mediaInputRef.current) mediaInputRef.current.value = null;
     if (attachInputRef.current) attachInputRef.current.value = null;
     if (onEdit) onEdit(null); // This will set editingPost to null
     if (repostingPost && onCancelRepost) onCancelRepost(); // Clear reposting post
+    
+    // Remove the blue ring highlight
+    if (composer) {
+      composer.classList.remove('ring-2', 'ring-[#89CFF0]', 'shadow-lg', 'shadow-[#89CFF0]/20');
+    }
   }
 
   async function submit() {
@@ -95,8 +111,6 @@ export default function PostComposer({ onPost, onEdit, editingPost, repostingPos
         }
         setText("");
         if (onCancelRepost) onCancelRepost();
-        // Refresh the page to show new repost
-        window.location.reload();
         return;
       }
 
@@ -126,10 +140,11 @@ export default function PostComposer({ onPost, onEdit, editingPost, repostingPos
       };
 
       if (editingPost) {
-        // Edit mode
+        // Edit mode - just update the post content, don't trigger share again
         const updatedPost = {
           id: editingPost.id,
-          ...postData
+          ...postData,
+          isRepost: editingPost.repost_of ? true : false // Flag to prevent duplicate share
         };
         if (onEdit) onEdit(updatedPost);
       } else {
@@ -151,7 +166,9 @@ export default function PostComposer({ onPost, onEdit, editingPost, repostingPos
   }
 
   return (
-    <div id="post-composer" className={`composer-card px-6 sm:px-8 py-3 sm:py-4 scroll-mt-4 transition-colors duration-300 border mb-6 ${
+    <div id="post-composer" className={`composer-card px-6 sm:px-8 py-3 sm:py-4 scroll-mt-4 transition-all duration-300 border mb-6 ${
+      repostingPost ? 'ring-2 ring-[#89CFF0] shadow-lg shadow-[#89CFF0]/20' : ''
+    } ${
       brightOn ? 'bg-[#0F172A] border-white' : 'bg-gray-900/40 border-[#045F5F]'
     }`}>
       <div className="flex flex-col gap-2 md:gap-3">

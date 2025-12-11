@@ -25,20 +25,30 @@ const Subscription = sequelize.define('Subscription', {
     comment: 'Original plan duration: 15days, 30days, or yearly'
   },
   status: {
-    type: DataTypes.ENUM('active', 'expired', 'cancelled', 'pending', 'completed'),
+    type: DataTypes.STRING(20),
     defaultValue: 'pending'
   },
   start_date: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: true,
+    field: 'start_date'
   },
   end_date: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: true,
+    field: 'end_date'
   },
-  auto_renew: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true
+  amount: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true
+  },
+  currency: {
+    type: DataTypes.STRING(3),
+    defaultValue: 'BDT'
+  },
+  payment_transaction_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true
   },
   created_at: {
     type: DataTypes.DATE,
@@ -51,7 +61,8 @@ const Subscription = sequelize.define('Subscription', {
 }, {
   tableName: 'subscriptions',
   timestamps: false,
-  underscored: true
+  underscored: false,
+  freezeTableName: true
 });
 
 // Class methods

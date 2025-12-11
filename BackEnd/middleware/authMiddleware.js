@@ -17,9 +17,7 @@ const protect = async (req, res, next) => {
       // Try Firebase token first (if Firebase Admin SDK is initialized)
       try {
         if (admin.apps.length > 0) {
-          console.log('Verifying Firebase token...');
           const decodedFirebaseToken = await admin.auth().verifyIdToken(token);
-          console.log('Firebase token verified for UID:', decodedFirebaseToken.uid);
           
           // Find user by Firebase UID
           req.user = await User.findByFirebaseUid(decodedFirebaseToken.uid);
@@ -37,9 +35,6 @@ const protect = async (req, res, next) => {
               profession: null,
               username: null
             });
-            console.log('User created with ID:', req.user.id);
-          } else {
-            console.log('User found with ID:', req.user.id);
           }
 
           delete req.user.password;
@@ -53,7 +48,7 @@ const protect = async (req, res, next) => {
         // If Firebase token fails, try JWT
         console.log('Firebase verification failed:', firebaseError.message);
         try {
-          const decoded = jwt.verify(token, JWT_SECRET);
+          const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
           req.user = await User.findById(decoded.id);
           
           if (!req.user) {
@@ -89,7 +84,7 @@ const optionalAuth = async (req, res, next) => {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
       req.user = await User.findById(decoded.id);
       delete req.user?.password;
     } catch (error) {
@@ -101,4 +96,60 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-module.exports = { protect, optionalAuth };
+// Admin only middleware
+const requireAdmin = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Authentication required' 
+      });
+    }
+
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Admin access required' 
+      });
+    }
+
+    console.log(`✅ Admin access granted: ${req.user.email} (${req.user.role})`);
+    next();
+  } catch (error) {
+    console.error('Admin middleware error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Authorization check failed' 
+    });
+  }
+};
+
+// Super admin only middleware
+const requireSuperAdmin = async (req, res, next) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Authentication required' 
+      });
+    }
+
+    if (req.user.role !== 'super_admin') {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Super admin access required' 
+      });
+    }
+
+    console.log(`✅ Super admin access granted: ${req.user.email}`);
+    next();
+  } catch (error) {
+    console.error('Super admin middleware error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Authorization check failed' 
+    });
+  }
+};
+
+module.exports = { protect, optionalAuth, requireAdmin, requireSuperAdmin };

@@ -73,11 +73,17 @@ exports.initPremiumSubscription = async (req, res) => {
     const paymentTransaction = await PaymentTransaction.create({
       user_id: userId,
       transaction_id: tran_id,
+      gateway_transaction_id: tran_id,
       payment_method: 'sslcommerz',
+      payment_gateway: 'sslcommerz',
+      transaction_type: 'subscription',
       amount: amount,
       currency: 'BDT',
       status: 'pending',
-      plan_type: plan_type
+      plan_type: plan_type,
+      metadata: {
+        plan_days: PLAN_DAYS[plan_type]
+      }
     });
 
     // Get user phone

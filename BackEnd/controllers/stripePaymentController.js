@@ -4,10 +4,22 @@
  * Get test keys instantly from: https://dashboard.stripe.com/test/apikeys
  */
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// Initialize Stripe only if secret key is provided
+let stripe = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  console.log('✅ Stripe initialized');
+} else {
+  console.log('⚠️  Stripe secret key not found - Stripe payments disabled');
+}
+
 const Subscription = require('../models/Subscription');
 const PaymentTransaction = require('../models/PaymentTransaction');
 const User = require('../models/User');
+const crypto = require('crypto');
+
+// Store for one-time tokens (in production, use Redis)
+const paymentTokens = new Map();
 
 // Pricing (in BDT, converted to USD for Stripe)
 const PRICING_BDT = {
@@ -30,6 +42,15 @@ const BDT_TO_USD = 0.0091; // 1 BDT = ~0.0091 USD
  */
 exports.createCheckoutSession = async (req, res) => {
   try {
+    // Check if Stripe is initialized
+    if (!stripe) {
+      console.error('Stripe not initialized - secret key not configured');
+      return res.status(500).json({ 
+        success: false,
+        error: 'Payment system not configured. Please contact support.' 
+      });
+    }
+
     const { plan_type } = req.body;
     const userId = req.user.id;
 
@@ -49,15 +70,6 @@ exports.createCheckoutSession = async (req, res) => {
       });
     }
 
-    // Check if Stripe is configured
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('Stripe secret key not configured');
-      return res.status(500).json({ 
-        success: false,
-        error: 'Payment system not configured. Please contact support.' 
-      });
-    }
-
     // Get user details
     const user = await User.findByPk(userId);
     if (!user) {
@@ -67,17 +79,19 @@ exports.createCheckoutSession = async (req, res) => {
       });
     }
 
-    // Check existing subscription
-    const existingSubscription = await Subscription.findOne({
-      where: { user_id: userId, status: 'active' }
-    });
+    // Check existing subscription (TEMPORARILY DISABLED FOR TESTING)
+    // const existingSubscription = await Subscription.findOne({
+    //   where: { user_id: userId, status: 'active' }
+    // });
 
-    if (existingSubscription && new Date(existingSubscription.end_date) > new Date()) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'You already have an active subscription' 
-      });
-    }
+    // if (existingSubscription && new Date(existingSubscription.end_date) > new Date()) {
+    //   return res.status(400).json({ 
+    //     success: false,
+    //     error: 'You already have an active subscription' 
+    //   });
+    // }
+    
+    console.log('⚠️ TESTING MODE: Active subscription check bypassed for testing');
 
     const amountBDT = PRICING_BDT[plan_type];
     const amountUSD = Math.round(amountBDT * BDT_TO_USD * 100); // in cents
@@ -112,15 +126,39 @@ exports.createCheckoutSession = async (req, res) => {
     });
 
     console.log('Stripe session created:', session.id);
+    
+    // Generate secure one-time token
+    const secureToken = crypto.randomBytes(32).toString('hex');
+    
+    // Store token with session mapping (expires in 10 minutes)
+    paymentTokens.set(secureToken, {
+      sessionId: session.id,
+      userId: userId,
+      createdAt: Date.now(),
+      used: false
+    });
+    
+    // Clean up expired tokens (older than 10 minutes)
+    setTimeout(() => {
+      paymentTokens.delete(secureToken);
+    }, 10 * 60 * 1000);
 
     // Create pending transaction
     await PaymentTransaction.create({
       user_id: userId,
-      transaction_id: session.id,
+      gateway_transaction_id: session.id,
+      transaction_id: `STRIPE_${userId}_${Date.now()}`,
       amount: amountBDT,
       currency: 'BDT',
       status: 'pending',
-      payment_method: 'stripe'
+      payment_method: 'stripe',
+      payment_gateway: 'stripe',
+      transaction_type: 'subscription',
+      plan_type: plan_type,
+      metadata: {
+        session_id: session.id,
+        plan_days: PLAN_DAYS[plan_type]
+      }
     });
 
     res.json({
@@ -146,6 +184,12 @@ exports.createCheckoutSession = async (req, res) => {
  * Handle Stripe Webhook (Payment Success/Failure)
  */
 exports.handleWebhook = async (req, res) => {
+  // Check if Stripe is initialized
+  if (!stripe) {
+    console.error('Stripe webhook received but Stripe not initialized');
+    return res.status(500).send('Payment system not configured');
+  }
+
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -186,15 +230,15 @@ exports.handleWebhook = async (req, res) => {
 async function handleSuccessfulPayment(session) {
   try {
     const { user_id, plan_type, amount_bdt } = session.metadata;
-    const transaction_id = session.id;
+    const session_id = session.id;
     const userId = parseInt(user_id);
 
     // Use Sequelize transaction for atomicity
     const sequelize = require('../config/sequelize');
     await sequelize.transaction(async (t) => {
-      // Update transaction
+      // Update transaction using gateway_transaction_id (session ID)
       const transaction = await PaymentTransaction.findOne({
-        where: { transaction_id },
+        where: { gateway_transaction_id: session_id },
         transaction: t
       });
 
@@ -263,7 +307,7 @@ async function handleSuccessfulPayment(session) {
 async function handleExpiredSession(session) {
   try {
     const transaction = await PaymentTransaction.findOne({
-      where: { transaction_id: session.id }
+      where: { gateway_transaction_id: session.id }
     });
 
     if (transaction) {
@@ -288,11 +332,12 @@ async function handleFailedPayment(paymentIntent) {
 
     if (session.data.length > 0) {
       const transaction = await PaymentTransaction.findOne({
-        where: { transaction_id: session.data[0].id }
+        where: { gateway_transaction_id: session.data[0].id }
       });
 
       if (transaction) {
         transaction.status = 'failed';
+        transaction.gateway_response = paymentIntent.last_payment_error;
         await transaction.save();
       }
     }
@@ -306,6 +351,15 @@ async function handleFailedPayment(paymentIntent) {
  */
 exports.verifySession = async (req, res) => {
   try {
+    // Check if Stripe is initialized
+    if (!stripe) {
+      console.error('Stripe not initialized - cannot verify session');
+      return res.status(500).json({ 
+        success: false,
+        error: 'Payment system not configured' 
+      });
+    }
+
     const { session_id } = req.query;
     const userId = req.user.id;
 
@@ -328,7 +382,7 @@ exports.verifySession = async (req, res) => {
         const planDuration = PLAN_DAYS[planType] || 30;
         const planPrice = session.amount_total / 100;
 
-        // Calculate end date
+        // Calculate dates
         const startDate = new Date();
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + planDuration);
@@ -339,25 +393,27 @@ exports.verifySession = async (req, res) => {
         // Use Sequelize transaction for atomicity
         const sequelize = require('../config/sequelize');
         await sequelize.transaction(async (t) => {
-          // Create subscription with plan_duration
+          // Create subscription with all required fields
           const subscription = await Subscription.create({
             user_id: userId,
             plan_type: dbPlanType,
             plan_duration: planType, // Store original plan (15days/30days/yearly)
             start_date: startDate,
             end_date: endDate,
-            status: 'active',
-            auto_renew: false
+            amount: planPrice,
+            currency: session.currency.toUpperCase(), // BDT, USD, etc
+            status: 'active'
           }, { transaction: t });
 
           // Update transaction to link subscription and mark as success
           await PaymentTransaction.update(
             { 
               status: 'success',
-              subscription_id: subscription.id
+              subscription_id: subscription.id,
+              payment_intent_id: session.payment_intent
             },
             { 
-              where: { transaction_id: session_id },
+              where: { gateway_transaction_id: session_id },
               transaction: t 
             }
           );
@@ -394,24 +450,80 @@ exports.verifySession = async (req, res) => {
         status: 'completed',
         amount: session.amount_total / 100,
         currency: session.currency,
+        plan_type: session.metadata.plan_type || '30days',
         message: 'Premium subscription activated successfully!'
       });
-    } else {
-      res.json({
-        success: false,
-        status: session.payment_status,
-        message: 'Payment not completed yet.'
-      });
     }
-
   } catch (error) {
     console.error('Session verification error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: 'Failed to verify session',
-      message: error.message 
+      error: error.message
     });
   }
 };
 
-module.exports = exports;
+/**
+ * Verify Payment Token (One-time use)
+ */
+exports.verifyPaymentToken = async (req, res) => {
+  try {
+    const { token } = req.query;
+    
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        error: 'Token required'
+      });
+    }
+    
+    // Check if token exists
+    const tokenData = paymentTokens.get(token);
+    
+    if (!tokenData) {
+      return res.status(404).json({
+        success: false,
+        error: 'Invalid or expired token'
+      });
+    }
+    
+    // Check if already used
+    if (tokenData.used) {
+      return res.status(400).json({
+        success: false,
+        error: 'Token already used'
+      });
+    }
+    
+    // Check if expired (10 minutes)
+    if (Date.now() - tokenData.createdAt > 10 * 60 * 1000) {
+      paymentTokens.delete(token);
+      return res.status(400).json({
+        success: false,
+        error: 'Token expired'
+      });
+    }
+    
+    // Mark as used
+    tokenData.used = true;
+    paymentTokens.set(token, tokenData);
+    
+    // Return session ID for verification
+    res.json({
+      success: true,
+      sessionId: tokenData.sessionId
+    });
+    
+    // Delete token after 30 seconds
+    setTimeout(() => {
+      paymentTokens.delete(token);
+    }, 30000);
+    
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};

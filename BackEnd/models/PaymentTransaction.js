@@ -17,6 +17,7 @@ const PaymentTransaction = sequelize.define('PaymentTransaction', {
   },
   subscription_id: {
     type: DataTypes.INTEGER,
+    allowNull: true,
     references: {
       model: 'subscriptions',
       key: 'id'
@@ -24,12 +25,28 @@ const PaymentTransaction = sequelize.define('PaymentTransaction', {
   },
   transaction_id: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: true,
     unique: true
   },
   amount: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false
+  },
+  transaction_type: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  payment_gateway: {
+    type: DataTypes.STRING(50),
+    allowNull: true
+  },
+  gateway_transaction_id: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  metadata: {
+    type: DataTypes.JSONB,
+    allowNull: true
   },
   currency: {
     type: DataTypes.STRING(3),
@@ -39,11 +56,18 @@ const PaymentTransaction = sequelize.define('PaymentTransaction', {
     type: DataTypes.STRING(50)
   },
   status: {
-    type: DataTypes.ENUM('pending', 'success', 'failed', 'cancelled', 'refunded', 'completed'),
+    type: DataTypes.STRING(50),
     defaultValue: 'pending'
   },
   gateway_response: {
-    type: DataTypes.JSONB
+    type: DataTypes.TEXT,
+    get() {
+      const rawValue = this.getDataValue('gateway_response');
+      return rawValue ? (typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue) : null;
+    },
+    set(value) {
+      this.setDataValue('gateway_response', value ? (typeof value === 'string' ? value : JSON.stringify(value)) : null);
+    }
   },
   plan_type: {
     type: DataTypes.STRING(50)

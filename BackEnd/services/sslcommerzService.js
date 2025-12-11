@@ -5,13 +5,12 @@ class SSLCommerzService {
     this.store_id = process.env.SSLCOMMERZ_STORE_ID;
     this.store_passwd = process.env.SSLCOMMERZ_STORE_PASSWORD;
     this.is_live = process.env.SSLCOMMERZ_MODE === 'live';
+    this.isConfigured = !!(this.store_id && this.store_passwd);
     
-    // Validate credentials on initialization
-    if (!this.store_id || !this.store_passwd) {
-      console.error('❌ SSLCommerz credentials missing!');
-      console.error('Store ID:', this.store_id ? '✓ Present' : '✗ Missing');
-      console.error('Store Password:', this.store_passwd ? '✓ Present' : '✗ Missing');
-      throw new Error('SSLCommerz credentials are not configured');
+    // Log configuration status (but don't throw error)
+    if (!this.isConfigured) {
+      console.log('⚠️  SSLCommerz credentials not found - SSLCommerz payments disabled');
+      return;
     }
     
     console.log('✅ SSLCommerz Service initialized');
@@ -25,6 +24,10 @@ class SSLCommerzService {
    * @returns {Promise} API response with GatewayPageURL
    */
   async initPayment(paymentData) {
+    if (!this.isConfigured) {
+      throw new Error('SSLCommerz is not configured. Please set SSLCOMMERZ_STORE_ID and SSLCOMMERZ_STORE_PASSWORD in .env');
+    }
+    
     try {
       console.log('🔵 SSLCommerz Init - Store ID:', this.store_id);
       console.log('🔵 SSLCommerz Init - Mode:', this.is_live ? 'LIVE' : 'SANDBOX');
@@ -58,6 +61,10 @@ class SSLCommerzService {
    * @returns {Promise} Validation response
    */
   async validatePayment(val_id) {
+    if (!this.isConfigured) {
+      throw new Error('SSLCommerz is not configured');
+    }
+    
     try {
       const sslcz = new SSLCommerzPayment(this.store_id, this.store_passwd, this.is_live);
       const validationResponse = await sslcz.validate({ val_id });

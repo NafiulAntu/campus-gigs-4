@@ -9,19 +9,25 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
-    logging: false, // Set to console.log to see SQL queries
+    logging: false, // Disabled for clean logs
     pool: {
-      max: 5,
-      min: 0,
+      max: 10, // Increased from 5 to 10
+      min: 2, // Keep 2 connections always ready
       acquire: 30000,
       idle: 10000
     }
   }
 );
 
-// Test connection
+// Test connection once
+let isSequelizeConnected = false;
 sequelize.authenticate()
-  .then(() => console.log('✅ Sequelize connected to PostgreSQL'))
+  .then(() => {
+    if (!isSequelizeConnected) {
+      console.log('✅ Sequelize Pool Connected (Max: 10 connections)');
+      isSequelizeConnected = true;
+    }
+  })
   .catch(err => console.error('❌ Sequelize connection error:', err));
 
 module.exports = sequelize;

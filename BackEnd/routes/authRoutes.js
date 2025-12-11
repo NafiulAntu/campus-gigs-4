@@ -14,7 +14,9 @@ router.post('/reset-password', resetPassword);
 
 // Protected routes
 router.delete('/delete-account', protect, deleteAccount);
-router.post('/firebase-sync', protect, firebaseSync);
+
+// Firebase sync - public endpoint (handles auth internally)
+router.post('/firebase-sync', firebaseSync);
 
 // OAuth routes - Google
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

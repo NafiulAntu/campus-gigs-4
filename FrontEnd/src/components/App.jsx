@@ -20,6 +20,7 @@ const AuthLayout = lazy(() => import("./Interface/AuthLayout.jsx"));
 const Terms = lazy(() => import("./log/sign/Terms.jsx"));
 const Privacy = lazy(() => import("./log/sign/Privacy.jsx"));
 const Premium = lazy(() => import("./Post/components/Premium.jsx"));
+const PaymentVerify = lazy(() => import("./Post/components/PaymentVerify.jsx"));
 const PaymentSuccess = lazy(() => import("./Post/components/PaymentResult.jsx").then(m => ({ default: m.PaymentSuccess })));
 const PaymentFailed = lazy(() => import("./Post/components/PaymentResult.jsx").then(m => ({ default: m.PaymentFailed })));
 const PaymentCancelled = lazy(() => import("./Post/components/PaymentResult.jsx").then(m => ({ default: m.PaymentCancelled })));
@@ -95,7 +96,7 @@ export default function App() {
       }
     });
   }, []);
-  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/verify-otp", "/reset-password", "/terms", "/privacy", "/premium", "/payment/success", "/payment/failed", "/payment/cancelled", "/send-money", "/dummy-payment", "/payment-callback"];
+  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/verify-otp", "/reset-password", "/terms", "/privacy", "/premium", "/payment/verify", "/payment/success", "/payment/failed", "/payment/cancelled", "/send-money", "/dummy-payment", "/payment-callback"];
   const shouldHideFooter = hideFooterOn.includes(
     location.pathname.toLowerCase()
   );
@@ -117,6 +118,7 @@ export default function App() {
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/post" element={<PostPage />} />
               <Route path="/premium" element={<Premium />} />
+              <Route path="/payment/verify" element={<PaymentVerify />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/payment/failed" element={<PaymentFailed />} />
               <Route path="/payment/cancelled" element={<PaymentCancelled />} />

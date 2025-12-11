@@ -99,63 +99,43 @@ router.post('/', protect, (req, res) => {
         return res.status(400).json({ error: 'No files uploaded' });
       }
 
-      console.log(`📤 Uploading ${req.files.length} file(s)...`);
+      console.log(`📤 Uploading ${req.files.length} file(s) to local storage...`);
 
       const fileUrls = [];
-
-      // Upload to Firebase Storage
-      if (isFirebaseEnabled()) {
-        console.log('🔥 Using Firebase Storage');
+      
+      // Determine upload type from request body
+      const uploadType = req.body.type || 'post'; // 'post', 'profile', or 'cover'
+      
+      for (const file of req.files) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        let filename, filepath, urlPath;
         
-        for (const file of req.files) {
-          try {
-            const firebaseUrl = await uploadToFirebase(
-              file.buffer,
-              file.originalname,
-              file.mimetype
-            );
-            fileUrls.push(firebaseUrl);
-            console.log(`  ✅ ${file.originalname} → Firebase`);
-          } catch (uploadError) {
-            console.error(`  ❌ Failed to upload ${file.originalname}:`, uploadError.message);
-            throw uploadError;
-          }
+        if (uploadType === 'profile') {
+          filename = 'profile-' + uniqueSuffix + path.extname(file.originalname);
+          filepath = path.join(profileUploadsDir, filename);
+          urlPath = `http://localhost:5000/uploads/profiles/${filename}`;
+        } else if (uploadType === 'cover') {
+          filename = 'cover-' + uniqueSuffix + path.extname(file.originalname);
+          filepath = path.join(coverUploadsDir, filename);
+          urlPath = `http://localhost:5000/uploads/covers/${filename}`;
+        } else {
+          filename = 'post-' + uniqueSuffix + path.extname(file.originalname);
+          filepath = path.join(uploadsDir, filename);
+          urlPath = `http://localhost:5000/uploads/posts/${filename}`;
         }
-      } else {
-        // Fallback to local storage
-        console.log('💾 Using local storage (Firebase not configured)');
         
-        // Determine upload type from request body
-        const uploadType = req.body.type || 'post'; // 'post', 'profile', or 'cover'
-        
-        for (const file of req.files) {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-          let filename, filepath, urlPath;
-          
-          if (uploadType === 'profile') {
-            filename = 'profile-' + uniqueSuffix + path.extname(file.originalname);
-            filepath = path.join(profileUploadsDir, filename);
-            urlPath = `http://localhost:5000/uploads/profiles/${filename}`;
-          } else if (uploadType === 'cover') {
-            filename = 'cover-' + uniqueSuffix + path.extname(file.originalname);
-            filepath = path.join(coverUploadsDir, filename);
-            urlPath = `http://localhost:5000/uploads/covers/${filename}`;
-          } else {
-            filename = 'post-' + uniqueSuffix + path.extname(file.originalname);
-            filepath = path.join(uploadsDir, filename);
-            urlPath = `http://localhost:5000/uploads/posts/${filename}`;
-          }
-          
-          fs.writeFileSync(filepath, file.buffer);
-          fileUrls.push(urlPath);
-          console.log(`  ✅ ${file.originalname} → Local (${uploadType})`);
-        }
+        fs.writeFileSync(filepath, file.buffer);
+        fileUrls.push(urlPath);
+        console.log(`  ✅ ${file.originalname} → Local (${uploadType})`);
       }
 
+      console.log(`✅ Successfully uploaded ${fileUrls.length} files to local storage`);
+      
       res.status(200).json({
         message: 'Files uploaded successfully',
         files: fileUrls,
-        storage: isFirebaseEnabled() ? 'firebase' : 'local'
+        storage: 'local',
+        count: fileUrls.length
       });
     } catch (error) {
       console.error('Upload processing error:', error);

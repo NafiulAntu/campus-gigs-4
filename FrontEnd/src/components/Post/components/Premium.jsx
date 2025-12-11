@@ -6,6 +6,7 @@ import '../styles/Premium.css';
 
 const Premium = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [error, setError] = useState('');
   const [paymentGateway, setPaymentGateway] = useState('stripe'); // stripe, sslcommerz, mock
@@ -14,29 +15,52 @@ const Premium = ({ onBack }) => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    console.log('🚀🚀🚀 Premium.jsx useEffect TRIGGERED 🚀🚀🚀');
+    console.log('📍 Full URL:', window.location.href);
+    
     // Check for payment callback status
     const status = searchParams.get('status');
     const plan = searchParams.get('plan');
+    const fromPayment = searchParams.get('from_payment');
     
-    if (status === 'success' && plan) {
-      const planNames = {
-        '15days': '15 Days',
-        '30days': '30 Days',
-        'yearly': 'Yearly'
-      };
-      setSuccessMessage(`🎉 Premium ${planNames[plan] || plan} subscription activated successfully!`);
+    console.log('🔍 Premium.jsx - Checking URL params:', { status, plan, fromPayment });
+    
+    // If no special URL params, just check subscription status normally
+    if (!status && !plan && !fromPayment) {
+      console.log('📡 No URL params - checking subscription status normally');
+      checkSubscriptionStatus();
+      return;
+    }
+    
+    if (status === 'success' && plan && !fromPayment) {
+      // Redirect to PaymentResult page for proper congratulations display
+      console.log('✅ Payment success detected in Premium.jsx!');
+      console.log('🎯 Redirecting to: /payment/success?status=success&plan=' + plan);
+      navigate(`/payment/success?status=success&plan=${plan}`, { replace: true });
+      return; // Don't continue with other logic
+    } else if (status === 'success' && fromPayment === 'true') {
+      // Coming back from payment success page - show welcome message
+      console.log('✅✅✅ PAYMENT SUCCESS DETECTED! ✅✅✅');
+      console.log('🎉 Returning from payment success!');
+      console.log('🎉 Plan received:', plan);
+      const planName = plan === 'yearly' ? 'Yearly' : plan === '15days' ? '15 Days' : '30 Days';
+      const message = `🎉 Congratulations! You Got ${planName} Premium!\n\n✨ All premium features are now unlocked. You can cancel your subscription anytime using the button below.`;
+      console.log('💾 Setting success message to state:', message);
+      console.log('💾 Message length:', message.length, 'characters');
+      setSuccessMessage(message);
+      console.log('✅ Success message has been set in state!');
+      // Clean URL but keep the message showing
+      navigate('/premium', { replace: true });
       
-      // Force refresh subscription status
+      // Force refresh subscription status after 1 second
       setTimeout(() => {
+        console.log('🔄 Force refreshing subscription after payment...');
         checkSubscriptionStatus();
-      }, 500);
+      }, 1000);
       
-      // Clear URL parameters after showing message
-      setTimeout(() => {
-        navigate('/premium', { replace: true });
-        // Hide success message after 10 seconds
-        setTimeout(() => setSuccessMessage(''), 10000);
-      }, 100);
+      // ✅ DON'T auto-hide the success message anymore!
+      // Users need to see the Cancel button at all times
+      console.log('✅ Success message will stay visible (not auto-hiding after 15 seconds)'); // Show for 15 seconds
     } else if (status === 'failed') {
       const message = searchParams.get('message') || 'Payment failed';
       setError(`❌ ${decodeURIComponent(message)}`);
@@ -70,12 +94,16 @@ const Premium = ({ onBack }) => {
       console.log('📊 Subscription data received:', response.data);
       console.log('📊 Plan type:', response.data?.subscription?.plan_type);
       console.log('📊 Is premium:', response.data?.is_premium);
+      console.log('📊 Subscription status:', response.data?.subscription?.status);
+      console.log('📊 Expiry date:', response.data?.subscription?.expiry_date);
+      console.log('📊 Days remaining:', response.data?.subscription?.days_remaining);
       setSubscription(response.data);
       
       if (response.data?.is_premium) {
         console.log('✅ User is premium!', response.data.subscription);
       } else {
         console.log('❌ User is not premium');
+        console.log('❌ Reason: status =', response.data?.subscription?.status, ', expiry =', response.data?.subscription?.expiry_date);
       }
     } catch (err) {
       console.error('❌ Failed to fetch subscription:', err);
@@ -141,19 +169,34 @@ const Premium = ({ onBack }) => {
       console.error('Error response:', err.response?.data);
       
       // Check if user already has active subscription
-      if (err.response?.status === 400 && err.response?.data?.subscription) {
-        const sub = err.response.data.subscription;
+      const errorMessage = err.response?.data?.error 
+        || err.response?.data?.message 
+        || err.message 
+        || 'Failed to start payment process';
+      
+      if (errorMessage.toLowerCase().includes('already have an active subscription') || 
+          errorMessage.toLowerCase().includes('active subscription') ||
+          err.response?.status === 400) {
         setError(
-          `You already have an active ${sub.plan_type} Premium subscription! ` +
-          `It expires in ${sub.days_remaining} days on ${new Date(sub.expiry_date).toLocaleDateString()}.`
+          '⚠️ You already have an active premium subscription!\n\n' +
+          '💡 To change your plan:\n' +
+          '1️⃣ Cancel your current subscription using the button below\n' +
+          '2️⃣ Then purchase the new plan you want\n\n' +
+          'Your current subscription will end immediately when cancelled.'
         );
-      } else {
-        const errorMessage = err.response?.data?.error 
-          || err.response?.data?.message 
-          || err.message 
-          || 'Failed to start payment process';
         
-        setError(errorMessage);
+        // Scroll to cancel subscription section after a brief delay
+        setTimeout(() => {
+          const cancelSection = document.querySelector('.mt-12.border.border-red-500\\/30');
+          if (cancelSection) {
+            cancelSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Add a pulse animation to draw attention
+            cancelSection.classList.add('animate-pulse');
+            setTimeout(() => cancelSection.classList.remove('animate-pulse'), 2000);
+          }
+        }, 500);
+      } else {
+        setError('❌ ' + errorMessage);
       }
     } finally {
       setLoading(false);
@@ -162,52 +205,108 @@ const Premium = ({ onBack }) => {
 
   const handleCancelSubscription = async () => {
     console.log('🔵 handleCancelSubscription called');
-    if (!window.confirm('⚠️ Cancel subscription now?\n\nYour premium access will end immediately and you can purchase a new subscription anytime.\n\nNote: Payment history will be preserved.')) {
+    
+    // Professional confirmation dialog
+    const confirmed = window.confirm(
+      '⚠️ CANCEL PREMIUM SUBSCRIPTION?\n\n' +
+      '🚫 Your premium access will end IMMEDIATELY\n' +
+      '❌ All premium features will be disabled\n' +
+      '💳 You can purchase a new subscription anytime\n' +
+      '📜 Payment history will be preserved\n\n' +
+      'Are you absolutely sure you want to cancel?'
+    );
+    
+    if (!confirmed) {
       console.log('❌ User cancelled the confirmation dialog');
       return;
     }
 
     try {
-      setLoading(true);
+      setCancelLoading(true);
       console.log('🚀 Calling cancel subscription API...');
+      
       const response = await api.post('/subscription/cancel');
       console.log('✅ Cancel response:', response.data);
-      alert('✅ ' + response.data.message);
-      checkSubscriptionStatus();
+      
+      // Success notification
+      setSuccessMessage('✅ Subscription cancelled successfully! Your premium access has ended.');
+      
+      // Refresh subscription status
+      await checkSubscriptionStatus();
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+      
     } catch (err) {
       console.error('❌ Cancel error:', err);
       console.error('Error response:', err.response);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to cancel subscription';
-      alert('❌ ' + errorMsg);
+      
+      const errorMsg = err.response?.data?.error || 
+                      err.response?.data?.message || 
+                      err.message || 
+                      'Failed to cancel subscription. Please try again or contact support.';
+      
+      setError('❌ ' + errorMsg);
+      
+      // Auto-hide error after 7 seconds
+      setTimeout(() => setError(''), 7000);
     } finally {
-      setLoading(false);
+      setCancelLoading(false);
     }
   };
 
   const handleTurnOffAutoRenew = async () => {
-    if (!window.confirm('Turn off auto-renewal?\n\nYou will keep premium access until the end date, but it won\'t renew automatically.')) return;
+    const confirmed = window.confirm(
+      '🔄 Turn off auto-renewal?\n\n' +
+      '✅ You will keep premium access until ' + 
+      (subscription?.subscription?.expiry_date ? 
+        new Date(subscription.subscription.expiry_date).toLocaleDateString() : 
+        'the end date') + '\n' +
+      '❌ Subscription won\'t renew automatically\n' +
+      '♻️ You can turn it back on anytime\n\n' +
+      'Confirm to disable auto-renewal?'
+    );
+    
+    if (!confirmed) return;
 
     try {
       console.log('🚀 Calling turn off auto-renew API...');
       const response = await api.post('/subscription/turn-off-auto-renew');
       console.log('✅ Auto-renew response:', response.data);
-      alert('✅ ' + response.data.message);
-      checkSubscriptionStatus();
+      
+      setSuccessMessage('✅ Auto-renewal disabled! Your subscription will not renew automatically.');
+      await checkSubscriptionStatus();
+      
+      setTimeout(() => setSuccessMessage(''), 5000);
     } catch (err) {
       console.error('❌ Auto-renew error:', err);
       console.error('Error response:', err.response);
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to turn off auto-renew';
-      alert('❌ ' + errorMsg);
+      
+      const errorMsg = err.response?.data?.error || 
+                      err.response?.data?.message || 
+                      err.message || 
+                      'Failed to turn off auto-renew';
+      
+      setError('❌ ' + errorMsg);
+      setTimeout(() => setError(''), 5000);
     }
   };
 
   const handleReactivate = async () => {
     try {
       const response = await api.post('/subscription/reactivate');
-      alert(response.data.message);
-      checkSubscriptionStatus();
+      
+      setSuccessMessage('✅ ' + response.data.message);
+      await checkSubscriptionStatus();
+      
+      setTimeout(() => setSuccessMessage(''), 5000);
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to reactivate subscription');
+      const errorMsg = err.response?.data?.error || 
+                      err.response?.data?.message || 
+                      'Failed to reactivate subscription';
+      
+      setError('❌ ' + errorMsg);
+      setTimeout(() => setError(''), 5000);
     }
   };
 
@@ -223,8 +322,19 @@ const Premium = ({ onBack }) => {
     );
   }
 
-  if (subscription?.is_premium) {
-    console.log('✅ Premium view - Showing subscription details:', subscription);
+  // Show premium view if user is premium OR if showing success message (just after payment)
+  const showPremiumView = subscription?.is_premium || successMessage;
+  
+  console.log('═══════════════════════════════════════════');
+  console.log('🎯 PREMIUM VIEW DECISION:');
+  console.log('  - Success Message State:', successMessage ? `YES (${successMessage.substring(0, 50)}...)` : 'NO');
+  console.log('  - Is Premium (from API):', subscription?.is_premium ? 'YES' : 'NO');
+  console.log('  - Show Premium View:', showPremiumView ? '✅ YES (Premium Section)' : '❌ NO (Upgrade Cards)');
+  console.log('  - Subscription Status:', subscription?.subscription?.status || 'N/A');
+  console.log('═══════════════════════════════════════════');
+  
+  if (showPremiumView) {
+    console.log('✅ Premium view - Showing congratulations + subscription details');
     return (
       <div className="fixed inset-0 bg-black overflow-hidden flex flex-col">
         {/* Header */}
@@ -271,6 +381,28 @@ const Premium = ({ onBack }) => {
           `}</style>
 
           <div className="premium-container relative z-10 max-w-6xl mx-auto px-4 py-8">
+            {/* Error Messages */}
+            {error && (
+              <div className="mb-6 relative overflow-hidden animate-slideDown">
+                <div className="p-5 bg-gradient-to-r from-red-500/20 via-red-600/20 to-orange-500/20 border-2 border-red-500/50 rounded-2xl shadow-2xl shadow-red-500/20">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <i className="fi fi-rr-exclamation text-white text-2xl"></i>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white font-bold text-base whitespace-pre-line">{error}</p>
+                    </div>
+                    <button 
+                      onClick={() => setError('')}
+                      className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
+                    >
+                      <i className="fi fi-rr-cross text-lg"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Premium Header with Animation */}
             <div className="relative overflow-hidden backdrop-blur-xl bg-gradient-to-br from-cyan-500/10 via-blue-500/5 to-purple-500/10 border border-cyan-500/20 rounded-3xl p-12 mb-10 shadow-2xl">
               <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400/10 rounded-full blur-3xl -translate-y-32 translate-x-32"></div>
@@ -281,10 +413,32 @@ const Premium = ({ onBack }) => {
                   <i className="fi fi-br-crown text-yellow-400 text-6xl drop-shadow-lg"></i>
                 </div>
                 <div className="flex items-center justify-center gap-4 mb-4">
-                  <h1 className="text-4xl font-black bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">You're Premium!</h1>
-                  <img src="https://cdn-icons-png.flaticon.com/512/3386/3386773.png" alt="Celebration" className="w-12 h-12 drop-shadow-lg" />
+                  {(() => {
+                    console.log('═══════════════════════════════════════════');
+                    console.log('🎨 RENDERING PREMIUM HEADER');
+                    console.log('  - successMessage exists?', !!successMessage);
+                    console.log('  - successMessage value:', successMessage || 'NULL/EMPTY');
+                    console.log('  - Will render:', successMessage ? 'CONGRATULATIONS MESSAGE' : 'YOU\'RE PREMIUM DEFAULT');
+                    console.log('═══════════════════════════════════════════');
+                    return successMessage ? (
+                      <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-300 via-green-300 to-cyan-300 bg-clip-text text-transparent drop-shadow-2xl whitespace-pre-line leading-tight">
+                        {successMessage.split('\n\n')[0]}
+                      </h1>
+                    ) : (
+                      <>
+                        <h1 className="text-4xl font-black bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">You're Premium!</h1>
+                        <img src="https://cdn-icons-png.flaticon.com/512/3386/3386773.png" alt="Celebration" className="w-12 h-12 drop-shadow-lg" />
+                      </>
+                    );
+                  })()}
                 </div>
-                <p className="text-lg text-gray-300 font-semibold tracking-wide">Enjoying all the exclusive features</p>
+                {successMessage ? (
+                  <p className="text-lg text-emerald-300 font-bold tracking-wide mb-6 whitespace-pre-line">
+                    {successMessage.split('\n\n')[1]}
+                  </p>
+                ) : (
+                  <p className="text-lg text-gray-300 font-semibold tracking-wide">Enjoying all the exclusive features</p>
+                )}
                 <div className="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500/20 to-green-500/20 backdrop-blur-sm rounded-full border border-emerald-400/30 shadow-lg shadow-emerald-500/20">
                   <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50"></div>
                   <span className="text-emerald-300 font-bold text-base tracking-wider">ACTIVE SUBSCRIPTION</span>
@@ -387,6 +541,7 @@ const Premium = ({ onBack }) => {
           </div>
         </div>
 
+        {/* Premium Features Section */}
         <div className="border border-white/20 rounded-3xl p-10 bg-gradient-to-br from-slate-800/20 to-transparent backdrop-blur-sm">
           <div className="flex items-center gap-4 mb-10">
             <i className="fi fi-br-sparkles text-yellow-400 text-3xl drop-shadow-lg"></i>
@@ -432,32 +587,45 @@ const Premium = ({ onBack }) => {
           </div>
         </div>
 
-        {/* Cancel Subscription Section */}
-        <div className="border border-red-500/20 rounded-3xl p-8 bg-gradient-to-br from-red-500/5 to-transparent backdrop-blur-sm mt-6">
-          <div className="flex items-start gap-4 mb-6">
-            <i className="fi fi-rr-exclamation text-red-400 text-2xl mt-1"></i>
+        {/* Cancel Subscription Section - Professional Bottom Placement */}
+        <div className="mt-12 border border-red-500/30 rounded-3xl p-8 bg-gradient-to-br from-red-500/10 via-red-600/5 to-transparent backdrop-blur-sm hover:border-red-500/50 hover:shadow-xl hover:shadow-red-500/10 transition-all duration-300">
+          <div className="flex items-start gap-6">
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-200 mb-2">Cancel Subscription</h3>
-              <p className="text-gray-400 text-sm mb-6">
-                Want to try a different plan or take a break? Cancel your current subscription to purchase a new one. 
-                Your payment history will be preserved in Recent Activity.
+              <h3 className="text-2xl font-bold text-gray-100 mb-3 flex items-center gap-3">
+                Cancel Subscription
+                <span className="text-xs font-normal text-red-400 bg-red-500/20 px-3 py-1 rounded-full border border-red-500/30">
+                  Destructive Action
+                </span>
+              </h3>
+              <p className="text-gray-300 text-sm mb-2 leading-relaxed">
+                Canceling your subscription will immediately revoke your premium features and benefits.
               </p>
-              <button 
+              <p className="text-gray-400 text-xs mb-2 leading-relaxed">
+                You will lose access to: Unlimited Posts, Priority Placement, Advanced Analytics, Premium Badge, Read Receipts, and Post Pinning.
+              </p>
+              <p className="text-cyan-400 text-xs mb-6 leading-relaxed flex items-center gap-2">
+                <i className="fi fi-rr-info-circle"></i>
+                <span><strong>Note:</strong> To change your plan or purchase a different subscription, you must cancel your current subscription first.</span>
+              </p>
+              <button
                 onClick={handleCancelSubscription}
-                disabled={loading}
-                className="bg-red-500/20 hover:bg-red-500/30 border-2 border-red-500/30 hover:border-red-500/50 text-red-400 font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={cancelLoading}
+                className="group relative px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex items-center gap-3 overflow-hidden"
               >
-                {loading ? (
-                  <>
-                    <i className="fi fi-rr-spinner animate-spin"></i>
-                    Cancelling...
-                  </>
-                ) : (
-                  <>
-                    <i className="fi fi-rr-trash"></i>
-                    Cancel Subscription Now
-                  </>
-                )}
+                <div className="absolute inset-0 bg-gradient-to-r from-red-400/0 via-red-400/20 to-red-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                <div className="relative flex items-center gap-3">
+                  {cancelLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>Canceling...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="fi fi-rr-trash text-lg"></i>
+                      <span>Cancel Subscription Now</span>
+                    </>
+                  )}
+                </div>
               </button>
             </div>
           </div>
@@ -490,50 +658,51 @@ const Premium = ({ onBack }) => {
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
         <div className="premium-container">
-          <div className="premium-hero">
-            <h1>Upgrade to Premium</h1>
-            <p>Unlock powerful features to grow your presence on Campus Gigs</p>
-          </div>
-
-      {/* Success Message with Celebration */}
-      {successMessage && (
-        <div className="mb-6 relative overflow-hidden">
-          <div className="p-6 bg-gradient-to-r from-emerald-500/20 via-green-500/20 to-cyan-500/20 border-2 border-emerald-500/50 rounded-2xl shadow-2xl shadow-emerald-500/20 animate-slideDown">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full flex items-center justify-center animate-bounce">
-                  <i className="fi fi-rr-check text-white text-3xl"></i>
+          {/* Congratulations Banner - Show if coming from payment */}
+          {successMessage ? (
+            <div className="mb-8 relative overflow-hidden rounded-3xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-500/20 via-green-500/10 to-cyan-500/20 backdrop-blur-sm p-8 shadow-2xl shadow-emerald-500/20">
+              {/* Animated Background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-green-500/10 to-emerald-500/5 animate-pulse"></div>
+              
+              {/* Content */}
+              <div className="relative z-10">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="flex-shrink-0 w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/50 animate-bounce">
+                    <span className="text-3xl">🎉</span>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-3xl font-black bg-gradient-to-r from-emerald-300 via-green-300 to-cyan-300 bg-clip-text text-transparent mb-2">
+                      {successMessage.split('\n\n')[0]}
+                    </h2>
+                    <p className="text-emerald-200 text-lg font-medium leading-relaxed">
+                      {successMessage.split('\n\n')[1]}
+                    </p>
+                  </div>
                 </div>
-                <div className="absolute -top-1 -right-1">
-                  <span className="text-2xl animate-spin-slow">🎉</span>
+                
+                {/* Features Unlocked */}
+                <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="flex items-center gap-2 text-emerald-300 text-sm font-semibold">
+                    <i className="fi fi-sr-check-circle text-emerald-400"></i>
+                    <span>Unlimited Posts</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-emerald-300 text-sm font-semibold">
+                    <i className="fi fi-sr-check-circle text-emerald-400"></i>
+                    <span>Priority Placement</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-emerald-300 text-sm font-semibold">
+                    <i className="fi fi-sr-check-circle text-emerald-400"></i>
+                    <span>Premium Badge</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex-1">
-                <p className="text-white font-bold text-lg mb-1">{successMessage}</p>
-                <p className="text-emerald-300 text-sm font-semibold flex items-center gap-2">
-                  <i className="fi fi-rr-crown text-yellow-400"></i>
-                  All premium features are now unlocked!
-                </p>
-              </div>
-              <button 
-                onClick={() => setSuccessMessage('')}
-                className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg"
-              >
-                <i className="fi fi-rr-cross text-xl"></i>
-              </button>
             </div>
-            
-            {/* Confetti Effect */}
-            <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-              <div className="confetti">🎊</div>
-              <div className="confetti" style={{animationDelay: '0.3s', left: '20%'}}>✨</div>
-              <div className="confetti" style={{animationDelay: '0.6s', left: '40%'}}>🎉</div>
-              <div className="confetti" style={{animationDelay: '0.2s', left: '60%'}}>⭐</div>
-              <div className="confetti" style={{animationDelay: '0.8s', left: '80%'}}>💫</div>
+          ) : (
+            <div className="premium-hero">
+              <h1>Upgrade to Premium</h1>
+              <p>Unlock powerful features to grow your presence on Campus Gigs</p>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
       {error && <div className="error-message">{error}</div>}
 
@@ -654,15 +823,10 @@ const Premium = ({ onBack }) => {
 
           <button 
             onClick={() => handleUpgrade('30days')}
-            disabled={loading || (subscription && subscription.subscription?.plan_duration === '30days')}
-            className={`upgrade-btn premium ${subscription?.subscription?.plan_duration === '30days' ? 'completed' : ''}`}
+            disabled={loading}
+            className="upgrade-btn premium"
           >
-            {subscription?.subscription?.plan_duration === '30days' ? (
-              <>
-                <i className="fi fi-br-check-circle"></i>
-                COMPLETED
-              </>
-            ) : loading ? (
+            {loading ? (
               <>
                 <i className="fi fi-rr-spinner animate-spin"></i>
                 Processing...
@@ -702,15 +866,10 @@ const Premium = ({ onBack }) => {
 
           <button 
             onClick={() => handleUpgrade('15days')}
-            disabled={loading || (subscription && subscription.subscription?.plan_duration === '15days')}
-            className={`upgrade-btn starter ${subscription?.subscription?.plan_duration === '15days' ? 'completed' : ''}`}
+            disabled={loading}
+            className="upgrade-btn starter"
           >
-            {subscription?.subscription?.plan_duration === '15days' ? (
-              <>
-                <i className="fi fi-br-check-circle"></i>
-                COMPLETED
-              </>
-            ) : loading ? (
+            {loading ? (
               <>
                 <i className="fi fi-rr-spinner animate-spin"></i>
                 Processing...
@@ -797,6 +956,64 @@ const Premium = ({ onBack }) => {
           </div>
         </div>
       </div>
+
+      {/* Cancel Subscription Section - Show if user has active subscription */}
+      {subscription?.subscription && (subscription?.subscription?.status === 'active' || subscription?.subscription?.status === 'completed') && (
+        <div className="mt-12 border border-red-500/30 rounded-3xl p-8 bg-gradient-to-br from-red-500/10 via-red-600/5 to-transparent backdrop-blur-sm hover:border-red-500/50 hover:shadow-xl hover:shadow-red-500/10 transition-all duration-300">
+          <div className="flex items-start gap-6">
+            <div className="flex-1">
+              <h3 className="text-2xl font-bold text-gray-100 mb-3 flex items-center gap-3">
+                Cancel Subscription
+                <span className="text-xs font-normal text-red-400 bg-red-500/20 px-3 py-1 rounded-full border border-red-500/30">
+                  Destructive Action
+                </span>
+              </h3>
+              <div className="mb-4 p-4 bg-slate-800/50 rounded-xl border border-cyan-500/20">
+                <p className="text-cyan-400 text-sm mb-2 font-semibold">📋 Current Subscription:</p>
+                <p className="text-gray-200 text-base">
+                  {subscription.subscription.plan_name || 'Premium Plan'} - ৳{subscription.subscription.amount}
+                </p>
+                <p className="text-gray-400 text-sm mt-1">
+                  Status: <span className="text-emerald-400 font-semibold">{subscription.subscription.status?.toUpperCase()}</span>
+                  {subscription.subscription.days_remaining > 0 && (
+                    <> • {subscription.subscription.days_remaining} days remaining</>
+                  )}
+                </p>
+              </div>
+              <p className="text-gray-300 text-sm mb-2 leading-relaxed">
+                Canceling your subscription will immediately revoke your premium features and benefits.
+              </p>
+              <p className="text-gray-400 text-xs mb-2 leading-relaxed">
+                You will lose access to: Unlimited Posts, Priority Placement, Advanced Analytics, Premium Badge, Read Receipts, and Post Pinning.
+              </p>
+              <p className="text-cyan-400 text-xs mb-6 leading-relaxed flex items-center gap-2">
+                <i className="fi fi-rr-info-circle"></i>
+                <span><strong>Note:</strong> To change your plan or purchase a different subscription, you must cancel your current subscription first.</span>
+              </p>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={cancelLoading}
+                className="group relative px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white font-bold rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex items-center gap-3 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-red-400/0 via-red-400/20 to-red-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                <div className="relative flex items-center gap-3">
+                  {cancelLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span>Canceling...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="fi fi-rr-trash text-lg"></i>
+                      <span>Cancel Subscription Now</span>
+                    </>
+                  )}
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
         </div>
       </div>
     </div>

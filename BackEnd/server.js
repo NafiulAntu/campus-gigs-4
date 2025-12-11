@@ -15,8 +15,10 @@ const app = express();
   try {
     const result = await pool.query('SELECT current_database() as db');
     console.log('✅ Database connected:', result.rows[0].db);
-    await sequelize.sync({ alter: true });
-    console.log('✅ Models synced');
+    // Sync disabled - using manual migrations
+    // await sequelize.sync({ alter: true });
+    await sequelize.authenticate();
+    console.log('✅ Sequelize connected to PostgreSQL');
   } catch (err) {
     console.error('❌ Database error:', err.message);
   }
@@ -55,6 +57,9 @@ const mobileWalletRoutes = require('./routes/mobileWalletRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
 const dummyMobileWalletRoutes = require('./routes/dummyMobileWalletRoutes');
 const sslcommerzRoutes = require('./routes/sslcommerzRoutes');
+const activeUsersRoutes = require('./routes/activeUsers');
+const verificationRoutes = require('./routes/verificationRoutes');
+const searchRoutes = require('./routes/searchRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
@@ -73,6 +78,9 @@ app.use('/api/mobile-wallet', mobileWalletRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/dummy-mobile-wallet', dummyMobileWalletRoutes);
 app.use('/api/sslcommerz', sslcommerzRoutes);
+app.use('/api/active-users', activeUsersRoutes);
+app.use('/api/verification', verificationRoutes);
+app.use('/api/search', searchRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Campus Gigs API', status: 'running' });

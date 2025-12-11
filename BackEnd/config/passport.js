@@ -19,39 +19,42 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 
-// Google OAuth Strategy
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: '/api/auth/google/callback'
-  },
-  async (accessToken, refreshToken, profile, done) => {
-    try {
-      // Check if user already exists
-      let user = await User.findByProvider('google', profile.id);
-      
-      if (user) {
-        return done(null, user);
+// Google OAuth Strategy (only if credentials are provided)
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(new GoogleStrategy({
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: '/api/auth/google/callback'
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Check if user already exists
+        let user = await User.findByProvider('google', profile.id);
+        
+        if (user) {
+          return done(null, user);
+        }
+
+        // Create new user
+        user = await User.createOAuth({
+          full_name: profile.displayName,
+          email: profile.emails[0].value,
+          provider: 'google',
+          provider_id: profile.id,
+          profile_picture: profile.photos[0]?.value
+        });
+
+        done(null, user);
+      } catch (error) {
+        done(error, null);
       }
-
-      // Create new user
-      user = await User.createOAuth({
-        full_name: profile.displayName,
-        email: profile.emails[0].value,
-        provider: 'google',
-        provider_id: profile.id,
-        profile_picture: profile.photos[0]?.value
-      });
-
-      done(null, user);
-    } catch (error) {
-      done(error, null);
     }
-  }
-));
+  ));
+}
 
-// GitHub OAuth Strategy
-passport.use(new GitHubStrategy({
+// GitHub OAuth Strategy (only if credentials are provided)
+if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
+  passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
     clientSecret: process.env.GITHUB_CLIENT_SECRET,
     callbackURL: '/api/auth/github/callback',
@@ -78,10 +81,12 @@ passport.use(new GitHubStrategy({
       done(error, null);
     }
   }
-));
+  ));
+}
 
-// LinkedIn OAuth Strategy
-passport.use(new LinkedInStrategy({
+// LinkedIn OAuth Strategy (only if credentials are provided)
+if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET) {
+  passport.use(new LinkedInStrategy({
     clientID: process.env.LINKEDIN_CLIENT_ID,
     clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
     callbackURL: '/api/auth/linkedin/callback',
@@ -108,6 +113,7 @@ passport.use(new LinkedInStrategy({
       done(error, null);
     }
   }
-));
+  ));
+}
 
 module.exports = passport;

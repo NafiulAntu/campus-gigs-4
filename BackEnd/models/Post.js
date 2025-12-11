@@ -4,7 +4,7 @@ class Post {
   // Create a new post
   static async create(userId, content, mediaUrls = []) {
     const query = `
-      INSERT INTO posts (posted_by, content, media)
+      INSERT INTO posts (posted_by, content, media_urls)
       VALUES ($1, $2, $3)
       RETURNING *
     `;
@@ -24,10 +24,10 @@ class Post {
         u.firebase_uid,
         COALESCE((SELECT COUNT(*) FROM post_likes WHERE post_id = p.id AND user_id = $1), 0) > 0 as user_liked,
         COALESCE((SELECT COUNT(*) FROM post_shares WHERE post_id = p.id AND user_id = $1), 0) > 0 as user_shared,
-        COALESCE((SELECT COUNT(*) FROM post_likes WHERE post_id = p.id), 0) as likes_count,
-        p.replies as comments_count,
-        COALESCE((SELECT COUNT(*) FROM post_shares WHERE post_id = p.id), 0) as shares_count,
-        p.media as media_urls,
+        COALESCE(p.likes_count, 0) as likes_count,
+        COALESCE(p.comments_count, 0) as comments_count,
+        COALESCE(p.shares_count, 0) as shares_count,
+        p.media_urls,
         p.posted_by as user_id,
         p.repost_of,
         -- Get original post data if this is a repost
@@ -35,7 +35,7 @@ class Post {
           (SELECT json_build_object(
             'id', op.id,
             'content', op.content,
-            'media_urls', op.media,
+            'media_urls', op.media_urls,
             'full_name', ou.full_name,
             'username', ou.username,
             'profile_picture', ou.profile_picture,
@@ -61,10 +61,10 @@ class Post {
         p.id,
         p.posted_by,
         p.content,
-        p.media as media_urls,
+        p.media_urls,
         p.created_at,
-        p.likes as likes_count,
-        p.replies as comments_count,
+        p.likes_count,
+        p.comments_count,
         u.full_name,
         u.username,
         u.profile_picture
@@ -90,7 +90,7 @@ class Post {
         COALESCE((SELECT COUNT(*) FROM post_likes WHERE post_id = p.id), 0) as likes_count,
         p.replies as comments_count,
         COALESCE((SELECT COUNT(*) FROM post_shares WHERE post_id = p.id), 0) as shares_count,
-        p.media as media_urls,
+        p.media_urls,
         p.posted_by as user_id
       FROM posts p
       JOIN users u ON p.posted_by = u.id
@@ -104,7 +104,7 @@ class Post {
   static async update(postId, userId, content, mediaUrls) {
     const query = `
       UPDATE posts
-      SET content = $1, media = $2, updated_at = CURRENT_TIMESTAMP
+      SET content = $1, media_urls = $2, updated_at = CURRENT_TIMESTAMP
       WHERE id = $3 AND posted_by = $4
       RETURNING *
     `;

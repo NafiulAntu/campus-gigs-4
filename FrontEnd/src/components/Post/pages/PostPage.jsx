@@ -9,6 +9,8 @@ import Premium from "../components/Premium";
 import Payments from "../sidebar/payments";
 import UserProfile from "./UserProfile";
 import api, { getAllPosts, createPost, updatePost, deletePost as deletePostAPI, toggleLike as toggleLikeAPI, toggleShare as toggleShareAPI, acceptPost as acceptPostAPI, rejectPost as rejectPostAPI } from "../../../services/api";
+import { useSocket } from "../../../hooks/useSocket";
+import { auth } from "../../../config/firebase";
 
 const Switcher8 = ({ isChecked, onChange }) => {
   return (
@@ -48,6 +50,9 @@ export default function PostPage({ onNavigate = () => {} }) {
   const [query, setQuery] = useState("");
   const [peopleTab, setPeopleTab] = useState("active");
   const [brightOn, setBrightOn] = useState(false);
+  const [activeUsers, setActiveUsers] = useState([]);
+  const [loadingActiveUsers, setLoadingActiveUsers] = useState(false);
+  const { socket, isConnected } = useSocket();
   const [isWideScreen, setIsWideScreen] = useState(window.innerWidth >= 1536);
   const [editingPost, setEditingPost] = useState(null);
   const [currentView, setCurrentView] = useState("home");
@@ -89,28 +94,88 @@ export default function PostPage({ onNavigate = () => {} }) {
           console.error('Failed to refresh user data:', error);
         }
       }
+      
+      // Fetch posts after user data is loaded
+      await fetchPosts();
     };
     
     loadUserData();
   }, []);
 
-  // Fetch posts from API
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
+  const fetchPosts = async (retryCount = 0) => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching posts...');
+      console.log('🔄 Fetching posts... (attempt', retryCount + 1, ')');
+      
+      // Try to load cached posts first
+      const cachedPosts = localStorage.getItem('cached_posts');
+      const cachedTimestamp = localStorage.getItem('cached_posts_timestamp');
+      const cacheAge = cachedTimestamp ? Date.now() - parseInt(cachedTimestamp) : Infinity;
+      const cacheMaxAge = 60 * 60 * 1000; // 1 hour
+      
+      if (cachedPosts && retryCount === 0 && cacheAge < cacheMaxAge) {
+        try {
+          const parsed = JSON.parse(cachedPosts);
+          console.log('📦 Loading cached posts:', parsed.length, '(age:', Math.round(cacheAge / 1000 / 60), 'min)');
+          setPosts(parsed);
+        } catch (e) {
+          console.warn('Failed to parse cached posts');
+          localStorage.removeItem('cached_posts');
+          localStorage.removeItem('cached_posts_timestamp');
+        }
+      } else if (cacheAge >= cacheMaxAge) {
+        console.log('🗑️ Cache expired, clearing...');
+        localStorage.removeItem('cached_posts');
+        localStorage.removeItem('cached_posts_timestamp');
+      }
+      
+      // Wait for auth token to be ready
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        console.warn('⚠️ No auth token found, waiting...');
+        if (retryCount < 3) {
+          setTimeout(() => fetchPosts(retryCount + 1), 1000);
+          return;
+        }
+      }
+      
       const response = await getAllPosts();
-      console.log('✅ Posts fetched:', response.data.posts);
-      setPosts(response.data.posts);
+      console.log('✅ Posts fetched from server:', response.data.posts.length, 'posts');
+      
+      if (response.data.posts && response.data.posts.length > 0) {
+        const breakdown = response.data.posts.reduce((acc, p) => {
+          acc[p.posted_by] = (acc[p.posted_by] || 0) + 1;
+          return acc;
+        }, {});
+        console.log('Posts by user:', breakdown);
+        
+        // Cache posts in browser localStorage (fast access on reload)
+        localStorage.setItem('cached_posts', JSON.stringify(response.data.posts));
+        localStorage.setItem('cached_posts_timestamp', Date.now().toString());
+        console.log('💾 Posts cached in browser for fast reload');
+        
+        setPosts(response.data.posts);
+        setLoading(false);
+      } else {
+        console.log('ℹ️ No posts found on server');
+        if (!cachedPosts) {
+          setPosts([]);
+        }
+        setLoading(false);
+      }
     } catch (error) {
       console.error('❌ Error fetching posts:', error);
-    } finally {
-      setLoading(false);
-      console.log('✓ Loading complete');
+      console.error('Error details:', error.response?.data);
+      
+      // Retry logic for network errors
+      if (error.code === 'ERR_NETWORK' && retryCount < 3) {
+        console.log('🔄 Retrying in 2 seconds...');
+        setTimeout(() => fetchPosts(retryCount + 1), 2000);
+      } else {
+        setLoading(false);
+        // Keep cached posts on error
+        console.log('Keeping cached posts due to error');
+      }
     }
   };
 
@@ -132,6 +197,56 @@ export default function PostPage({ onNavigate = () => {} }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Fetch active users
+  const fetchActiveUsers = async () => {
+    try {
+      setLoadingActiveUsers(true);
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return;
+
+      const response = await api.get('/active-users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setActiveUsers(response.data.data.users);
+      }
+    } catch (error) {
+      console.error('Error fetching active users:', error);
+    } finally {
+      setLoadingActiveUsers(false);
+    }
+  };
+
+  // Fetch active users on mount and when tab changes to "active"
+  useEffect(() => {
+    if (peopleTab === 'active') {
+      fetchActiveUsers();
+    }
+  }, [peopleTab]);
+
+  // Socket.io listeners for real-time presence updates
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    // When a user comes online
+    socket.on('user:online', ({ userId, online }) => {
+      console.log('🟢 User came online:', userId);
+      fetchActiveUsers(); // Refresh the list
+    });
+
+    // When a user goes offline
+    socket.on('user:offline', ({ userId, online }) => {
+      console.log('🔴 User went offline:', userId);
+      fetchActiveUsers(); // Refresh the list
+    });
+
+    return () => {
+      socket.off('user:online');
+      socket.off('user:offline');
+    };
+  }, [socket, isConnected]);
 
   // Scroll to specific post when postIdToScroll is set
   useEffect(() => {
@@ -166,7 +281,12 @@ export default function PostPage({ onNavigate = () => {} }) {
       
       // Add new post to the top of the list
       if (response.data && response.data.post) {
-        setPosts(prev => [response.data.post, ...prev]);
+        const newPosts = [response.data.post, ...posts];
+        setPosts(newPosts);
+        // Update cache
+        localStorage.setItem('cached_posts', JSON.stringify(newPosts));
+        localStorage.setItem('cached_posts_timestamp', Date.now().toString());
+        console.log('✅ Post created and saved to PostgreSQL + cached locally');
       }
     } catch (error) {
       console.error('❌ Error creating post:', error);
@@ -184,7 +304,11 @@ export default function PostPage({ onNavigate = () => {} }) {
       
       // Update the post in the list
       if (response.data && response.data.post) {
-        setPosts(prev => prev.map(p => p.id === updatedPost.id ? response.data.post : p));
+        const updatedPosts = posts.map(p => p.id === updatedPost.id ? response.data.post : p);
+        setPosts(updatedPosts);
+        // Update cache
+        localStorage.setItem('cached_posts', JSON.stringify(updatedPosts));
+        localStorage.setItem('cached_posts_timestamp', Date.now().toString());
       }
       setEditingPost(null);
     } catch (error) {
@@ -215,8 +339,10 @@ export default function PostPage({ onNavigate = () => {} }) {
 
   // Relative time like X.com (e.g., 5s, 2m, 1h, 3d)
   function formatRelativeTime(iso) {
+    if (!iso) return 'just now';
     const now = Date.now();
     const t = new Date(iso).getTime();
+    if (isNaN(t)) return 'just now'; // Handle invalid dates
     const diff = Math.max(0, now - t);
     const s = Math.floor(diff / 1000);
     if (s < 60) return `${s}s`;
@@ -255,13 +381,25 @@ export default function PostPage({ onNavigate = () => {} }) {
   async function toggleRepost(post) {
     setRepostingPost(post);
     setEditingPost(null);
-    // Scroll to post composer
+    // Scroll to post composer smoothly
     setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const composer = document.getElementById('post-composer');
+      if (composer) {
+        composer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Focus on textarea after scroll
+        setTimeout(() => {
+          const textarea = composer.querySelector('textarea');
+          if (textarea) textarea.focus();
+        }, 500);
+      } else {
+        // Fallback to top if composer not found
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }, 100);
   }
 
-  const handleRepost = (postId, responseData) => {
+  const handleRepost = async (postId, responseData) => {
+    // Update the share count on the original post
     setPosts((prev) =>
       prev.map((p) => {
         if (p.id !== postId) return p;
@@ -272,6 +410,18 @@ export default function PostPage({ onNavigate = () => {} }) {
         };
       })
     );
+    
+    // If this was a share (not unshare), add the new repost to the top of the list
+    if (responseData.shared && responseData.repost) {
+      const newPosts = [responseData.repost, ...posts];
+      setPosts(newPosts);
+      // Update cache
+      localStorage.setItem('cached_posts', JSON.stringify(newPosts));
+      localStorage.setItem('cached_posts_timestamp', Date.now().toString());
+    }
+    
+    // Clear the reposting state
+    setRepostingPost(null);
   };
 
   const scrollToPost = (postId) => {
@@ -358,7 +508,11 @@ export default function PostPage({ onNavigate = () => {} }) {
     
     try {
       await deletePostAPI(postToDelete);
-      setPosts((prev) => prev.filter((p) => p.id !== postToDelete));
+      const filteredPosts = posts.filter((p) => p.id !== postToDelete);
+      setPosts(filteredPosts);
+      // Update cache
+      localStorage.setItem('cached_posts', JSON.stringify(filteredPosts));
+      localStorage.setItem('cached_posts_timestamp', Date.now().toString());
       setDeleteModalOpen(false);
       setPostToDelete(null);
       
@@ -484,8 +638,8 @@ export default function PostPage({ onNavigate = () => {} }) {
   }
 
   return (
-    <div className={`w-full min-h-screen ${brightOn ? 'bg-gray-50' : 'bg-black'}`}>
-      <div className="max-w-[1400px] mx-auto flex relative">
+    <div className={`w-full h-screen overflow-hidden transition-colors duration-300 ${brightOn ? 'bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50' : 'bg-black'}`}>
+      <div className="max-w-[1400px] h-full mx-auto flex relative">
         {/* Fixed Left Sidebar - hidden on mobile, compact on xl-2xl, full on 2xl+ */}
         <aside className="hidden xl:block xl:w-[88px] 2xl:w-[275px] fixed left-[max(0px,calc((100vw-1400px)/2))] top-0 h-screen z-30 transition-all duration-300 xl:ml-[-10px] 2xl:ml-[-17px]">
           <div className="h-full flex justify-end xl:pr-2 2xl:pr-3">
@@ -495,14 +649,15 @@ export default function PostPage({ onNavigate = () => {} }) {
                   handleNav(k);
                   onNavigate(k);
                 }}
+                brightOn={brightOn}
               />
             </div>
           </div>
         </aside>
 
         {/* Main content area - Full width when not on home, normal width on home */}
-        <div className={`w-full mx-auto px-0 min-h-screen transition-all duration-300 ${
-          brightOn ? 'bg-white' : 'bg-black'
+        <div className={`w-full mx-auto px-0 h-screen overflow-y-auto transition-all duration-300 scrollbar-hide ${
+          brightOn ? '' : 'bg-black'
         } ${
           currentView === "home" 
             ? "xl:w-[750px] xl:ml-[108px] 2xl:ml-[295px]" 
@@ -586,11 +741,11 @@ export default function PostPage({ onNavigate = () => {} }) {
           }`}>
             <div 
               className={`flex items-center gap-3 px-3 py-3.5 transition-all duration-300 border-b ${
-                brightOn ? 'border-gray-300 bg-white' : 'border-[#045F5F] bg-black'
+                brightOn ? 'border-gray-300 bg-white shadow-md' : 'border-[#045F5F] bg-black'
               }`}
             >
               <i className={`fi fi-br-search text-xl transition-colors duration-300 ${
-                brightOn ? 'text-[#008B8B]' : 'text-blue-400'
+                brightOn ? 'text-teal-600' : 'text-blue-400'
               }`}></i>
               <input
                 value={query}
@@ -644,7 +799,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                       key={t.title}
                       onClick={() => { setQuery(t.title); }}
                       className={`w-full text-left px-4 py-3 rounded-lg transition-all duration-200 ${
-                        brightOn ? 'hover:bg-gray-100 active:bg-gray-200' : 'hover:bg-white/5 active:bg-white/10'
+                        brightOn ? 'hover:bg-gradient-to-r hover:from-teal-50 hover:to-blue-50 active:from-teal-100 active:to-blue-100' : 'hover:bg-white/5 active:bg-white/10'
                       }`}
                     >
                       <div className={`text-xs font-medium transition-colors duration-300 ${
@@ -704,12 +859,12 @@ export default function PostPage({ onNavigate = () => {} }) {
                 <div
                   key={p.id}
                   id={`post-${p.id}`}
-                  className={`mb-2 transition-colors duration-300 border overflow-hidden rounded-lg ${
-                    brightOn ? 'border-gray-200 bg-white shadow-sm' : 'border-[#045F5F] bg-black'
+                  className={`mb-2 transition-all duration-300 border overflow-hidden rounded-2xl ${
+                    brightOn ? 'border-gray-200/50 bg-white shadow-md hover:shadow-xl' : 'border-[#045F5F] bg-black'
                   }`}
                 >
-                  <article className={`px-6 sm:px-8 py-5 sm:py-6 transition-colors duration-150 ${
-                    brightOn ? 'bg-white hover:bg-gray-50/70' : 'bg-black hover:bg-gray-900/40'
+                  <article className={`px-6 sm:px-8 py-5 sm:py-6 transition-all duration-200 ${
+                    brightOn ? 'bg-white hover:bg-gradient-to-br hover:from-slate-50 hover:to-blue-50' : 'bg-black hover:bg-gray-900/40'
                   }`}>
                     <div className="flex items-start gap-3 sm:gap-4">
                       <button
@@ -757,21 +912,32 @@ export default function PostPage({ onNavigate = () => {} }) {
                                 {p.full_name || "Unknown"}
                               </button>
                               <span className={`text-xs sm:text-sm truncate transition-colors duration-300 ${
-                                brightOn ? 'text-gray-500' : 'text-gray-400'
+                                brightOn ? 'text-slate-500' : 'text-gray-400'
                               }`}>
                                 @{p.username || "unknown"}
                               </span>
                               <span className={`hidden sm:inline transition-colors duration-300 ${
                                 brightOn ? 'text-gray-400' : 'text-gray-400'
                               }`}>•</span>
-                              <a
-                                href="#"
-                                className={`text-xs sm:text-sm hover:underline hidden sm:inline transition-colors duration-300 ${
+                              <button
+                                onClick={() => {
+                                  const fullDate = p.created_at || p.createdAt;
+                                  const formattedDate = new Date(fullDate).toLocaleString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  });
+                                  alert(`Posted: ${formattedDate}`);
+                                }}
+                                className={`text-xs sm:text-sm hover:underline hidden sm:inline transition-colors duration-300 cursor-pointer ${
                                   brightOn ? 'text-gray-500 hover:text-gray-900' : 'text-gray-400 hover:text-white'
                                 }`}
+                                title="Click to see full date"
                               >
-                                {formatRelativeTime(p.createdAt)}
-                              </a>
+                                {formatRelativeTime(p.created_at || p.createdAt)}
+                              </button>
                             </div>
                           </div>
                           <div className="relative" ref={openMenuId === p.id ? menuRef : null}>
@@ -806,18 +972,69 @@ export default function PostPage({ onNavigate = () => {} }) {
                                 
                                 {/* Dropdown Menu */}
                                 {openMenuId === p.id && (
-                                  <div className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl overflow-hidden z-50 border transition-colors duration-300 ${
-                                    brightOn ? 'bg-white border-gray-200' : 'bg-gray-900 border-white/10'
+                                  <div className={`absolute right-0 mt-2 w-48 rounded-2xl shadow-2xl overflow-hidden z-50 border transition-colors duration-300 ${
+                                    brightOn ? 'bg-white border-gray-200 shadow-teal-100' : 'bg-gray-900 border-white/10'
                                   }`}>
                                     <button
+                                      onClick={() => {
+                                        // Save post to local storage
+                                        const savedPosts = JSON.parse(localStorage.getItem('saved_posts') || '[]');
+                                        const isAlreadySaved = savedPosts.some(sp => sp.id === p.id);
+                                        
+                                        if (isAlreadySaved) {
+                                          // Remove from saved
+                                          const filtered = savedPosts.filter(sp => sp.id !== p.id);
+                                          localStorage.setItem('saved_posts', JSON.stringify(filtered));
+                                          alert('Post removed from saved posts');
+                                        } else {
+                                          // Add to saved
+                                          savedPosts.push(p);
+                                          localStorage.setItem('saved_posts', JSON.stringify(savedPosts));
+                                          alert('Post saved successfully! ✅');
+                                        }
+                                        setOpenMenuId(null);
+                                      }}
                                       className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 ${
-                                        brightOn ? 'text-gray-700 hover:bg-gray-50' : 'text-white hover:bg-white/10'
+                                        brightOn ? 'text-gray-700 hover:bg-gradient-to-r hover:from-teal-50 hover:to-blue-50' : 'text-white hover:bg-white/10'
                                       }`}
                                     >
                                       <i className="fi fi-br-bookmark text-lg"></i>
-                                      <span className="font-semibold">Save Post</span>
+                                      <span className="font-semibold">
+                                        {JSON.parse(localStorage.getItem('saved_posts') || '[]').some(sp => sp.id === p.id) ? 'Unsave Post' : 'Save Post'}
+                                      </span>
                                     </button>
                                     <button
+                                      onClick={() => {
+                                        const reasons = [
+                                          'Spam',
+                                          'Harassment or Bullying',
+                                          'Inappropriate Content',
+                                          'False Information',
+                                          'Violence or Dangerous Content',
+                                          'Hate Speech',
+                                          'Other'
+                                        ];
+                                        
+                                        const reason = prompt('Why are you reporting this post?\n\n' + reasons.map((r, i) => `${i + 1}. ${r}`).join('\n') + '\n\nEnter the number (1-7):');
+                                        
+                                        if (reason && parseInt(reason) >= 1 && parseInt(reason) <= 7) {
+                                          const selectedReason = reasons[parseInt(reason) - 1];
+                                          // Store report locally (in production, send to backend)
+                                          const reports = JSON.parse(localStorage.getItem('post_reports') || '[]');
+                                          reports.push({
+                                            postId: p.id,
+                                            postAuthor: p.full_name,
+                                            reason: selectedReason,
+                                            reportedBy: user?.id,
+                                            reportedAt: new Date().toISOString()
+                                          });
+                                          localStorage.setItem('post_reports', JSON.stringify(reports));
+                                          alert(`Thank you for reporting. We'll review this post for: ${selectedReason}`);
+                                        } else if (reason !== null) {
+                                          alert('Invalid selection. Please try again.');
+                                        }
+                                        setOpenMenuId(null);
+                                      }}
                                       className={`w-full px-4 py-3 text-left flex items-center gap-3 transition-colors duration-300 border-t ${
                                         brightOn 
                                           ? 'text-rose-400 hover:bg-rose-500/10 border-white/10' 
@@ -836,11 +1053,13 @@ export default function PostPage({ onNavigate = () => {} }) {
 
                         {/* Repost indicator */}
                         {p.repost_of && (
-                          <div className={`mt-2 flex items-center gap-2 text-sm ${
-                            brightOn ? 'text-gray-500' : 'text-gray-400'
+                          <div className={`mt-2 flex items-center gap-2 text-sm font-medium ${
+                            brightOn ? 'text-gray-600' : 'text-gray-500'
                           }`}>
-                            <i className="fi fi-br-refresh"></i>
-                            <span>Reposted</span>
+                            <i className="fi fi-br-refresh text-[#00ba7c]"></i>
+                            <span className={brightOn ? 'text-gray-700' : 'text-gray-400'}>
+                              {p.full_name} reposted
+                            </span>
                           </div>
                         )}
 
@@ -853,34 +1072,43 @@ export default function PostPage({ onNavigate = () => {} }) {
                           </div>
                         )}
 
-                        {/* Original post preview for reposts */}
+                        {/* Original post preview for reposts - Click to view full post */}
                         {p.original_post && (
                           <div 
-                            onClick={() => scrollToPost(p.original_post.id)}
-                            className={`mt-3 border-l-2 pl-4 transition-colors duration-300 cursor-pointer hover:border-[#89CFF0] ${
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              scrollToPost(p.original_post.id);
+                            }}
+                            className={`mt-3 border-l-2 pl-4 transition-all duration-300 cursor-pointer hover:border-[#89CFF0] hover:pl-5 group ${
                               brightOn ? 'border-gray-300' : 'border-[#045F5F]'
                             }`}
                           >
-                            <div className={`rounded-xl p-4 border transition-all hover:border-[#045F5F] ${
-                              brightOn ? 'bg-[#1E293B] border-white/20 hover:bg-[#1E293B]/80' : 'bg-gray-800/30 border-[#045F5F]/30 hover:bg-gray-800/50'
+                            <div className={`rounded-xl p-4 border transition-all duration-200 hover:scale-[1.02] hover:shadow-lg ${
+                              brightOn ? 'bg-[#1E293B] border-white/20 hover:bg-[#1E293B]/90 hover:border-[#89CFF0]' : 'bg-gray-800/30 border-[#045F5F]/30 hover:bg-gray-800/60 hover:border-[#045F5F]'
                             }`}>
-                              <div className="flex items-center gap-2 mb-2">
-                                {p.original_post.profile_picture ? (
-                                  <img
-                                    src={p.original_post.profile_picture}
-                                    alt={p.original_post.full_name}
-                                    className="w-8 h-8 rounded-full object-cover ring-2 ring-[#045F5F]/20"
-                                  />
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#045F5F] to-[#89CFF0] flex items-center justify-center text-white font-bold text-xs">
-                                    {p.original_post.full_name?.[0]?.toUpperCase() || 'U'}
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  {p.original_post.profile_picture ? (
+                                    <img
+                                      src={p.original_post.profile_picture}
+                                      alt={p.original_post.full_name}
+                                      className="w-8 h-8 rounded-full object-cover ring-2 ring-[#045F5F]/20"
+                                    />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#045F5F] to-[#89CFF0] flex items-center justify-center text-white font-bold text-xs">
+                                      {p.original_post.full_name?.[0]?.toUpperCase() || 'U'}
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className={`font-semibold text-sm ${brightOn ? 'text-white' : 'text-white'}`}>
+                                      {p.original_post.full_name}
+                                    </p>
+                                    <p className="text-gray-500 text-xs">@{p.original_post.username}</p>
                                   </div>
-                                )}
-                                <div>
-                                  <p className={`font-semibold text-sm ${brightOn ? 'text-white' : 'text-white'}`}>
-                                    {p.original_post.full_name}
-                                  </p>
-                                  <p className="text-gray-500 text-xs">@{p.original_post.username}</p>
+                                </div>
+                                {/* Click indicator */}
+                                <div className="text-gray-500 group-hover:text-[#89CFF0] transition-colors duration-200">
+                                  <i className="fi fi-rr-arrow-up-right text-sm"></i>
                                 </div>
                               </div>
                               {p.original_post.content && (
@@ -1085,34 +1313,43 @@ export default function PostPage({ onNavigate = () => {} }) {
                           <div className="flex items-center gap-2">
                             {/* Sup button (hang loose hand) */}
                             <button
-                              onClick={() => toggleLike(p.id)}
+                              onClick={() => {
+                                toggleLike(p.id);
+                                // Add animation feedback
+                                const button = event.currentTarget;
+                                button.classList.add('scale-110');
+                                setTimeout(() => button.classList.remove('scale-110'), 200);
+                              }}
                               className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all ${
                                 p.user_liked
                                   ? "text-[#89CFF0] bg-[#89CFF0]/10"
                                   : `transition-colors duration-300 ${
-                                      brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
+                                      brightOn ? 'text-gray-500 hover:text-[#89CFF0] hover:bg-gradient-to-r hover:from-teal-50 hover:to-blue-50' : 'text-text-muted hover:text-[#89CFF0]'
                                     } hover:bg-[#89CFF0]/10`
                               }`}
                               title="Sup"
                             >
-                              <span className="text-[18px]" style={{ filter: p.user_liked ? 'sepia(1) saturate(5) hue-rotate(160deg) brightness(1.1)' : 'grayscale(1)' }}>🤙</span>
-                              <span className="text-sm font-semibold">{p.likes_count || 0}</span>
+                              <span className="text-[18px] transition-transform" style={{ filter: p.user_liked ? 'sepia(1) saturate(5) hue-rotate(160deg) brightness(1.1)' : 'grayscale(1)' }}>🤙</span>
+                              <span className="text-sm font-semibold">{parseInt(p.likes_count) || 0}</span>
                             </button>
 
                             {/* Repost button */}
                             <button
-                              onClick={() => toggleRepost(p)}
+                              onClick={() => {
+                                // Allow reposting any post, including reposts
+                                toggleRepost(p);
+                              }}
                               className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all ${
                                 p.user_shared
-                                  ? "text-[#89CFF0] bg-[#89CFF0]/10"
+                                  ? "text-[#00ba7c] bg-[#00ba7c]/10"
                                   : `transition-colors duration-300 ${
-                                      brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
-                                    } hover:bg-[#89CFF0]/10`
+                                      brightOn ? 'text-gray-500 hover:text-[#00ba7c] hover:bg-gradient-to-r hover:from-teal-50 hover:to-blue-50' : 'text-text-muted hover:text-[#00ba7c]'
+                                    } hover:bg-[#00ba7c]/10`
                               }`}
                               title="Repost"
                             >
                               <i className="fi fi-br-refresh text-[18px]" />
-                              <span className="text-sm font-semibold">{p.shares_count || 0}</span>
+                              <span className="text-sm font-semibold">{parseInt(p.shares_count) || 0}</span>
                             </button>
 
                             {/* Send button */}
@@ -1131,7 +1368,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                                 }
                               }}
                               className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all transition-colors duration-300 ${
-                                brightOn ? 'text-gray-400 hover:text-[#89CFF0]' : 'text-text-muted hover:text-[#89CFF0]'
+                                brightOn ? 'text-gray-500 hover:text-[#89CFF0] hover:bg-gradient-to-r hover:from-teal-50 hover:to-blue-50' : 'text-text-muted hover:text-[#89CFF0]'
                               } hover:bg-[#89CFF0]/10`}
                               title="Send message"
                             >
@@ -1144,6 +1381,7 @@ export default function PostPage({ onNavigate = () => {} }) {
                               <button
                                 onClick={() => {
                                   setEditingPost(p);
+                                  setRepostingPost(null); // Clear reposting state when editing
                                   // Scroll to post composer
                                   const composer = document.getElementById('post-composer');
                                   if (composer) {
@@ -1170,26 +1408,35 @@ export default function PostPage({ onNavigate = () => {} }) {
                           {!isCurrentUserPost && (
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={() => toggleAccept(p.id)}
-                                className={`flex items-center gap-1.5 px-2 py-1 transition-all font-semibold text-sm transition-colors duration-300 ${
+                                onClick={(e) => {
+                                  toggleAccept(p.id);
+                                  // Add bounce animation
+                                  e.currentTarget.classList.add('animate-bounce');
+                                  setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
+                                }}
+                                className={`flex items-center gap-1.5 px-2 py-1 transition-all font-semibold text-sm transition-colors duration-300 rounded-full ${
                                   p.accepted
-                                    ? "text-green-400"
+                                    ? "text-green-400 bg-green-400/10"
                                     : `${
-                                        brightOn ? 'text-gray-400 hover:text-green-400' : 'text-text-muted hover:text-green-400'
+                                        brightOn ? 'text-gray-400 hover:text-green-400 hover:bg-green-400/10' : 'text-text-muted hover:text-green-400 hover:bg-green-400/10'
                                       }`
                                 }`}
                                 title="Accept"
                               >
-                                <i className="fa-solid fa-check text-[14px]" />
+                                <i className={`fa-solid fa-check text-[14px] ${p.accepted ? 'animate-pulse' : ''}`} />
                                 <span>Accept</span>
                               </button>
                               <button
-                                onClick={() => toggleReject(p.id)}
-                                className={`flex items-center gap-1.5 px-2 py-1 transition-all font-semibold text-sm transition-colors duration-300 ${
+                                onClick={() => {
+                                  if (confirm('Are you sure you want to reject this post?')) {
+                                    toggleReject(p.id);
+                                  }
+                                }}
+                                className={`flex items-center gap-1.5 px-2 py-1 transition-all font-semibold text-sm transition-colors duration-300 rounded-full ${
                                   p.rejected
-                                    ? "text-rose-400"
+                                    ? "text-rose-400 bg-rose-400/10"
                                     : `${
-                                        brightOn ? 'text-gray-400 hover:text-rose-400' : 'text-text-muted hover:text-rose-400'
+                                        brightOn ? 'text-gray-400 hover:text-rose-400 hover:bg-rose-400/10' : 'text-text-muted hover:text-rose-400 hover:bg-rose-400/10'
                                       }`
                                 }`}
                                 title="Reject"
@@ -1214,24 +1461,30 @@ export default function PostPage({ onNavigate = () => {} }) {
       {/* Right-side rail (xl+): Active Users - Properly aligned with post section */}
       {currentView === "home" && (
       <aside 
-        className="hidden xl:block w-[375px] fixed top-0 h-screen z-30 brightness-root transition-all duration-300" 
+        className={`hidden xl:block w-[375px] fixed top-0 h-screen z-30 transition-all duration-300 ${
+          brightOn ? 'bg-transparent' : 'brightness-root'
+        }`}
         style={{ 
           left: isWideScreen 
             ? 'calc(max(0px, (100vw - 1400px) / 2) + 287.8px + 750px)' 
             : 'calc(max(0px, (100vw - 1400px) / 2) + 100px + 750px)' 
         }}
       >
-        <div className="relative h-full pl-12 pr-4">
+        <div className="relative h-full pl-12 pr-4 overflow-y-auto scrollbar-hide">
           <div className="sticky top-0 pt-4 space-y-4 max-w-[320px]">
             {/* Theme Toggle: Bright / Dim controls */}
             <div className="bg-transparent p-3 rounded-2xl">
               <div className="flex items-center justify-center">
-                <div className={`flex items-center gap-4 backdrop-blur-sm rounded-full px-4 py-2.5 border-2 border-white transition-all duration-500 cursor-pointer group ${
-                  !brightOn 
-                    ? 'bg-black/60 hover:shadow-[0_0_30px_rgba(112,178,178,0.3)] hover:scale-105' 
-                    : 'bg-[#0f172a]/80 hover:shadow-[0_0_30px_rgba(15,23,42,0.6)] hover:scale-105'
+                <div className={`flex items-center gap-4 rounded-full px-4 py-2.5 border-2 transition-all duration-500 cursor-pointer group ${
+                  brightOn
+                    ? 'bg-transparent border-gray-300 hover:shadow-lg hover:shadow-teal-200/50 hover:scale-105'
+                    : 'bg-transparent border-white/20 hover:shadow-[0_0_30px_rgba(112,178,178,0.3)] hover:scale-105'
                 }`}>
-                  <i className={`fa-regular fa-moon text-2xl transition-all duration-300 ${!brightOn ? 'text-primary-teal scale-125 drop-shadow-[0_0_8px_rgba(112,178,178,0.8)]' : 'text-gray-500 scale-100 group-hover:text-gray-400'}`} />
+                  <i className={`fa-regular fa-moon text-2xl transition-all duration-300 ${
+                    !brightOn 
+                      ? 'text-primary-teal scale-125 drop-shadow-[0_0_8px_rgba(112,178,178,0.8)]' 
+                      : 'text-slate-400 scale-100 group-hover:text-slate-500'
+                  }`} />
                   <Switcher8
                     isChecked={brightOn}
                     onChange={() => {
@@ -1254,20 +1507,31 @@ export default function PostPage({ onNavigate = () => {} }) {
                       }
                     }}
                   />
-                  <i className={`fa-regular fa-sun text-2xl transition-all duration-300 ${brightOn ? 'text-amber-500 scale-125 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' : 'text-gray-500 scale-100 group-hover:text-gray-400'}`} />
+                  <i className={`fa-regular fa-sun text-2xl transition-all duration-300 ${
+                    brightOn 
+                      ? 'text-amber-500 scale-125 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]' 
+                      : 'text-slate-500 scale-100 group-hover:text-slate-400'
+                  }`} />
                 </div>
               </div>
             </div>
             {/* People: Active / Following / Followers */}
-            <div className={`p-3 people-tabs transition-colors duration-300 ${
-              brightOn ? 'bg-[#0f172a]/50' : 'bg-white/[0.04]'
+            <div className={`p-4 people-tabs rounded-2xl transition-all duration-300 ${
+              brightOn 
+                ? 'bg-transparent' 
+                : 'bg-transparent'
             }`}>
-              <div className="flex items-center mb-2">
-                <h3 className="text-lg font-extrabold flex items-center gap-2 text-white">
+              <div className="flex items-center mb-3">
+                <h3 className={`text-lg font-extrabold flex items-center gap-2 transition-colors duration-300 ${
+                  brightOn ? 'text-gray-900' : 'text-white'
+                }`}>
                   <i className="fa-solid fa-users" />
+                  <span>People</span>
                 </h3>
               </div>
-              <div className="grid grid-cols-3 gap-1 rounded-full bg-white/5 p-0.5 mb-2 w-full">
+              <div className={`grid grid-cols-3 gap-1 rounded-full p-0.5 mb-3 w-full transition-colors duration-300 ${
+                brightOn ? 'bg-transparent' : 'bg-transparent'
+              }`}>
                 {[
                   { key: "active", label: "Active" },
                   { key: "following", label: "Following" },
@@ -1276,26 +1540,94 @@ export default function PostPage({ onNavigate = () => {} }) {
                   <button
                     key={t.key}
                     onClick={() => setPeopleTab(t.key)}
-                    className={`text-xs px-2.5 rounded-full transition-colors w-full text-center h-8 font-bold transition-colors duration-300 ${
+                    className={`text-xs px-2.5 rounded-full transition-all duration-300 w-full text-center h-8 font-bold ${
                       peopleTab === t.key
-                        ? "chip-active"
-                        : `${
-                            brightOn ? 'text-gray-400 hover:text-white' : 'text-text-muted hover:text-white'
-                          } hover:bg-white/10`
+                        ? brightOn
+                          ? "bg-gradient-to-r from-teal-500 to-blue-500 text-white shadow-md"
+                          : "chip-active"
+                        : brightOn
+                          ? 'text-gray-600 hover:text-gray-900 hover:bg-white/20'
+                          : 'text-text-muted hover:text-white hover:bg-white/10'
                     }`}
                   >
                     {t.label}
                   </button>
                 ))}
               </div>
-              <div className="space-y-1.5">
-                <div className={`flex flex-col items-center justify-center py-8 px-4 text-center ${
-                  brightOn ? 'text-gray-400' : 'text-gray-500'
-                }`}>
-                  <i className="fa-solid fa-user-group text-3xl mb-2 opacity-50" />
-                  <p className="text-sm font-medium">No users yet</p>
-                  <p className="text-xs mt-1 opacity-70">Check back later for active users</p>
-                </div>
+              <div className="space-y-2">
+                {loadingActiveUsers ? (
+                  <div className={`flex flex-col items-center justify-center py-8 px-4 text-center rounded-xl transition-colors duration-300 ${
+                    brightOn ? 'bg-gradient-to-br from-gray-50 to-blue-50/30 text-gray-600' : 'text-gray-500'
+                  }`}>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+                    <p className="text-xs mt-2">Loading...</p>
+                  </div>
+                ) : activeUsers.length === 0 ? (
+                  <div className={`flex flex-col items-center justify-center py-8 px-4 text-center rounded-xl transition-colors duration-300 ${
+                    brightOn ? 'bg-gradient-to-br from-gray-50 to-blue-50/30 text-gray-600' : 'text-gray-500'
+                  }`}>
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-3 transition-colors duration-300 ${
+                      brightOn ? 'bg-gradient-to-br from-teal-100 to-blue-100' : 'bg-white/5'
+                    }`}>
+                      <i className="fa-solid fa-user-group text-2xl text-teal-500" />
+                    </div>
+                    <p className="text-sm font-semibold">No active users</p>
+                    <p className={`text-xs mt-1 transition-colors duration-300 ${
+                      brightOn ? 'text-gray-500' : 'text-gray-600'
+                    }`}>Check back later</p>
+                  </div>
+                ) : (
+                  activeUsers.map((user) => (
+                    <button
+                      key={user.id}
+                      onClick={() => {
+                        setViewingUserId(user.id);
+                        setCurrentView("userProfile");
+                      }}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
+                        brightOn
+                          ? 'hover:bg-gradient-to-r hover:from-teal-50 hover:to-blue-50'
+                          : 'hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="relative flex-shrink-0">
+                        {user.profile_picture ? (
+                          <img
+                            src={user.profile_picture}
+                            alt={user.full_name}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-500 to-blue-500 flex items-center justify-center text-white font-bold">
+                            {user.full_name?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                        )}
+                        {/* Online indicator */}
+                        <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
+                      </div>
+                      <div className="flex-1 text-left overflow-hidden">
+                        <p className={`font-semibold text-sm truncate transition-colors duration-300 ${
+                          brightOn ? 'text-gray-900' : 'text-white'
+                        }`}>
+                          {user.full_name || 'Unknown User'}
+                        </p>
+                        <p className={`text-xs truncate transition-colors duration-300 ${
+                          brightOn ? 'text-gray-600' : 'text-gray-400'
+                        }`}>
+                          @{user.username || 'unknown'}
+                        </p>
+                        {user.profession && (
+                          <p className="text-xs text-teal-500 truncate">
+                            {user.profession}
+                          </p>
+                        )}
+                      </div>
+                      <i className={`fa-solid fa-circle text-xs ${
+                        brightOn ? 'text-green-500' : 'text-green-400'
+                      }`} />
+                    </button>
+                  ))
+                )}
               </div>
             </div>
 

@@ -6,7 +6,7 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export default function Sidebar({ onNavigate = () => {} }) {
+export default function Sidebar({ onNavigate = () => {}, brightOn = false }) {
   const navigate = useNavigate();
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [user, setUser] = useState(null);
@@ -170,7 +170,9 @@ export default function Sidebar({ onNavigate = () => {} }) {
   ];
 
   return (
-    <div className="h-screen flex flex-col justify-between py-1">
+    <div className={`h-screen flex flex-col justify-between py-1 transition-all duration-300 ${
+      brightOn ? 'bg-transparent' : ''
+    }`}>
       {/* Brand */}
       <div className="min-h-0">
         <div className="px-3 pt-1 mb-1">
@@ -178,7 +180,9 @@ export default function Sidebar({ onNavigate = () => {} }) {
             <span className="hidden 2xl:inline">Cam-G</span>
             <span className="inline 2xl:hidden">C</span>
           </div>
-          <div className="mt-0.5 text-xs leading-tight italic text-text-muted hidden 2xl:block">
+          <div className={`mt-0.5 text-xs leading-tight italic hidden 2xl:block transition-colors duration-300 ${
+            brightOn ? 'text-gray-600' : 'text-text-muted'
+          }`}>
             Connect. Collaborate. Create.
           </div>
         </div>
@@ -200,27 +204,37 @@ export default function Sidebar({ onNavigate = () => {} }) {
                   navigate("/");
                 }
               }}
-              className={`group relative w-full text-left px-4 py-3 rounded-full flex items-center 2xl:gap-4 justify-center 2xl:justify-start transition-all duration-200 hover:bg-white/10 text-white hover:text-primary-teal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-teal`}
+              className={`group relative w-full text-left px-4 py-3 rounded-full flex items-center 2xl:gap-4 justify-center 2xl:justify-start transition-all duration-200 ${
+                brightOn 
+                  ? 'text-gray-700 hover:bg-gradient-to-r hover:from-teal-100 hover:to-blue-100 hover:text-teal-700 hover:shadow-md' 
+                  : 'hover:bg-white/10 text-white hover:text-primary-teal'
+              } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-teal`}
               title={it.label}
             >
               <span className="relative">
                 <i
-                  className={`${it.icon} text-[26px] transition-all duration-200 group-hover:scale-105 group-hover:text-primary-teal`}
+                  className={`${it.icon} text-[26px] transition-all duration-200 group-hover:scale-105 ${
+                    brightOn ? 'group-hover:text-teal-600' : 'group-hover:text-primary-teal'
+                  }`}
                 ></i>
                 {/* Show badge for notifications */}
                 {it.key === "notifications" && notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#1d9bf0] text-white text-[11px] font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1.5 ring-2 ring-black shadow-lg">
+                  <span className={`absolute -top-1 -right-1 bg-gradient-to-r from-[#FF6B6B] to-[#FF5252] text-white text-[11px] font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1.5 shadow-lg ring-2 ${
+                    brightOn ? 'ring-white' : 'ring-black'
+                  }`}>
                     {getBadgeCount(notificationCount)}
                   </span>
                 )}
                 {/* Show badge for messages */}
                 {it.key === "messages" && messageCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#1d9bf0] text-white text-[11px] font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1.5 ring-2 ring-black shadow-lg z-10">
+                  <span className={`absolute -top-1 -right-1 bg-gradient-to-r from-[#4ECDC4] to-[#44A08D] text-white text-[11px] font-semibold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1.5 shadow-lg ring-2 z-10 ${
+                    brightOn ? 'ring-white' : 'ring-black'
+                  }`}>
                     {getBadgeCount(messageCount)}
                   </span>
                 )}
               </span>
-              <span className="font-bold text-[20px] hidden 2xl:inline">
+              <span className={`font-bold text-[20px] hidden 2xl:inline transition-colors duration-200`}>
                 {it.label}
               </span>
             </button>
@@ -257,7 +271,11 @@ export default function Sidebar({ onNavigate = () => {} }) {
                 }
               }, 100);
             }}
-            className="group w-full text-center rounded-full bg-gradient-to-r from-primary-teal to-blue-500 hover:from-primary-blue hover:to-primary-teal text-white font-bold py-3.5 transition-all duration-300 text-[17px] flex items-center justify-center shadow-lg shadow-primary-teal/30 hover:shadow-primary-teal/50 hover:scale-105 active:scale-95"
+            className={`group w-full text-center rounded-full font-bold py-3.5 transition-all duration-300 text-[17px] flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 ${
+              brightOn
+                ? 'bg-gradient-to-r from-[#14b8a6] to-[#3B82F6] hover:from-[#0D9488] hover:to-[#2563EB] text-white shadow-teal-400/40 hover:shadow-teal-500/60'
+                : 'bg-gradient-to-r from-primary-teal to-blue-500 hover:from-primary-blue hover:to-primary-teal text-white shadow-primary-teal/30 hover:shadow-primary-teal/50'
+            }`}
             title="Create a new post"
           >
             <span className="hidden 2xl:inline">Post</span>
@@ -269,7 +287,11 @@ export default function Sidebar({ onNavigate = () => {} }) {
       {/* Account row (bottom) */}
       <div ref={menuRef} className="relative mx-3 mt-3 mb-4">
         <div
-          className="group p-3 rounded-full hover:bg-white/10 cursor-pointer flex items-center 2xl:gap-3 justify-center 2xl:justify-start transition-all duration-200"
+          className={`group p-3 rounded-full cursor-pointer flex items-center 2xl:gap-3 justify-center 2xl:justify-start transition-all duration-200 ${
+            brightOn 
+              ? 'hover:bg-gradient-to-r hover:from-teal-100 hover:to-blue-100 hover:shadow-md' 
+              : 'hover:bg-white/10'
+          }`}
           onClick={() => setShowAccountMenu(!showAccountMenu)}
           title="Account"
         >
@@ -285,21 +307,35 @@ export default function Sidebar({ onNavigate = () => {} }) {
             </div>
           )}
           <div className="flex-col leading-tight flex-1 overflow-hidden hidden 2xl:flex">
-            <span className="font-bold text-white text-[15px] transition-all duration-200 group-hover:text-primary-teal truncate">
+            <span className={`font-bold text-[15px] transition-all duration-200 truncate ${
+              brightOn 
+                ? 'text-gray-900 group-hover:text-teal-700' 
+                : 'text-white group-hover:text-primary-teal'
+            }`}>
               {user?.full_name || 'Your Name'}
             </span>
-            <span className="text-[15px] text-text-muted truncate">
+            <span className={`text-[15px] truncate transition-colors duration-200 ${
+              brightOn ? 'text-gray-600' : 'text-text-muted'
+            }`}>
               @{user?.username || 'username'}
             </span>
           </div>
-          <div className="text-text-muted transition-all duration-200 group-hover:text-primary-teal hidden 2xl:block">
+          <div className={`transition-all duration-200 hidden 2xl:block ${
+            brightOn 
+              ? 'text-gray-500 group-hover:text-teal-600' 
+              : 'text-text-muted group-hover:text-primary-teal'
+          }`}>
             <i className="fa-solid fa-ellipsis"></i>
           </div>
         </div>
 
         {/* Account Menu Dropdown */}
         {showAccountMenu && (
-          <div className="absolute bottom-full left-0 right-0 mb-2 bg-black border border-white/10 rounded-xl shadow-xl overflow-hidden z-50">
+          <div className={`absolute bottom-full left-0 right-0 mb-2 rounded-xl shadow-2xl overflow-hidden z-50 transition-colors duration-300 ${
+            brightOn 
+              ? 'bg-white border border-gray-200' 
+              : 'bg-black border border-white/10'
+          }`}>
             <button
               onClick={() => {
                 // Clear user data from localStorage
@@ -309,7 +345,11 @@ export default function Sidebar({ onNavigate = () => {} }) {
                 // Navigate to login page
                 navigate('/login');
               }}
-              className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3"
+              className={`w-full px-4 py-3 text-left transition-all duration-200 flex items-center gap-3 ${
+                brightOn
+                  ? 'text-gray-700 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 hover:text-red-600'
+                  : 'text-white hover:bg-white/10'
+              }`}
             >
               <i className="fi fi-br-sign-out-alt text-lg"></i>
               <span className="font-semibold">Log out @{user?.username || 'username'}</span>
@@ -320,7 +360,11 @@ export default function Sidebar({ onNavigate = () => {} }) {
                 // Navigate to signup page to add another account
                 navigate('/signup');
               }}
-              className="w-full px-4 py-3 text-left text-white hover:bg-white/10 transition-colors flex items-center gap-3 border-t border-white/10"
+              className={`w-full px-4 py-3 text-left transition-all duration-200 flex items-center gap-3 border-t ${
+                brightOn
+                  ? 'text-gray-700 hover:bg-gradient-to-r hover:from-teal-50 hover:to-blue-50 hover:text-teal-600 border-gray-200'
+                  : 'text-white hover:bg-white/10 border-white/10'
+              }`}
             >
               <i className="fi fi-br-user-add text-lg"></i>
               <span className="font-semibold">Add another account</span>

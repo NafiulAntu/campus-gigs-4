@@ -167,5 +167,25 @@ export const initiateSSLCommerzSubscription = (data) => API.post('/sslcommerz/su
 export const initiateMockPayment = (data) => API.post('/mock-payment/initiate', data);
 export const processMockPayment = (data) => API.post('/mock-payment/complete', data);
 
+// Search API
+export const searchPosts = (params) => API.get('/search/posts', { params });
+export const searchJobs = (params) => API.get('/search/jobs', { params });
+export const getSearchSuggestions = (query) => API.get('/search/suggestions', { params: { q: query } });
+export const getPopularCategories = () => API.get('/search/categories');
+export const getPopularTags = () => API.get('/search/tags');
+
+// Verification API
+export const submitVerification = (formData) => API.post('/verification/submit', formData, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+});
+export const getVerificationStatus = () => API.get('/verification/status');
+export const getVerificationById = (id) => API.get(`/verification/${id}`);
+
+// Admin Verification API
+export const getPendingVerifications = (params) => API.get('/verification/admin/pending', { params });
+export const approveVerification = (id, data) => API.post(`/verification/admin/approve/${id}`, data);
+export const rejectVerification = (id, data) => API.post(`/verification/admin/reject/${id}`, data);
+export const getVerificationStats = () => API.get('/verification/admin/stats');
+
 // Export API instance as default for direct usage
 export default API;

@@ -430,55 +430,67 @@ exports.deleteAccount = async (req, res) => {
 // Firebase Sync Controller - Sync Firebase authenticated user with PostgreSQL
 exports.firebaseSync = async (req, res) => {
   try {
-    // User is already verified by authMiddleware (req.user is set)
-    // The middleware has verified the Firebase token and extracted the user
+    const { firebase_uid, uid, email, full_name, displayName, username, profession, profile_picture, photoURL } = req.body;
     
-    const { username, profession, profile_picture, photoURL } = req.body;
+    // Accept either firebase_uid or uid (frontend sends uid)
+    const firebaseUid = firebase_uid || uid;
+    const name = full_name || displayName;
     
-    // req.user should already be populated by the middleware
-    if (!req.user) {
-      return res.status(401).json({ 
+    // Validate required fields
+    if (!firebaseUid || !email) {
+      return res.status(400).json({ 
         success: false, 
-        message: 'User not authenticated' 
+        message: 'Firebase UID and email are required' 
       });
     }
 
     // Use photoURL if profile_picture not provided (for Firebase compatibility)
     const finalProfilePicture = profile_picture || photoURL;
 
-    // Update user metadata if provided
-    if (username || profession || finalProfilePicture) {
-      const updatedUser = await User.updateMetadata(req.user.id, {
-        username,
-        profession,
-        profile_picture: finalProfilePicture
+    // Find or create user by Firebase UID
+    let user = await User.findByFirebaseUid(firebaseUid);
+    
+    if (!user) {
+      // Create new user from Firebase data
+      console.log('Creating new user from Firebase data:', { firebaseUid, email, name });
+      user = await User.upsertFirebaseUser({
+        firebase_uid: firebaseUid,
+        email,
+        full_name: name || email.split('@')[0],
+        profile_picture: finalProfilePicture,
+        profession: profession || null,
+        username: username || null
       });
-
-      return res.status(200).json({
-        success: true,
-        message: 'User synced successfully',
-        user: {
-          id: updatedUser.id,
-          email: updatedUser.email,
-          full_name: updatedUser.full_name,
-          username: updatedUser.username,
-          profession: updatedUser.profession,
-          profile_picture: updatedUser.profile_picture
-        }
-      });
+      console.log('User created with ID:', user.id);
+    } else {
+      // Update existing user metadata if provided
+      if (username || profession || finalProfilePicture) {
+        console.log('Updating existing user metadata:', user.id);
+        user = await User.updateMetadata(user.id, {
+          username,
+          profession,
+          profile_picture: finalProfilePicture
+        });
+      }
     }
 
-    // Return existing user data
+    // Generate JWT token for this user
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+      expiresIn: '7d',
+    });
+
     res.status(200).json({
       success: true,
-      message: 'User already synced',
+      message: 'User synced successfully',
+      token, // Return JWT token for future requests
       user: {
-        id: req.user.id,
-        email: req.user.email,
-        full_name: req.user.full_name,
-        username: req.user.username,
-        profession: req.user.profession,
-        profile_picture: req.user.profile_picture
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        username: user.username,
+        profession: user.profession,
+        profile_picture: user.profile_picture,
+        firebase_uid: user.firebase_uid
       }
     });
 
