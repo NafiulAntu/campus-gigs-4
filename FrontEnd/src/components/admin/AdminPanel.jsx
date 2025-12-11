@@ -672,6 +672,13 @@ const AdminPanel = () => {
               <Typography variant="h4" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <AdminIcon sx={{ color: 'primary.main' }} />
                 Admin Panel
+                <Chip 
+                  icon={<SuperAdminIcon />}
+                  label="Super Admin" 
+                  size="small" 
+                  color="error" 
+                  sx={{ ml: 1, fontWeight: 'bold' }}
+                />
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Manage users, view statistics, and control platform settings
