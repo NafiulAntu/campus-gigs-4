@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { signInWithEmail, signInWithGoogle, signInWithGitHub, getCurrentToken } from '../../../services/firebaseAuth';
-import { syncUserWithBackend } from '../../../services/api';
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { syncUserWithBackend, checkAdminStatus } from '../../../services/api';
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaUserShield } from "react-icons/fa";
 import GmailIcon from "../../../assets/icons/GmailIcon";
 import GitHubIcon from "../../../assets/icons/GitHubIcon";
 import LinkedInIcon from "../../../assets/icons/LinkedInIcon";
@@ -19,6 +19,32 @@ export default function Signin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if logged-in user is admin
+  useEffect(() => {
+    const checkIfAdmin = async () => {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      if (token && user) {
+        // Quick check from local storage first
+        if (user.role === 'admin' || user.role === 'super_admin') {
+          setIsAdmin(true);
+        } else {
+          // Verify with backend
+          try {
+            const response = await checkAdminStatus();
+            setIsAdmin(response.data.isAdmin);
+          } catch (err) {
+            setIsAdmin(false);
+          }
+        }
+      }
+    };
+    
+    checkIfAdmin();
+  }, []);
 
   // Aurora animation colors
   const COLORS = ["#ef4444", "#0ea5e9", "#14b8a6", "#3b82f6"];
@@ -206,6 +232,43 @@ export default function Signin() {
             <button type="submit" className="signin-button" disabled={loading}>
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
+
+            {/* Admin Panel Button - Only visible to admins */}
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                style={{
+                  marginTop: '8px',
+                  width: '100%',
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #dc2626 0%, #7c2d12 100%)',
+                  color: 'white',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(220, 38, 38, 0.3)',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(220, 38, 38, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 4px 15px rgba(220, 38, 38, 0.3)';
+                }}
+              >
+                <FaUserShield size={18} />
+                Admin Panel
+              </button>
+            )}
+
             {error && <p style={{ color: '#ef4444', marginTop: '10px', fontSize: '14px' }}>{error}</p>}
             {success && <p style={{ color: '#10b981', marginTop: '10px', fontSize: '14px' }}>{success}</p>}
           </form>

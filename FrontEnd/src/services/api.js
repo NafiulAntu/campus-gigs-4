@@ -187,5 +187,20 @@ export const approveVerification = (id, data) => API.post(`/verification/admin/a
 export const rejectVerification = (id, data) => API.post(`/verification/admin/reject/${id}`, data);
 export const getVerificationStats = () => API.get('/verification/admin/stats');
 
+// ============= ADMIN PANEL API =============
+// Check admin status
+export const checkAdminStatus = () => API.get('/admin/check-status');
+
+// Admin Dashboard
+export const getAdminDashboardStats = () => API.get('/admin/stats');
+
+// Admin User Management
+export const getAdminUsers = (params) => API.get('/admin/users', { params });
+export const getAdminUserDetails = (userId) => API.get(`/admin/users/${userId}`);
+export const getAdminUserPosts = (userId, params) => API.get(`/admin/users/${userId}/posts`, { params });
+export const approveAdminUser = (userId, data) => API.post(`/admin/users/${userId}/approve`, data);
+export const updateUserRole = (userId, role) => API.put(`/admin/users/${userId}/role`, { role });
+export const deleteAdminUser = (userId, data) => API.delete(`/admin/users/${userId}`, { data });
+
 // Export API instance as default for direct usage
 export default API;

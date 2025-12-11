@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSocket } from "../../../hooks/useSocket";
 import { auth } from "../../../config/firebase";
 import axios from "axios";
+import { checkAdminStatus } from "../../../services/api";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -12,6 +13,7 @@ export default function Sidebar({ onNavigate = () => {}, brightOn = false }) {
   const [user, setUser] = useState(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const [messageCount, setMessageCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const menuRef = useRef(null);
   const { socket, isConnected } = useSocket();
 
@@ -20,7 +22,25 @@ export default function Sidebar({ onNavigate = () => {}, brightOn = false }) {
     const loadUser = () => {
       const userData = localStorage.getItem('user');
       if (userData) {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        
+        // Check admin status from local storage first
+        if (parsedUser.role === 'admin' || parsedUser.role === 'super_admin') {
+          setIsAdmin(true);
+        } else {
+          // Verify with backend if token exists
+          checkAdminStatusAsync();
+        }
+      }
+    };
+    
+    const checkAdminStatusAsync = async () => {
+      try {
+        const response = await checkAdminStatus();
+        setIsAdmin(response.data.isAdmin);
+      } catch (err) {
+        setIsAdmin(false);
       }
     };
     
@@ -369,6 +389,23 @@ export default function Sidebar({ onNavigate = () => {}, brightOn = false }) {
               <i className="fi fi-br-user-add text-lg"></i>
               <span className="font-semibold">Add another account</span>
             </button>
+            {/* Admin Panel Button - Only visible to admins */}
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setShowAccountMenu(false);
+                  navigate('/admin');
+                }}
+                className={`w-full px-4 py-3 text-left transition-all duration-200 flex items-center gap-3 border-t ${
+                  brightOn
+                    ? 'text-red-600 hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 hover:text-red-700 border-gray-200'
+                    : 'text-red-400 hover:bg-red-500/10 border-white/10'
+                }`}
+              >
+                <i className="fi fi-br-shield text-lg"></i>
+                <span className="font-semibold">Admin Panel</span>
+              </button>
+            )}
           </div>
         )}
       </div>

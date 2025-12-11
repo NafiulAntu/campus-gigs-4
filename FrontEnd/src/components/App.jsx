@@ -27,6 +27,8 @@ const PaymentCancelled = lazy(() => import("./Post/components/PaymentResult.jsx"
 const SendMoneyPage = lazy(() => import("./Post/pages/SendMoneyPage.jsx"));
 const DummyPaymentPage = lazy(() => import("./Post/pages/DummyPaymentPage.jsx"));
 const PaymentCallbackPage = lazy(() => import("./Post/pages/PaymentCallbackPage.jsx"));
+const AdminLogin = lazy(() => import("./admin/AdminLogin.jsx"));
+const AdminPanel = lazy(() => import("./admin/AdminPanel.jsx"));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -96,7 +98,7 @@ export default function App() {
       }
     });
   }, []);
-  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/verify-otp", "/reset-password", "/terms", "/privacy", "/premium", "/payment/verify", "/payment/success", "/payment/failed", "/payment/cancelled", "/send-money", "/dummy-payment", "/payment-callback"];
+  const hideFooterOn = ["/", "/login", "/signup", "/post", "/auth/callback", "/forgot-password", "/verify-otp", "/reset-password", "/terms", "/privacy", "/premium", "/payment/verify", "/payment/success", "/payment/failed", "/payment/cancelled", "/send-money", "/dummy-payment", "/payment-callback", "/admin", "/admin/dashboard"];
   const shouldHideFooter = hideFooterOn.includes(
     location.pathname.toLowerCase()
   );
@@ -125,6 +127,8 @@ export default function App() {
               <Route path="/send-money" element={<SendMoneyPage />} />
               <Route path="/dummy-payment" element={<DummyPaymentPage />} />
               <Route path="/payment-callback" element={<PaymentCallbackPage />} />
+              <Route path="/admin" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminPanel />} />
               <Route path="/auth/callback" element={<CallbackHandler />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

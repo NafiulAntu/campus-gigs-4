@@ -103,6 +103,14 @@ exports.signin = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    console.log('User found:', { email: user.email, hasPassword: !!user.password, passwordType: typeof user.password });
+
+    // Check if password exists and is valid
+    if (!user.password || typeof user.password !== 'string') {
+      console.log('Password validation failed:', { password: user.password, type: typeof user.password });
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
     // Check password
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
@@ -125,6 +133,7 @@ exports.signin = async (req, res) => {
         full_name: user.full_name,
         email: user.email,
         profile_picture: user.profile_picture,
+        role: user.role || 'user',
       },
     });
   } catch (error) {
